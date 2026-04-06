@@ -1,12 +1,31 @@
-build/
+# --- Compiled Binaries ---
+# Ignore the final executable we built
+frnn_standalone
+run_test
+my_program
+*.o
+*.out
 *.so
-*.egg-info/
-.vscode/
-data/mesh/
-all_data/
-**/__pycache__/
-.vscode/
-drill/
+*.a
+
+# --- Python & Build Artifacts ---
+# If you ever run python scripts, ignore these
+__pycache__/
+*.pyc
+build/
 dist/
-data/
-tests/output/
+*.egg-info/
+
+# --- IDE & System Files ---
+# Ignore VS Code settings and Mac/Linux system junk
+.vscode/
+.DS_Store
+*.swp
+.idea/
+
+# --- Data & Logs ---
+# Ignore large point cloud files or slurm output logs
+*.pts
+*.ply
+*.pcd
+slurm-*.out
