@@ -29,3 +29,4 @@ dist/
 *.ply
 *.pcd
 slurm-*.out
+tests/output/
