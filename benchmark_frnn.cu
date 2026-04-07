@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <cuda_runtime.h>
+#include <algorithm> // Added for random fill
 #include "frnn/csrc/grid/grid.h"
 
 extern "C" void run_insert_points(float3* d_points, int* d_grid_cnt, int* d_grid_cell, int* d_grid_idx, int P, GridParams params);
@@ -11,7 +12,7 @@ extern "C" void run_find_nbrs(float3* d_points1, float3* d_points2, int* d_pc2_g
 void benchmark_scale(int P) {
     int K = 16;
     float radius = 0.02f;
-    int iterations = 50;
+    int iterations = (P >= 1000000) ? 10 : 50; // Reduction for 1M to save time
 
     GridParams params;
     params.min_pos = make_float3(0,0,0);
@@ -32,7 +33,17 @@ void benchmark_scale(int P) {
     cudaMalloc(&d_dists, P * K * sizeof(float));
     cudaMalloc(&d_idxs, P * K * sizeof(int));
 
-    cudaMemset(d_points, 0, P * sizeof(float3));
+    // --- NEW: Generate distributed random points instead of all zeros ---
+    std::vector<float3> h_points(P);
+    for(int i = 0; i < P; ++i) {
+        h_points[i] = make_float3(
+            (float)rand() / RAND_MAX, 
+            (float)rand() / RAND_MAX, 
+            (float)rand() / RAND_MAX
+        );
+    }
+    cudaMemcpy(d_points, h_points.data(), P * sizeof(float3), cudaMemcpyHostToDevice);
+    // --------------------------------------------------------------------
 
     cudaEvent_t start, stop;
     cudaEventCreate(&start); cudaEventCreate(&stop);
@@ -58,8 +69,9 @@ void benchmark_scale(int P) {
 }
 
 int main() {
+    srand(42); // Ensure reproducible results for your report
     std::cout << "--- Starting Scaling Benchmarks ---" << std::endl;
-    std::vector<int> scales = {10000, 50000, 100000, 200000};
+    std::vector<int> scales = {10000, 50000, 100000, 200000, 1000000};
     for(int p : scales) {
         benchmark_scale(p);
     }
