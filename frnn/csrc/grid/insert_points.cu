@@ -73,3 +73,45 @@ extern "C" void run_set_identity(int* d_idx, int P) {
     int blocks = (P + threads - 1) / threads;
     set_identity_idx_kernel<<<blocks, threads>>>(d_idx, P);
 }
+
+// This kernel maps the original point index to its new "sorted" position
+__global__ void ReorderPointsKernel(
+    const int* __restrict__ grid_cell,  // What cell is this point in?
+    const int* __restrict__ grid_idx,   // What is its local index in that cell?
+    const int* __restrict__ grid_offsets, // Where does each cell start?
+    int* __restrict__ sorted_idxs,      // OUTPUT: The mapping
+    int P) 
+{
+    int p = blockIdx.x * blockDim.x + threadIdx.x;
+    if (p >= P) return;
+
+    int cell = grid_cell[p];
+    
+    // If point is out of bounds, we don't sort it
+    if (cell != -1) {
+        int local_idx = grid_idx[p];
+        int start_pos = grid_offsets[cell];
+        
+        // The magic formula: Start of the cell + position inside the cell
+        int sorted_pos = start_pos + local_idx;
+        
+        // Store the original point index at the sorted position
+        sorted_idxs[sorted_pos] = p;
+    }
+}
+
+extern "C" void run_reorder_points(
+    int* d_grid_cell, 
+    int* d_grid_idx, 
+    int* d_grid_offsets, 
+    int* d_sorted_idxs, 
+    int P) 
+{
+    int threads = 256;
+    int blocks = (P + threads - 1) / threads;
+
+    ReorderPointsKernel<<<blocks, threads>>>(
+        d_grid_cell, d_grid_idx, d_grid_offsets, d_sorted_idxs, P
+    );
+    cudaDeviceSynchronize();
+}
