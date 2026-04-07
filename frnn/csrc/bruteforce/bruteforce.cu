@@ -1,124 +1,75 @@
-#include <ATen/ATen.h>
-#include <ATen/cuda/CUDAContext.h>
-#include <c10/cuda/CUDAGuard.h>
+#include "bruteforce.h"
+#include <device_launch_parameters.h>
 #include <float.h>
-#include <iostream>
-#include <tuple>
 
-#include "utils/dispatch.cuh"
-#include "utils/mink.cuh"
-
-template <typename scalar_t, int64_t D, int64_t K>
-__global__ void FRNNBruteForceKernel(const scalar_t *__restrict__ points1,
-                                     const scalar_t *__restrict__ points2,
-                                     const int64_t *__restrict__ lengths1,
-                                     const int64_t *__restrict__ lengths2,
-                                     scalar_t *__restrict__ dists,
-                                     int64_t *__restrict__ idxs, int N, int P1,
-                                     int P2, float r2) {
-  scalar_t cur_point[D];
-  scalar_t min_dists[K];
-  int min_idxs[K];
-  int chunks_per_cloud = (1 + (P1 - 1) / blockDim.x);
-  int chunks_to_do = N * chunks_per_cloud;
-  for (int chunk = blockIdx.x; chunk < chunks_to_do; chunk += gridDim.x) {
-    int n = chunk / chunks_per_cloud;
-    int start_point = blockDim.x * (chunk % chunks_per_cloud);
-    int p1 = start_point + threadIdx.x;
-    if (p1 >= lengths1[n]) continue;
-    for (int d = 0; d < D; ++d) {
-      cur_point[d] = points1[n * P1 * D + p1 * D + d];
+// Helper to keep track of the top K neighbors (Max-Heap)
+__device__ void bf_insert_neighbor(float* local_dists, int* local_idxs, int K, float d2, int idx2) {
+    if (d2 < local_dists[0]) {
+        local_dists[0] = d2;
+        local_idxs[0] = idx2;
+        int i = 0;
+        while (true) {
+            int left = 2 * i + 1, right = 2 * i + 2, largest = i;
+            if (left < K && local_dists[left] > local_dists[largest]) largest = left;
+            if (right < K && local_dists[right] > local_dists[largest]) largest = right;
+            if (largest != i) {
+                float td = local_dists[i]; local_dists[i] = local_dists[largest]; local_dists[largest] = td;
+                int ti = local_idxs[i]; local_idxs[i] = local_idxs[largest]; local_idxs[largest] = ti;
+                i = largest;
+            } else break;
+        }
     }
-    int length2 = lengths2[n];
-    MinK<scalar_t, int> mink(min_dists, min_idxs, K);
-    for (int p2 = 0; p2 < length2; ++p2) {
-      scalar_t dist = 0;
-      for (int d = 0; d < D; ++d) {
-        int offset = n * P2 * D + p2 * D + d;
-        scalar_t diff = cur_point[d] - points2[offset];
-        dist += diff * diff;
-      }
-      if (dist >= r2) continue;
-      mink.add(dist, p2);
-    }
-    mink.sort();
-    for (int k = 0; k < mink.size(); ++k) {
-      // if (min_dists[k] >= r2)
-      //   break;
-      idxs[n * P1 * K + p1 * K + k] = min_idxs[k];
-      dists[n * P1 * K + p1 * K + k] = min_dists[k];
-    }
-  }
 }
 
-// This is a shim so we can dispatch using DispatchKernel2D
-template <typename scalar_t, int64_t D, int64_t K>
-struct FRNNBruteForceFunctor {
-  static void run(int blocks, int threads, const scalar_t *__restrict__ points1,
-                  const scalar_t *__restrict__ points2,
-                  const int64_t *__restrict__ lengths1,
-                  const int64_t *__restrict__ lengths2,
-                  scalar_t *__restrict__ dists, int64_t *__restrict__ idxs,
-                  int N, int P1, int P2, float r2) {
-    cudaStream_t stream = at::cuda::getCurrentCUDAStream();
-    FRNNBruteForceKernel<scalar_t, D, K><<<blocks, threads, 0, stream>>>(
-        points1, points2, lengths1, lengths2, dists, idxs, N, P1, P2, r2);
-  }
-};
+__global__ void BruteforceKernel(
+    const float3* p1_ptr, const float3* p2_ptr,
+    int P1, int P2, int K, float r2,
+    float* dists, int* idxs) 
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= P1) return;
 
-constexpr int V2_MIN_D = 1;
-constexpr int V2_MAX_D = 8;
-constexpr int V2_MIN_K = 1;
-constexpr int V2_MAX_K = 64;
+    float3 pt1 = p1_ptr[i];
+    
+    // Local storage for this thread's K nearest neighbors
+    // Note: K must be <= 128 for this fixed array size
+    float local_dists[128];
+    int local_idxs[128];
 
-std::tuple<at::Tensor, at::Tensor> FRNNBruteForceCUDA(
-    const at::Tensor &p1, const at::Tensor &p2, const at::Tensor &lengths1,
-    const at::Tensor &lengths2, int K, float r) {
-  // Check inputs are on the same device
-  at::TensorArg p1_t{p1, "p1", 1}, p2_t{p2, "p2", 2},
-      lengths1_t{lengths1, "lengths1", 3}, lengths2_t{lengths2, "lengths2", 4};
-  at::CheckedFrom c = "FRNNBruteForceCUDA";
-  at::checkAllSameGPU(c, {p1_t, p2_t, lengths1_t, lengths2_t});
-  at::checkAllSameType(c, {p1_t, p2_t});
-  at::checkAllSameType(c, {lengths1_t, lengths2_t});
+    for (int k = 0; k < K; k++) {
+        local_dists[k] = r2; 
+        local_idxs[k] = -1;
+    }
 
-  // Set the device for the kernel launch based on the device of the input
-  at::cuda::CUDAGuard device_guard(p1.device());
-  cudaStream_t stream = at::cuda::getCurrentCUDAStream();
+    // Exhaustive search: Check against EVERY point in the second set
+    for (int j = 0; j < P2; j++) {
+        float3 pt2 = p2_ptr[j];
+        float dx = pt1.x - pt2.x;
+        float dy = pt1.y - pt2.y;
+        float dz = pt1.z - pt2.z;
+        float d2 = dx*dx + dy*dy + dz*dz;
 
-  auto N = p1.size(0);
-  auto P1 = p1.size(1);
-  auto P2 = p2.size(1);
-  auto D = p2.size(2);
-  int64_t K_64 = K;
-  float r2 = r * r;
+        if (d2 < r2) {
+            bf_insert_neighbor(local_dists, local_idxs, K, d2, j);
+        }
+    }
 
-  TORCH_CHECK(p2.size(2) == D, "Point sets must have the same last dimension");
-  auto long_dtype = lengths1.options().dtype(at::kLong);
-  auto idxs = at::full({N, P1, K}, -1, long_dtype);
-  auto dists = at::full({N, P1, K}, -1, p1.options());
+    // Write results to global memory
+    for (int k = 0; k < K; k++) {
+        dists[i * K + k] = local_dists[k];
+        idxs[i * K + k] = local_idxs[k];
+    }
+}
 
-  if (idxs.numel() == 0) {
-    AT_CUDA_CHECK(cudaGetLastError());
-    return std::make_tuple(idxs, dists);
-  }
+extern "C" void run_bruteforce(
+    const float3* d_p1, const float3* d_p2, 
+    int P1, int P2, int K, float r,
+    float* d_dists, int* d_idxs) 
+{
+    int threads = 256;
+    int blocks = (P1 + threads - 1) / threads;
+    float r2 = r * r;
 
-  AT_ASSERTM(D >= V2_MIN_D && D <= V2_MAX_D && K >= V2_MIN_K && D <= V2_MAX_K,
-             "Invalid range for K or D");
-
-  int threads = 256;
-  int blocks = 256;
-  AT_DISPATCH_FLOATING_TYPES(
-      p1.scalar_type(), "frnn_kernel_cuda", ([&] {
-        DispatchKernel2D<FRNNBruteForceFunctor, scalar_t, V2_MIN_D, V2_MAX_D,
-                         V2_MIN_K, V2_MAX_K>(
-            D, K_64, blocks, threads, p1.contiguous().data_ptr<scalar_t>(),
-            p2.contiguous().data_ptr<scalar_t>(),
-            lengths1.contiguous().data_ptr<int64_t>(),
-            lengths2.contiguous().data_ptr<int64_t>(),
-            dists.data_ptr<scalar_t>(), idxs.data_ptr<int64_t>(), N, P1, P2,
-            r2);
-      }));
-  AT_CUDA_CHECK(cudaGetLastError());
-  return std::make_tuple(idxs, dists);
+    BruteforceKernel<<<blocks, threads>>>(d_p1, d_p2, P1, P2, K, r2, d_dists, d_idxs);
+    cudaDeviceSynchronize();
 }

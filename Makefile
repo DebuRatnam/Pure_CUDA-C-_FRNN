@@ -1,55 +1,50 @@
-# --- Compiler Settings ---
 NVCC = nvcc
-CUDA_COMPUTE = -gencode=arch=compute_80,code=sm_80
-FLAGS = -O3 $(CUDA_COMPUTE) --std=c++14
+# -O3 for optimization, sm_80 for Perlmutter A100s
+FLAGS = -O3 -arch=sm_80 --std=c++14
+INC = -I. -Ifrnn/csrc/grid -Iexternal/prefix_sum-master -Iexternal/prefix_sum-master/parallel-scan -Iexternal/prefix_sum-master/include
 
-# --- Project Paths ---
-GRID_DIR   = frnn/csrc/grid
-PREFIX_DIR = external/prefix_sum-master
-SCAN_DIR   = $(PREFIX_DIR)/parallel-scan
-INC        = -I$(GRID_DIR) -I$(PREFIX_DIR) -I$(SCAN_DIR) -I$(PREFIX_DIR)/include
+# These are the shared object files both apps need
+CORE_OBJS = insert_points.o find_nbrs.o prefix_sum_wrapper.o scan.o kernels.o utils.o bruteforce.o
 
-# --- Target ---
-TARGET = frnn_standalone
+# Build everything by default
+all: frnn_test frnn_bench
 
-# --- Object Files (ADDED utils.o HERE) ---
-OBJS = main.o \
-       insert_points.o \
-       find_nbrs.o \
-       prefix_sum_wrapper.o \
-       scan.o \
-       kernels.o \
-       utils.o
+# Program 1: The Validator
+frnn_test: test_frnn.o $(CORE_OBJS)
+	$(NVCC) $(FLAGS) test_frnn.o $(CORE_OBJS) -o frnn_test
 
-# --- Build Rules ---
+# Program 2: The Benchmarker
+frnn_bench: benchmark_frnn.o $(CORE_OBJS)
+	$(NVCC) $(FLAGS) benchmark_frnn.o $(CORE_OBJS) -o frnn_bench
 
-all: $(TARGET)
+# How to compile the main files
+test_frnn.o: test_frnn.cu
+	$(NVCC) $(FLAGS) $(INC) -c test_frnn.cu -o test_frnn.o
 
-$(TARGET): $(OBJS)
-	$(info [Linking]: Creating $(TARGET) executable)
-	$(NVCC) $(FLAGS) $(OBJS) -o $(TARGET)
+benchmark_frnn.o: benchmark_frnn.cu
+	$(NVCC) $(FLAGS) $(INC) -c benchmark_frnn.cu -o benchmark_frnn.o
 
-main.o: main.cu
-	$(NVCC) $(FLAGS) $(INC) -c main.cu -o main.o
+# How to compile the Engine files (Update paths if they differ)
+insert_points.o: frnn/csrc/grid/insert_points.cu
+	$(NVCC) $(FLAGS) $(INC) -c frnn/csrc/grid/insert_points.cu -o insert_points.o
 
-insert_points.o: $(GRID_DIR)/insert_points.cu
-	$(NVCC) $(FLAGS) $(INC) -c $(GRID_DIR)/insert_points.cu -o insert_points.o
+find_nbrs.o: frnn/csrc/grid/find_nbrs.cu
+	$(NVCC) $(FLAGS) $(INC) -c frnn/csrc/grid/find_nbrs.cu -o find_nbrs.o
 
-find_nbrs.o: $(GRID_DIR)/find_nbrs.cu
-	$(NVCC) $(FLAGS) $(INC) -c $(GRID_DIR)/find_nbrs.cu -o find_nbrs.o
+bruteforce.o: frnn/csrc/bruteforce/bruteforce.cu
+	$(NVCC) $(FLAGS) $(INC) -c frnn/csrc/bruteforce/bruteforce.cu -o bruteforce.o
 
-prefix_sum_wrapper.o: $(PREFIX_DIR)/prefix_sum.cu
-	$(NVCC) $(FLAGS) $(INC) -c $(PREFIX_DIR)/prefix_sum.cu -o prefix_sum_wrapper.o
+prefix_sum_wrapper.o: external/prefix_sum-master/prefix_sum.cu
+	$(NVCC) $(FLAGS) $(INC) -c external/prefix_sum-master/prefix_sum.cu -o prefix_sum_wrapper.o
 
-scan.o: $(SCAN_DIR)/scan.cu
-	$(NVCC) $(FLAGS) $(INC) -c $(SCAN_DIR)/scan.cu -o scan.o
+scan.o: external/prefix_sum-master/parallel-scan/scan.cu
+	$(NVCC) $(FLAGS) $(INC) -c external/prefix_sum-master/parallel-scan/scan.cu -o scan.o
 
-kernels.o: $(SCAN_DIR)/kernels.cu
-	$(NVCC) $(FLAGS) $(INC) -c $(SCAN_DIR)/kernels.cu -o kernels.o
+kernels.o: external/prefix_sum-master/parallel-scan/kernels.cu
+	$(NVCC) $(FLAGS) $(INC) -c external/prefix_sum-master/parallel-scan/kernels.cu -o kernels.o
 
-# --- NEW RULE FOR UTILS ---
-utils.o: $(SCAN_DIR)/utils.cpp
-	$(NVCC) $(FLAGS) $(INC) -c $(SCAN_DIR)/utils.cpp -o utils.o
+utils.o: external/prefix_sum-master/parallel-scan/utils.cpp
+	$(NVCC) $(FLAGS) $(INC) -c external/prefix_sum-master/parallel-scan/utils.cpp -o utils.o
 
 clean:
-	rm -f *.o $(TARGET)
+	rm -f *.o frnn_test frnn_bench
