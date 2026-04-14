@@ -1,13 +1,17 @@
 NVCC = nvcc
 # -O3 for optimization, sm_80 for Perlmutter A100s
-FLAGS = -O3 -arch=sm_80 --std=c++14
+FLAGS = -O3 -arch=sm_80 --std=c++14 -Xcompiler -fPIC
 INC = -I. -Ifrnn/csrc/grid -Iexternal/prefix_sum-master -Iexternal/prefix_sum-master/parallel-scan -Iexternal/prefix_sum-master/include
+
+# Python / PyBind11 Detection
+PY_FLAGS = $(shell python3 -m pybind11 --includes)
+PY_EXT   = $(shell python3-config --extension-suffix)
 
 # These are the shared object files both apps need
 CORE_OBJS = insert_points.o find_nbrs.o prefix_sum_wrapper.o scan.o kernels.o utils.o bruteforce.o
 
-# Build everything by default
-all: frnn_test frnn_bench
+# Build everything by default (Added python_wrapper to default)
+all: frnn_test frnn_bench python_wrapper
 
 # Program 1: The Validator
 frnn_test: test_frnn.o $(CORE_OBJS)
@@ -17,6 +21,14 @@ frnn_test: test_frnn.o $(CORE_OBJS)
 frnn_bench: benchmark_frnn.o $(CORE_OBJS)
 	$(NVCC) $(FLAGS) benchmark_frnn.o $(CORE_OBJS) -o frnn_bench
 
+# --- NEW: The Python Interface ---
+# This compiles the engine manager and links it with all core CUDA objects
+python_wrapper: frnn_engine.o $(CORE_OBJS)
+	$(NVCC) $(FLAGS) -shared frnn_engine.o $(CORE_OBJS) -o frnn_cuda$(PY_EXT)
+
+frnn_engine.o: python_interface/frnn_engine.cu
+	$(NVCC) $(FLAGS) $(INC) $(PY_FLAGS) -c python_interface/frnn_engine.cu -o frnn_engine.o
+
 # How to compile the main files
 test_frnn.o: test_frnn.cu
 	$(NVCC) $(FLAGS) $(INC) -c test_frnn.cu -o test_frnn.o
@@ -24,7 +36,7 @@ test_frnn.o: test_frnn.cu
 benchmark_frnn.o: benchmark_frnn.cu
 	$(NVCC) $(FLAGS) $(INC) -c benchmark_frnn.cu -o benchmark_frnn.o
 
-# How to compile the Engine files (Update paths if they differ)
+# How to compile the Engine files
 insert_points.o: frnn/csrc/grid/insert_points.cu
 	$(NVCC) $(FLAGS) $(INC) -c frnn/csrc/grid/insert_points.cu -o insert_points.o
 
@@ -46,5 +58,6 @@ kernels.o: external/prefix_sum-master/parallel-scan/kernels.cu
 utils.o: external/prefix_sum-master/parallel-scan/utils.cpp
 	$(NVCC) $(FLAGS) $(INC) -c external/prefix_sum-master/parallel-scan/utils.cpp -o utils.o
 
+# Updated Clean Rule
 clean:
-	rm -f *.o frnn_test frnn_bench
+	rm -f *.o frnn_test frnn_bench frnn_cuda*.so
