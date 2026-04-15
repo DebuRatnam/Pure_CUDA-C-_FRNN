@@ -1,48 +1,68 @@
 import frnn_cuda
 import numpy as np
 import time
+import sys
 
-def run_lhc_test():
-    # 1. Configuration
-    num_particles = 100000
-    K = 16
-    radius = 0.05
-    
-    print(f"--- Initializing A100 Engine for {num_particles} particles ---")
-    # This calls your C++ Constructor and runs cudaMalloc
-    engine = frnn_cuda.FRNNEngine(max_points=num_particles)
+def run_interactive_lhc_test():
+    print("====================================================")
+    print("   LHC FRNN CUDA Engine - Interactive Tester")
+    print("====================================================\n")
 
-    # 2. Create synthetic particle data
-    # We flatten it because our C++ interface expects a flat vector
-    # [x1, y1, z1, x2, y2, z2...]
-    print("Generating synthetic particle hits...")
+    # 1. Get User Parameters
+    try:
+        user_k = int(input("Enter K (number of neighbors, e.g., 16): "))
+        user_r = float(input("Enter Radius (search distance, e.g., 0.05): "))
+        num_particles = int(input("Enter number of particles (e.g., 100000): "))
+    except ValueError:
+        print("\n[ERROR] Invalid input. Please enter numbers only (Int for K, Float for Radius).")
+        return
+
+    # 2. Setup Data and Engine
+    print(f"\n[1/3] Initializing A100 Engine for {num_particles} points...")
+    try:
+        engine = frnn_cuda.FRNNEngine(max_points=num_particles)
+    except Exception as e:
+        print(f"Failed to initialize GPU engine: {e}")
+        return
+
+    print(f"[2/3] Generating random particle hits on CPU...")
+    # Hits are flattened: [x0, y0, z0, x1, y1, z1...]
     hits = np.random.rand(num_particles * 3).astype(np.float32)
+    indices, distances = engine.search(hits, K=user_k, radius=user_r)
 
-    # 3. The Big Moment: Run the GPU Search
-    print(f"Running FRNN search (Radius={radius}, K={K})...")
-    start_time = time.time()
+    # 3. Execution and Timing
+    print(f"[3/3] Running GPU Search (K={user_k}, R={user_r})...")
+    hits = np.random.rand(num_particles * 3).astype(np.float32)
     
-    # This triggers the Host->Device copy and your 4 CUDA kernels
-    indices, distances = engine.search(hits, K, radius)
+    # Start the clock ONLY for the GPU work
+    start_time = time.perf_counter()
     
-    end_time = time.time()
+    indices, distances = engine.search(hits, K=user_k, radius=user_r)
     
-    # 4. Results Analysis
-    # Indices comes back as a flat list of (num_particles * K)
-    indices_res = np.array(indices).reshape(num_particles, K)
+    # Synchronize/End clock
+    end_time = time.perf_counter()
     
-    print("\n--- Search Complete ---")
-    print(f"Execution Time on A100: {(end_time - start_time)*1000:.2f} ms")
+    duration_ms = (end_time - start_time) * 1000
+
+    # 4. Results Formatting
+    print("\n" + "="*50)
+    print(f"RESULTS FOR {num_particles} PARTICLES")
+    print("="*50)
+    print(f"Total GPU Execution Time: {duration_ms:.3f} ms")
     
-    # Spot check the first particle
-    first_particle_neighbors = indices_res[0]
-    valid_neighbors = first_particle_neighbors[first_particle_neighbors != -1]
+    # Reshape indices to see neighbors per particle
+    indices_res = np.array(indices).reshape(num_particles, user_k)
     
-    print(f"Particle 0 found {len(valid_neighbors)} neighbors.")
-    if len(valid_neighbors) > 0:
-        print(f"First 3 neighbor IDs: {valid_neighbors[:3]}")
-    else:
-        print("No neighbors found for Particle 0. (Try increasing radius?)")
+    # Check first particle
+    p0_neighbors = indices_res[0]
+    valid_count = np.sum(p0_neighbors != -1)
+    
+    print(f"Particle 0: Found {valid_count} neighbors within radius {user_r}")
+    if valid_count > 0:
+        # Show first few non -1 neighbors
+        print(f"Sample Neighbor IDs: {p0_neighbors[p0_neighbors != -1][:5]}")
+    
+    print("="*50)
 
 if __name__ == "__main__":
-    run_lhc_test()
+    run_interactive_lhc_test()
