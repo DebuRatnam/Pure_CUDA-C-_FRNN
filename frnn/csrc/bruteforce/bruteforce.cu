@@ -2,7 +2,7 @@
 #include <device_launch_parameters.h>
 #include <float.h>
 
-// Helper to keep track of the top K neighbors (Max-Heap)
+// Max-Heap Insertion logic remains the same (it only cares about distance values)
 __device__ void bf_insert_neighbor(float* local_dists, int* local_idxs, int K, float d2, int idx2) {
     if (d2 < local_dists[0]) {
         local_dists[0] = d2;
@@ -21,18 +21,14 @@ __device__ void bf_insert_neighbor(float* local_dists, int* local_idxs, int K, f
     }
 }
 
-__global__ void BruteforceKernel(
-    const float3* p1_ptr, const float3* p2_ptr,
-    int P1, int P2, int K, float r2,
+__global__ void BruteforceNDKernel(
+    const float* p1_ptr, const float* p2_ptr,
+    int P1, int P2, int K, int dim, float r2,
     float* dists, int* idxs) 
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= P1) return;
 
-    float3 pt1 = p1_ptr[i];
-    
-    // Local storage for this thread's K nearest neighbors
-    // Note: K must be <= 128 for this fixed array size
     float local_dists[128];
     int local_idxs[128];
 
@@ -43,18 +39,19 @@ __global__ void BruteforceKernel(
 
     // Exhaustive search: Check against EVERY point in the second set
     for (int j = 0; j < P2; j++) {
-        float3 pt2 = p2_ptr[j];
-        float dx = pt1.x - pt2.x;
-        float dy = pt1.y - pt2.y;
-        float dz = pt1.z - pt2.z;
-        float d2 = dx*dx + dy*dy + dz*dz;
+        float d2 = 0.0f;
+        
+        // Loop over dimensions for N-D distance
+        for (int d = 0; d < dim; d++) {
+            float diff = p1_ptr[i * dim + d] - p2_ptr[j * dim + d];
+            d2 += diff * diff;
+        }
 
         if (d2 < r2) {
             bf_insert_neighbor(local_dists, local_idxs, K, d2, j);
         }
     }
 
-    // Write results to global memory
     for (int k = 0; k < K; k++) {
         dists[i * K + k] = local_dists[k];
         idxs[i * K + k] = local_idxs[k];
@@ -62,14 +59,14 @@ __global__ void BruteforceKernel(
 }
 
 extern "C" void run_bruteforce(
-    const float3* d_p1, const float3* d_p2, 
-    int P1, int P2, int K, float r,
+    const float* d_p1, const float* d_p2, 
+    int P1, int P2, int K, int dim, float r,
     float* d_dists, int* d_idxs) 
 {
     int threads = 256;
     int blocks = (P1 + threads - 1) / threads;
     float r2 = r * r;
 
-    BruteforceKernel<<<blocks, threads>>>(d_p1, d_p2, P1, P2, K, r2, d_dists, d_idxs);
+    BruteforceNDKernel<<<blocks, threads>>>(d_p1, d_p2, P1, P2, K, dim, r2, d_dists, d_idxs);
     cudaDeviceSynchronize();
 }
