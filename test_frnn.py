@@ -3,86 +3,108 @@ import numpy as np
 import time
 import pynvml
 import ctypes
+import json
+import math
 
-# Load CUDA runtime to allow manual synchronization without Torch
 _cudart = ctypes.CDLL('libcudart.so')
 
-def run_deterministic_test():
-    # 1. Setup hardware monitoring
+def run_scaling_benchmark():
     try:
         pynvml.nvmlInit()
         handle = pynvml.nvmlDeviceGetHandleByIndex(0)
-    except Exception as e:
-        print(f"NVML Init failed: {e}. Hardware metrics may be unavailable.")
+    except:
         handle = None
-    
-    # 2. Parameters & Determinism
-    np.random.seed(1234)
-    num_particles = 1000
-    user_dim = 3
-    user_k = 10
-    user_r = 0.5
-    
-    print("--- FRNN Deterministic Performance Test (No-Torch) ---")
-    print(f"Points: {num_particles} | K: {user_k} | Radius: {user_r} | Seed: 1234")
+        print("[WARN] NVML not found. Hardware metrics will be skipped.")
 
-    # 3. Data Generation (3D coordinates)
-    hits = np.random.rand(num_particles * user_dim).astype(np.float32)
+    # 2. Benchmark Parameters
+    try:
+        user_dim = int(input("Enter Dimension for sweep (e.g., 3, 8, 16): "))
+    except ValueError:
+        user_dim = 3
 
-    # 4. Initialize Engine
-    engine = frnn_cuda.FRNNEngine(max_points=num_particles)
-
-    # 5. Search with Metrics
-    if handle:
-        mem_info_start = pynvml.nvmlDeviceGetMemoryInfo(handle)
+    # Define K and the Auto-Radius Logic
+    user_k = 16 
+    MAX_TOTAL_CELLS = 2**18 
     
-    # Ensure GPU is idle/ready
+    # Mathematical Radius Scaling
+    base_r = 1.0 / (MAX_TOTAL_CELLS ** (1.0 / user_dim))
+    density_boost = math.sqrt(user_dim / 3.0) 
+    user_r = max(0.01, min(0.8, base_r * density_boost))
+    
+    n_counts = [2**i for i in range(14, 21)]
+    num_trials = 7
+    results = []
+
+    print(f"\n" + "="*60)
+    print(f"LHC FRNN SCALING TEST ({user_dim}D)")
+    print("="*60)
+    print(f"Fixed Parameters: K={user_k}, Radius={user_r:.4f}")
+    print(f"Methodology: {num_trials} trials per N, Median result recorded")
+
+    # 3. Warmup Phase
+    print("\n[Phase 1/2] Performing Burn-in run...")
+    warmup_n = 16384
+    engine_warmup = frnn_cuda.FRNNEngine(max_points=warmup_n)
+    warmup_hits = np.random.rand(warmup_n * user_dim).astype(np.float32)
+    engine_warmup.search(warmup_hits, K=user_k, radius=user_r)
     _cudart.cudaDeviceSynchronize()
-    
-    start_time = time.perf_counter()
-    
-    # CORE SEARCH CALL
-    indices, distances = engine.search(hits, K=user_k, radius=user_r)
-    
-    # Force CPU to wait for GPU to finish before stopping clock
-    _cudart.cudaDeviceSynchronize()
-    end_time = time.perf_counter()
-    
-    duration_ms = (end_time - start_time) * 1000
+    del engine_warmup 
 
-    # 6. Gather Hardware Stats
-    if handle:
-        util = pynvml.nvmlDeviceGetUtilizationRates(handle)
-        mem_info_end = pynvml.nvmlDeviceGetMemoryInfo(handle)
-        gpu_util = f"{util.gpu}%"
-        gpu_mem = f"{(mem_info_end.used - mem_info_start.used) / 1024**2:.2f} MB"
-    else:
-        gpu_util = "N/A"
-        gpu_mem = "N/A"
+    # 4. The Sweep
+    print("[Phase 2/2] Starting Particle Sweep...")
+    for n in n_counts:
+        print(f"  Testing N = {n:<8}...", end=" ", flush=True)
+        
+        if handle:
+            _cudart.cudaDeviceSynchronize()
+            m_baseline = pynvml.nvmlDeviceGetMemoryInfo(handle).used
+        
+        engine = frnn_cuda.FRNNEngine(max_points=n)
+        
+        if handle:
+            _cudart.cudaDeviceSynchronize()
+            m_peak = pynvml.nvmlDeviceGetMemoryInfo(handle).used
+            mem_usage = (m_peak - m_baseline) / 1024**2 
+        
+        hits = np.random.rand(n * user_dim).astype(np.float32)
+        trial_times = []
 
-    # 7. Results Display
-    indices_res = np.array(indices).reshape(num_particles, user_k)
-    distances_res = np.array(distances).reshape(num_particles, user_k)
+        for t in range(num_trials):
+            _cudart.cudaDeviceSynchronize()
+            start = time.perf_counter()
+            engine.search(hits, K=user_k, radius=user_r)
+            _cudart.cudaDeviceSynchronize()
+            end = time.perf_counter()
+            trial_times.append((end - start) * 1000)
 
-    print("\n" + "="*50)
-    print("METRICS REPORT")
-    print("="*50)
-    print(f"Search Latency:         {duration_ms:.4f} ms")
-    print(f"Avg GPU Utilization:    {gpu_util}")
-    print(f"Max GPU Memory Delta:   {gpu_mem}")
-    print("="*50)
+        median_time = np.median(trial_times)
+        results.append({
+            "n": n,
+            "latency_ms": median_time,
+            "memory_mb": max(0.0, mem_usage) if handle else 0.0
+        })
+        print(f"Median: {median_time:.3f} ms | Mem: {mem_usage:.1f} MB")
+        del engine
 
-    print("\nDETERMINISTIC CHECK (First 2 particles):")
-    for i in range(2):
-        print(f"Pt {i} Indices:   {indices_res[i].tolist()}")
-        # Check if any neighbors were found (indices != -1)
-        valid_dist = distances_res[i][indices_res[i] != -1]
-        print(f"Pt {i} Distances: {np.round(valid_dist, 4).tolist()}")
+    # 5. Final Report
+    print("\n" + "="*60)
+    print(f"{'N (Particles)':<15} | {'Median Latency (ms)':<20} | {'Peak Mem (MB)':<15}")
+    print("-" * 60)
+    for r in results:
+        print(f"{r['n']:<15} | {r['latency_ms']:<20.4f} | {r['memory_mb']:<15.2f}")
+    print("="*60)
     
-    print("="*50)
-    
+    log_data = {
+        "x_particles": [int(r['n']) for r in results],
+        "y_latency": [float(r['latency_ms']) for r in results],
+        "y_memory": [float(r['memory_mb']) for r in results],
+        "config": {"dim": user_dim, "radius": user_r, "k": user_k}
+    }
+    print("\nRAW DATA FOR PLOTTING (JSON):")
+    print(json.dumps(log_data))
+
     if handle:
         pynvml.nvmlShutdown()
 
 if __name__ == "__main__":
-    run_deterministic_test()
+    run_scaling_benchmark()
