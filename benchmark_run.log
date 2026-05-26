@@ -1,0 +1,116 @@
+
+────────────────────────────────────────────────────────
+  D2_N1000  R=0.07136
+────────────────────────────────────────────────────────
+    [xju2] D=2 unsupported (3D only), skipping
+  FRNN=0.4417519667185843ms  FAISS=0.1544094702694565ms  PyG=0.37660100497305393ms  xju2=Nonems
+  !! REGRESSION: FRNN 0.44ms > FAISS 0.15ms — see §4.3 diagnostics
+  !! REGRESSION: FRNN 0.44ms > PyG 0.38ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D2_N10000  R=0.02257
+────────────────────────────────────────────────────────
+    [xju2] D=2 unsupported (3D only), skipping
+  FRNN=4.461180535145104ms  FAISS=1.6249025065917522ms  PyG=2.26800495875068ms  xju2=Nonems
+  !! REGRESSION: FRNN 4.46ms > FAISS 1.62ms — see §4.3 diagnostics
+  !! REGRESSION: FRNN 4.46ms > PyG 2.27ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D2_N100000  R=0.00714
+────────────────────────────────────────────────────────
+    [xju2] D=2 unsupported (3D only), skipping
+  FRNN=67.0238914899528ms  FAISS=93.00253354012966ms  PyG=38.99650202947669ms  xju2=Nonems
+  !! REGRESSION: FRNN 67.02ms > PyG 39.00ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D3_N1000  R=0.15632
+────────────────────────────────────────────────────────
+    [xju2] frnn_grid_points not found. Available: []
+  FRNN=0.48532651271671057ms  FAISS=0.15576198347844183ms  PyG=0.3783540159929544ms  xju2=Nonems
+  !! REGRESSION: FRNN 0.49ms > FAISS 0.16ms — see §4.3 diagnostics
+  !! REGRESSION: FRNN 0.49ms > PyG 0.38ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D3_N10000  R=0.07256
+────────────────────────────────────────────────────────
+    [xju2] frnn_grid_points not found. Available: []
+  FRNN=6.543485505972058ms  FAISS=1.6341159935109317ms  PyG=2.4598025192972273ms  xju2=Nonems
+  !! REGRESSION: FRNN 6.54ms > FAISS 1.63ms — see §4.3 diagnostics
+  !! REGRESSION: FRNN 6.54ms > PyG 2.46ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D3_N100000  R=0.03368
+────────────────────────────────────────────────────────
+    [xju2] frnn_grid_points not found. Available: []
+  FRNN=69.58613300230354ms  FAISS=93.08578495983966ms  PyG=40.43285350780934ms  xju2=Nonems
+  !! REGRESSION: FRNN 69.59ms > PyG 40.43ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D4_N1000  R=0.23862
+────────────────────────────────────────────────────────
+    [xju2] D=4 unsupported (3D only), skipping
+  FRNN=0.5663540214300156ms  FAISS=0.15452448860742152ms  PyG=0.4415565053932369ms  xju2=Nonems
+  !! REGRESSION: FRNN 0.57ms > FAISS 0.15ms — see §4.3 diagnostics
+  !! REGRESSION: FRNN 0.57ms > PyG 0.44ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D4_N10000  R=0.13419
+────────────────────────────────────────────────────────
+    [xju2] D=4 unsupported (3D only), skipping
+  FRNN=7.2373165166936815ms  FAISS=1.6365349874831736ms  PyG=3.206962050171569ms  xju2=Nonems
+  !! REGRESSION: FRNN 7.24ms > FAISS 1.64ms — see §4.3 diagnostics
+  !! REGRESSION: FRNN 7.24ms > PyG 3.21ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D4_N100000  R=0.07546
+────────────────────────────────────────────────────────
+    [xju2] D=4 unsupported (3D only), skipping
+  FRNN=77.03230902552605ms  FAISS=93.21356646250933ms  PyG=47.992414503823966ms  xju2=Nonems
+  !! REGRESSION: FRNN 77.03ms > PyG 47.99ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D8_N1000  R=0.50057
+────────────────────────────────────────────────────────
+    [xju2] D=8 unsupported (3D only), skipping
+  FRNN=1.1588180204853415ms  FAISS=0.15499049914069474ms  PyG=0.7378564914688468ms  xju2=Nonems
+  !! REGRESSION: FRNN 1.16ms > FAISS 0.15ms — see §4.3 diagnostics
+  !! REGRESSION: FRNN 1.16ms > PyG 0.74ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D8_N10000  R=0.37538
+────────────────────────────────────────────────────────
+    [xju2] D=8 unsupported (3D only), skipping
+  FRNN=13.529067975468934ms  FAISS=1.6302634903695434ms  PyG=6.360369472531602ms  xju2=Nonems
+  !! REGRESSION: FRNN 13.53ms > FAISS 1.63ms — see §4.3 diagnostics
+  !! REGRESSION: FRNN 13.53ms > PyG 6.36ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D8_N100000  R=0.28149
+────────────────────────────────────────────────────────
+    [xju2] D=8 unsupported (3D only), skipping
+  FRNN=95.26059395284392ms  FAISS=93.40438299113885ms  PyG=167.90584698901512ms  xju2=Nonems
+  !! REGRESSION: FRNN 95.26ms > FAISS 93.40ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D16_N1000  R=0.84533
+────────────────────────────────────────────────────────
+    [xju2] D=16 unsupported (3D only), skipping
+  FRNN=1.593466498889029ms  FAISS=0.15905400505289435ms  PyG=1.8233319860883057ms  xju2=Nonems
+  !! REGRESSION: FRNN 1.59ms > FAISS 0.16ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D16_N10000  R=0.73203
+────────────────────────────────────────────────────────
+    [xju2] D=16 unsupported (3D only), skipping
+  FRNN=18.846558989025652ms  FAISS=1.695875485893339ms  PyG=17.240588524146006ms  xju2=Nonems
+  !! REGRESSION: FRNN 18.85ms > FAISS 1.70ms — see §4.3 diagnostics
+  !! REGRESSION: FRNN 18.85ms > PyG 17.24ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D16_N100000  R=0.63391
+────────────────────────────────────────────────────────
+    [xju2] D=16 unsupported (3D only), skipping
+  FRNN=292.38867448293604ms  FAISS=93.78319801180623ms  PyG=627.2125375107862ms  xju2=Nonems
+  !! REGRESSION: FRNN 292.39ms > FAISS 93.78ms — see §4.3 diagnostics
+
+→ benchmark_results.json

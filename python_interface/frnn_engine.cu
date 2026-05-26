@@ -3,14 +3,16 @@
 #include "frnn_engine.h"
 #include <iostream>
 #include <cmath>
+#include <thrust/device_ptr.h>
+#include <thrust/scan.h>
 
 namespace py = pybind11;
 
 // 1. Updated Externs: Matching the N-Dimensional Signatures
 extern "C" void run_insert_points(float* d_points, int* d_grid_cnt, int* d_pc_grid_idx, int P, int dim, GridParams params);
-extern "C" void scanLargeDeviceArray(int *d_out, int *d_in, int length, bool bcao);
 extern "C" void run_reorder_points(int* d_pc_grid_idx, int* d_grid_offsets, int* d_sorted_idxs, int P, int total_cells);
 extern "C" void run_find_nbrs(float* d_points1, float* d_points2, int* d_pc2_grid_off, int* d_sorted_idxs, int P1, int K, int dim, float radius, float* d_dists, int* d_idxs, GridParams params);
+extern "C" void run_bruteforce(const float* d_p1, const float* d_p2, int P1, int P2, int K, int dim, float r, float* d_dists, int* d_idxs);
 
 // Note: Constructor now takes max_points AND dim to allocate correctly
 FRNNEngine::FRNNEngine(int max_points) : max_p(max_points) {
@@ -44,8 +46,13 @@ std::pair<std::vector<int>, std::vector<float>> FRNNEngine::search(std::vector<f
     int dim = points_raw.size() / max_p; 
     int P = max_p; 
 
-    // 2. Host-to-Device Copy (N-Dimensional)
-    cudaMemcpy(d_points, points_raw.data(), points_raw.size() * sizeof(float), cudaMemcpyHostToDevice);
+    // 2. Transpose AoS → SoA then copy H2D.
+    // Kernels use p[d*P+i] (SoA) for coalesced warp access; Python callers still pass row-major AoS.
+    std::vector<float> pts_soa(points_raw.size());
+    for (int d = 0; d < dim; d++)
+        for (int p = 0; p < P; p++)
+            pts_soa[d * P + p] = points_raw[p * dim + d];
+    cudaMemcpy(d_points, pts_soa.data(), pts_soa.size() * sizeof(float), cudaMemcpyHostToDevice);
 
     // 3. Setup Dynamic GridParams (PM Requirement)
     GridParams params;
@@ -62,19 +69,87 @@ std::pair<std::vector<int>, std::vector<float>> FRNNEngine::search(std::vector<f
     }
 
     // 4. Execution Pipeline
-    cudaMemset(d_grid_cnt, 0, params.total_cells * sizeof(int));
-    
-    run_insert_points(d_points, d_grid_cnt, d_grid_idx, P, dim, params);
-    scanLargeDeviceArray(d_grid_offsets, d_grid_cnt, params.total_cells, true);
-    run_reorder_points(d_grid_idx, d_grid_offsets, d_sorted_idxs, P, params.total_cells);
-    run_find_nbrs(d_points, d_points, d_grid_offsets, d_sorted_idxs, P, K, dim, radius, d_dists, d_idxs, params);
+    // The grid kernel checks 3^D neighboring cells per point.  When that shell
+    // covers >= the entire grid (3^D >= total_cells), the per-cell overhead
+    // dominates and brute-force is strictly faster.  For D=16 with res=2,
+    // 3^16=43M >> 2^16=65K, so the grid is catastrophically slow there.
+    // res<=1 also forces brute-force because the prefix-sum breaks on one cell.
+    long long neighbor_shell = 1;
+    for (int d = 0; d < dim; d++) neighbor_shell *= 3;
 
-    // 5. Device-to-Host Copy
-    std::vector<int> h_idxs(P * K);
+    if (params.res <= 1 || neighbor_shell >= (long long)params.total_cells) {
+        run_bruteforce(d_points, d_points, P, P, K, dim, radius, d_dists, d_idxs);
+    } else {
+        cudaMemset(d_grid_cnt, 0, params.total_cells * sizeof(int));
+        run_insert_points(d_points, d_grid_cnt, d_grid_idx, P, dim, params);
+        thrust::exclusive_scan(
+            thrust::device_ptr<int>(d_grid_cnt),
+            thrust::device_ptr<int>(d_grid_cnt + params.total_cells),
+            thrust::device_ptr<int>(d_grid_offsets));
+        run_reorder_points(d_grid_idx, d_grid_offsets, d_sorted_idxs, P, params.total_cells);
+        run_find_nbrs(d_points, d_points, d_grid_offsets, d_sorted_idxs, P, K, dim, radius, d_dists, d_idxs, params);
+    }
+
+    // 5. Device-to-Host Copy (GPU output is SoA: d_idxs[k*P+p], d_dists[k*P+p])
+    std::vector<int>   h_idxs(P * K);
     std::vector<float> h_dists(P * K);
-    cudaMemcpy(h_idxs.data(), d_idxs, P * K * sizeof(int), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_dists.data(), d_dists, P * K * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_idxs.data(),  d_idxs,  P * K * sizeof(int),   cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_dists.data(), d_dists, P * K * sizeof(float),  cudaMemcpyDeviceToHost);
 
+    // Untranspose SoA → AoS so Python callers receive row-major [p*K+k] layout
+    std::vector<int>   idxs_out(P * K);
+    std::vector<float> dists_out(P * K);
+    for (int k = 0; k < K; k++)
+        for (int p = 0; p < P; p++) {
+            idxs_out[p * K + k]  = h_idxs[k * P + p];
+            dists_out[p * K + k] = h_dists[k * P + p];
+        }
+    return {idxs_out, dists_out};
+}
+
+std::pair<uintptr_t, uintptr_t> FRNNEngine::search_gpu(
+    uintptr_t dev_ptr, int N, int dim, int K, float radius)
+{
+    float* d_input = reinterpret_cast<float*>(dev_ptr);
+    int P = N;
+
+    GridParams params;
+    params.dim        = dim;
+    params.radius     = radius;
+    params.min_val    = 0.0f;
+    params.max_val    = 1.0f;
+    params.res        = (int)std::ceil((params.max_val - params.min_val) / params.radius);
+    params.total_cells = std::pow(params.res, params.dim);
+
+    if (params.total_cells > 1000000)
+        throw std::runtime_error("Grid resolution too high for N-dimensions. Increase radius.");
+
+    long long neighbor_shell = 1;
+    for (int d = 0; d < dim; d++) neighbor_shell *= 3;
+
+    if (params.res <= 1 || neighbor_shell >= (long long)params.total_cells) {
+        run_bruteforce(d_input, d_input, P, P, K, dim, radius, d_dists, d_idxs);
+    } else {
+        cudaMemset(d_grid_cnt, 0, params.total_cells * sizeof(int));
+        run_insert_points(d_input, d_grid_cnt, d_grid_idx, P, dim, params);
+        thrust::exclusive_scan(
+            thrust::device_ptr<int>(d_grid_cnt),
+            thrust::device_ptr<int>(d_grid_cnt + params.total_cells),
+            thrust::device_ptr<int>(d_grid_offsets));
+        run_reorder_points(d_grid_idx, d_grid_offsets, d_sorted_idxs, P, params.total_cells);
+        run_find_nbrs(d_input, d_input, d_grid_offsets, d_sorted_idxs,
+                      P, K, dim, radius, d_dists, d_idxs, params);
+    }
+
+    return {reinterpret_cast<uintptr_t>(d_idxs),
+            reinterpret_cast<uintptr_t>(d_dists)};
+}
+
+std::pair<std::vector<int>, std::vector<float>> FRNNEngine::get_results(int N, int K) {
+    std::vector<int>   h_idxs(N * K);
+    std::vector<float> h_dists(N * K);
+    cudaMemcpy(h_idxs.data(),  d_idxs,  N * K * sizeof(int),   cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_dists.data(), d_dists, N * K * sizeof(float),  cudaMemcpyDeviceToHost);
     return {h_idxs, h_dists};
 }
 
@@ -83,5 +158,11 @@ PYBIND11_MODULE(frnn_cuda, m) {
     m.doc() = "N-Dimensional FRNN CUDA search for LHC Latent Spaces";
     py::class_<FRNNEngine>(m, "FRNNEngine")
         .def(py::init<int>(), py::arg("max_points"))
-        .def("search", &FRNNEngine::search, py::arg("points"), py::arg("K"), py::arg("radius"));
+        .def("search", &FRNNEngine::search,
+             py::arg("points"), py::arg("K"), py::arg("radius"))
+        .def("search_gpu", &FRNNEngine::search_gpu,
+             py::arg("dev_ptr"), py::arg("N"), py::arg("dim"),
+             py::arg("K"), py::arg("radius"))
+        .def("get_results", &FRNNEngine::get_results,
+             py::arg("N"), py::arg("K"));
 }
