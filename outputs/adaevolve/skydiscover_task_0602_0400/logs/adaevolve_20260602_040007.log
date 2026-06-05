@@ -1,0 +1,3 @@
+2026-06-02 04:00:07,677 - skydiscover.search.utils.logging_utils - INFO - Logging to outputs/adaevolve/skydiscover_task_0602_0400/logs/adaevolve_20260602_040007.log
+2026-06-02 04:00:07,678 - skydiscover.search.adaevolve.database - INFO - AdaEvolveDatabase initialized: num_islands=2, decay=0.9, intensity=[0.15, 0.5], migration=True (interval=15), unified_archive=True, adaptive_search=True, ucb_selection=True, dynamic_islands=True, paradigm_breakthrough=True, multiobjective=False
+2026-06-02 04:00:07,678 - skydiscover.runner - INFO - Runner ready: search=adaevolve, program=skydiscover_task/initial_program.py

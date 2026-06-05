@@ -1,0 +1,95 @@
+2026-06-02 04:01:38,843 - skydiscover.search.utils.logging_utils - INFO - Logging to outputs/adaevolve/skydiscover_task_0602_0401/logs/adaevolve_20260602_040138.log
+2026-06-02 04:01:38,844 - skydiscover.search.adaevolve.database - INFO - AdaEvolveDatabase initialized: num_islands=2, decay=0.9, intensity=[0.15, 0.5], migration=True (interval=15), unified_archive=True, adaptive_search=True, ucb_selection=True, dynamic_islands=True, paradigm_breakthrough=True, multiobjective=False
+2026-06-02 04:01:38,844 - skydiscover.runner - INFO - Runner ready: search=adaevolve, program=skydiscover_task/initial_program.py
+2026-06-02 04:01:38,885 - skydiscover.llm - INFO - OpenAI LLM: gpt-4o
+2026-06-02 04:01:38,962 - skydiscover.evaluation.evaluator - WARNING - cascade_evaluation is true but skydiscover_task/evaluator.py has no evaluate_stage1 — will fall back to direct evaluation
+2026-06-02 04:01:38,962 - skydiscover.evaluation.evaluator - INFO - Initialized evaluator with skydiscover_task/evaluator.py
+2026-06-02 04:01:38,962 - skydiscover.search.default_discovery_controller - INFO - DiscoveryController initialized: num_context_programs=4
+2026-06-02 04:01:38,973 - skydiscover.search.adaevolve.controller - INFO - Paradigm LLM: using guide_models [gpt-4o]
+2026-06-02 04:01:38,973 - skydiscover.search.adaevolve.controller - INFO - AdaEvolveController initialized (language=python, paradigm_breakthrough=True)
+2026-06-02 04:01:38,974 - skydiscover.runner - INFO - Adding initial program to database
+2026-06-02 04:01:38,977 - skydiscover.evaluation.evaluator - INFO - Evaluated program dc9ea18e-a227-407c-8f8e-75cf854bd84a in 0.00s: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-02 04:01:38,977 - skydiscover.search.base_database - INFO - Database has 1 programs, best program score is combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-02 04:01:38,977 - skydiscover.search.adaevolve.controller - INFO - AdaEvolve: Running 50 iterations across 2 islands
+2026-06-02 04:01:38,977 - skydiscover.search.adaevolve.controller - INFO - AdaEvolve iteration stats will be logged to: outputs/adaevolve/skydiscover_task_0602_0401/adaevolve_iteration_stats_20260602_040138.jsonl
+2026-06-02 04:01:38,977 - skydiscover.search.adaevolve.controller - INFO - Seeded island 1
+2026-06-02 04:01:40,230 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:01:40,230 - openai._base_client - INFO - Retrying request to /chat/completions in 0.401860 seconds
+2026-06-02 04:01:40,720 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:01:40,720 - openai._base_client - INFO - Retrying request to /chat/completions in 0.777210 seconds
+2026-06-02 04:01:41,731 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:01:41,731 - openai._base_client - INFO - Retrying request to /chat/completions in 1.509751 seconds
+2026-06-02 04:01:43,449 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:01:43,450 - skydiscover.llm - WARNING - Error attempt 1/4: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}, retrying...
+2026-06-02 04:01:48,723 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:01:48,723 - openai._base_client - INFO - Retrying request to /chat/completions in 0.458458 seconds
+2026-06-02 04:01:49,404 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:01:49,404 - openai._base_client - INFO - Retrying request to /chat/completions in 0.866864 seconds
+2026-06-02 04:01:50,368 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:01:50,369 - openai._base_client - INFO - Retrying request to /chat/completions in 1.917475 seconds
+2026-06-02 04:01:52,410 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:01:52,411 - skydiscover.llm - WARNING - Error attempt 2/4: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}, retrying...
+2026-06-02 04:01:57,527 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:01:57,527 - openai._base_client - INFO - Retrying request to /chat/completions in 0.423119 seconds
+2026-06-02 04:01:58,015 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:01:58,015 - openai._base_client - INFO - Retrying request to /chat/completions in 0.802007 seconds
+2026-06-02 04:01:58,909 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:01:58,909 - openai._base_client - INFO - Retrying request to /chat/completions in 1.583072 seconds
+2026-06-02 04:02:00,569 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:00,570 - skydiscover.llm - WARNING - Error attempt 3/4: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}, retrying...
+2026-06-02 04:02:05,684 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:05,684 - openai._base_client - INFO - Retrying request to /chat/completions in 0.484221 seconds
+2026-06-02 04:02:06,235 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:06,235 - openai._base_client - INFO - Retrying request to /chat/completions in 0.892830 seconds
+2026-06-02 04:02:07,198 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:07,199 - openai._base_client - INFO - Retrying request to /chat/completions in 1.732349 seconds
+2026-06-02 04:02:08,995 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:09,091 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:09,091 - openai._base_client - INFO - Retrying request to /chat/completions in 0.493409 seconds
+2026-06-02 04:02:09,644 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:09,644 - openai._base_client - INFO - Retrying request to /chat/completions in 0.853091 seconds
+2026-06-02 04:02:10,587 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:10,587 - openai._base_client - INFO - Retrying request to /chat/completions in 1.716216 seconds
+2026-06-02 04:02:12,411 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:12,412 - skydiscover.llm - WARNING - Error attempt 1/4: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}, retrying...
+2026-06-02 04:02:17,552 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:17,552 - openai._base_client - INFO - Retrying request to /chat/completions in 0.497617 seconds
+2026-06-02 04:02:18,141 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:18,141 - openai._base_client - INFO - Retrying request to /chat/completions in 0.913734 seconds
+2026-06-02 04:02:19,164 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:19,164 - openai._base_client - INFO - Retrying request to /chat/completions in 1.872217 seconds
+2026-06-02 04:02:21,101 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:21,102 - skydiscover.llm - WARNING - Error attempt 2/4: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}, retrying...
+2026-06-02 04:02:26,253 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:26,254 - openai._base_client - INFO - Retrying request to /chat/completions in 0.474374 seconds
+2026-06-02 04:02:27,012 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:27,013 - openai._base_client - INFO - Retrying request to /chat/completions in 0.950324 seconds
+2026-06-02 04:02:28,034 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:28,034 - openai._base_client - INFO - Retrying request to /chat/completions in 1.737288 seconds
+2026-06-02 04:02:29,849 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:29,850 - skydiscover.llm - WARNING - Error attempt 3/4: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}, retrying...
+2026-06-02 04:02:34,968 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:34,968 - openai._base_client - INFO - Retrying request to /chat/completions in 0.467829 seconds
+2026-06-02 04:02:35,506 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:35,506 - openai._base_client - INFO - Retrying request to /chat/completions in 0.911908 seconds
+2026-06-02 04:02:36,496 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:36,496 - openai._base_client - INFO - Retrying request to /chat/completions in 1.941245 seconds
+2026-06-02 04:02:38,519 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:38,586 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:38,587 - openai._base_client - INFO - Retrying request to /chat/completions in 0.457162 seconds
+2026-06-02 04:02:39,109 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:39,109 - openai._base_client - INFO - Retrying request to /chat/completions in 0.946796 seconds
+2026-06-02 04:02:40,134 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:40,134 - openai._base_client - INFO - Retrying request to /chat/completions in 1.921009 seconds
+2026-06-02 04:02:42,321 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:42,322 - skydiscover.llm - WARNING - Error attempt 1/4: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}, retrying...
+2026-06-02 04:02:46,229 - skydiscover.runner - INFO - Signal 2 received, shutting down...
+2026-06-02 04:02:46,229 - skydiscover.search.default_discovery_controller - INFO - Graceful shutdown requested...
+2026-06-02 04:02:47,447 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:47,447 - openai._base_client - INFO - Retrying request to /chat/completions in 0.408666 seconds
+2026-06-02 04:02:47,905 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:47,906 - openai._base_client - INFO - Retrying request to /chat/completions in 0.940564 seconds
+2026-06-02 04:02:48,940 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:48,940 - openai._base_client - INFO - Retrying request to /chat/completions in 1.785810 seconds
+2026-06-02 04:02:50,787 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-02 04:02:50,788 - skydiscover.llm - WARNING - Error attempt 2/4: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}, retrying...
