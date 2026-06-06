@@ -24,22 +24,27 @@ __device__ void insert_neighbor(float* local_dists, int* local_idxs, int K, floa
     }
 }
 
+// CAP is the per-thread heap capacity, fixed at compile time so the arrays are sized to
+// the actual K (dispatched below) instead of the 128 worst case. K=16 then uses 64 B/thread
+// of local memory instead of 1 KB, easing local-memory traffic and L1 pressure. The count
+// itself (K) stays a runtime arg, so any K <= CAP is still correct.
+template<int CAP>
 __global__ void FindNbrsNDKernel(
-    const float* __restrict__ points1,      
-    const float* __restrict__ points2,      
-    const int* __restrict__ pc2_grid_off,    
-    const int* __restrict__ sorted_points2_idxs, 
-    int P1, int K, int dim, float r2, 
-    float* __restrict__ dists, 
+    const float* __restrict__ points1,
+    const float* __restrict__ points2,
+    const int* __restrict__ pc2_grid_off,
+    const int* __restrict__ sorted_points2_idxs,
+    int P1, int K, int dim, float r2,
+    float* __restrict__ dists,
     int* __restrict__ idxs,
-    GridParams params) 
+    GridParams params)
 {
     int p1 = blockIdx.x * blockDim.x + threadIdx.x;
     if (p1 >= P1) return;
 
-    // Use a local buffer for K-nearest (Adjust 128 if K is larger)
-    float local_dists[128];
-    int local_idxs[128];
+    // K-nearest scratch heap, sized to CAP (>= K) at compile time.
+    float local_dists[CAP];
+    int local_idxs[CAP];
     #pragma unroll 16
     for (int k = 0; k < K; ++k) {
         local_dists[k] = r2;
@@ -56,7 +61,7 @@ __global__ void FindNbrsNDKernel(
     
     for(int d = 0; d < dim; d++) {
         float pos = points1[d * P1 + p1];  // SoA
-        int grid_pos = floor((pos - params.min_val) / params.radius); // Resolution based on radius
+        int grid_pos = floor((pos - params.min_val) / params.cell_size); // cell = radius / ratio
         
         // Clamp to grid boundaries
         grid_pos = max(0, min(grid_pos, params.res - 1));
@@ -75,19 +80,22 @@ __global__ void FindNbrsNDKernel(
         }
     }
 
-    // 3. Enumerate all 3^dim neighboring cells (offsets -1, 0, +1 per dimension)
-    int num_neighbor_cells = 1;
-    for (int d = 0; d < dim; d++) num_neighbor_cells *= 3;
+    // 3. Enumerate the (2*cell_radius+1)^dim neighboring cells that cover the search
+    //    ball. With finer cells (cell_radius > 1) this is a tighter region than the
+    //    old fixed 3^dim shell, so fewer out-of-ball candidates get distance-checked.
+    const int W = 2 * params.cell_radius + 1;
+    long long num_neighbor_cells = 1;
+    for (int d = 0; d < dim; d++) num_neighbor_cells *= W;
 
-    for (int nc = 0; nc < num_neighbor_cells; nc++) {
+    for (long long nc = 0; nc < num_neighbor_cells; nc++) {
         long long neighbor_hash = 0;
         long long s = 1;
         bool valid = true;
-        int tmp = nc;
+        long long tmp = nc;
 
         for (int d = 0; d < dim; d++) {
-            int offset = (tmp % 3) - 1;   // maps 0,1,2 → -1,0,+1
-            tmp /= 3;
+            int offset = (int)(tmp % W) - params.cell_radius;  // maps 0..W-1 → -cr..+cr
+            tmp /= W;
             int coord = cell_coords[d] + offset;
             if (coord < 0 || coord >= params.res) { valid = false; break; }
             neighbor_hash += (long long)coord * s;
@@ -134,9 +142,14 @@ extern "C" void run_find_nbrs(
     int blocks = (P1 + threads - 1) / threads;
     float r2 = radius * radius;
 
-    FindNbrsNDKernel<<<blocks, threads>>>(
-        d_points1, d_points2, d_pc2_grid_off, d_sorted_idxs, 
-        P1, K, dim, r2, d_dists, d_idxs, params
-    );
+    // Dispatch to the smallest compile-time heap capacity that holds K (<= MAX_K_CAPACITY).
+    #define LAUNCH_FIND_NBRS(CAP) FindNbrsNDKernel<CAP><<<blocks, threads>>>( \
+        d_points1, d_points2, d_pc2_grid_off, d_sorted_idxs, \
+        P1, K, dim, r2, d_dists, d_idxs, params)
+    if      (K <= 16)  LAUNCH_FIND_NBRS(16);
+    else if (K <= 32)  LAUNCH_FIND_NBRS(32);
+    else if (K <= 64)  LAUNCH_FIND_NBRS(64);
+    else               LAUNCH_FIND_NBRS(128);
+    #undef LAUNCH_FIND_NBRS
     cudaDeviceSynchronize();
 }

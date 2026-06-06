@@ -14,8 +14,15 @@ struct GridParams {
     float radius;        // The search radius (defines the cell size)
     float min_val;       // The minimum value in the data (origin of the hypergrid)
     float max_val;       // The maximum value in the data
-    int res;             // Calculated: ceil((max_val - min_val) / radius)
+    int res;             // Calculated: ceil((max_val - min_val) / cell_size)
     long long total_cells; // Total hyper-cells (res ^ dim)
+    float cell_size;     // Grid cell edge length = radius / radius_cell_ratio.
+                         // Finer cells (ratio > 1) tighten the candidate set per query,
+                         // cutting redundant distance checks that the old cell=radius
+                         // (3^dim shell) layout incurred — especially at higher dim.
+    int cell_radius;     // Cell-steps each side needed to cover the search radius,
+                         // = ceil(radius / cell_size). The neighbor loop scans
+                         // (2*cell_radius+1)^dim cells. cell_radius=1 reproduces 3^dim.
 };
 
 /**

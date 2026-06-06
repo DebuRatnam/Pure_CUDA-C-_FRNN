@@ -56,7 +56,7 @@ public:
     // points: CUDA float32 tensor, shape (N, D), row-major AoS [p*D + d].
     // Returns (idx, dist) CUDA tensors, shape (N, K), row-major AoS [p*K + k].
     std::pair<torch::Tensor, torch::Tensor>
-    search(torch::Tensor points, int K, double radius) {
+    search(torch::Tensor points, int K, double radius, double radius_cell_ratio = 1.0) {
         TORCH_CHECK(points.is_cuda(),                 "points must be a CUDA tensor");
         TORCH_CHECK(points.scalar_type() == torch::kFloat32, "points must be float32");
         TORCH_CHECK(points.dim() == 2,                "points must be 2-D (N, D)");
@@ -72,17 +72,22 @@ public:
         auto pts_soa = points.t().contiguous();
         float* d_points = pts_soa.data_ptr<float>();
 
-        // 2. Dynamic grid params (identical to FRNNEngine::search_gpu).
+        // 2. Dynamic grid params. Cells are radius/ratio on a side; the neighbor loop
+        //    scans (2*cell_radius+1)^dim cells. In theory ratio>1 tightens the candidate
+        //    set, but MEASURED on the A100 it is ~6% slower at D=3 large-N: finer cells
+        //    are mostly empty, and the extra per-cell loop overhead (5^D=125 cells at
+        //    ratio=2 vs 3^D=27) outweighs the fewer distance checks. So the default is
+        //    ratio=1 (legacy 3^dim); the knob stays exposed for experimentation.
+        const float ratio = static_cast<float>(radius_cell_ratio > 0.0 ? radius_cell_ratio : 1.0);
         GridParams params;
-        params.dim     = dim;
-        params.radius  = r;
-        params.min_val = 0.0f;
-        params.max_val = 1.0f;
-        params.res     = static_cast<int>(std::ceil((params.max_val - params.min_val) / r));
+        params.dim         = dim;
+        params.radius      = r;
+        params.min_val     = 0.0f;
+        params.max_val     = 1.0f;
+        params.cell_size   = r / ratio;
+        params.res         = static_cast<int>(std::ceil((params.max_val - params.min_val) / params.cell_size));
         params.total_cells = static_cast<long long>(std::pow((double)params.res, dim));
-        TORCH_CHECK(params.total_cells <= max_cells_,
-                    "Grid resolution too high for D=", dim, " (cells=", params.total_cells,
-                    "). Increase radius.");
+        params.cell_radius = static_cast<int>(std::ceil(ratio - 1e-6f));  // = ceil(radius/cell_size)
 
         // 3. Allocate SoA output buffers as CUDA tensors (k*N + p layout).
         auto i32 = torch::TensorOptions().dtype(torch::kInt32).device(points.device());
@@ -92,14 +97,19 @@ public:
         int*   d_idxs  = idx_soa.data_ptr<int>();
         float* d_dists = dist_soa.data_ptr<float>();
 
-        // 4. Auto-dispatch: brute-force when the 3^D neighbor shell covers the whole
-        //    grid (or res<=1), grid otherwise — same rule as the engine.
+        // 4. Auto-dispatch: brute-force when the neighbor region covers the whole grid
+        //    (or res<=1), grid otherwise. The cell-count limit only binds on the grid
+        //    path (BF allocates no grid), so it's checked inside that branch.
+        const int W = 2 * params.cell_radius + 1;
         long long neighbor_shell = 1;
-        for (int d = 0; d < dim; d++) neighbor_shell *= 3;
+        for (int d = 0; d < dim; d++) neighbor_shell *= W;
 
         if (params.res <= 1 || neighbor_shell >= params.total_cells) {
             run_bruteforce(d_points, d_points, N, N, K, dim, r, d_dists, d_idxs);
         } else {
+            TORCH_CHECK(params.total_cells <= max_cells_,
+                        "Grid too fine for D=", dim, " (cells=", params.total_cells,
+                        "); lower radius_cell_ratio or raise radius.");
             cudaMemset(d_grid_cnt_, 0, params.total_cells * sizeof(int));
             run_insert_points(d_points, d_grid_cnt_, d_grid_idx_, N, dim, params);
             thrust::exclusive_scan(
@@ -131,6 +141,9 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
         .def(py::init<int>(), py::arg("max_points"))
         .def("search", &FRNNTorch::search,
              py::arg("points"), py::arg("K"), py::arg("radius"),
-             "FRNN search on a GPU-resident (N, D) float32 tensor; "
-             "returns (idx, dist) CUDA tensors of shape (N, K).");
+             py::arg("radius_cell_ratio") = 1.0,
+             "FRNN search on a GPU-resident (N, D) float32 tensor. radius_cell_ratio "
+             "sets grid cell size = radius/ratio (default 1.0 = 3^D shell, fastest here; "
+             ">1 uses finer cells but is slower on this kernel). Returns (idx, dist) "
+             "CUDA tensors of shape (N, K).");
 }

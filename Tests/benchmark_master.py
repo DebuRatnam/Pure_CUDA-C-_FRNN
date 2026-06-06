@@ -5,15 +5,27 @@
 # no host<->device copies occur inside the timed loop, so it is measured on the same
 # footing as PyG. (The old `_run_frnn_isolated.py` subprocess copied H2D/D2H every
 # trial — kernel time was swamped by PCIe traffic, making the comparison unfair.)
-import json, time
+import os, sys, json, time
 import numpy as np
 import torch
 import frnn_torch
 import pynvml
 from math import pi, gamma, ceil
 
-N_SWEEP = [1_000, 10_000, 100_000]
-D_SWEEP = [2, 3, 4, 8, 16]
+# Make `import frnn` resolve to the xju2/FRNN baseline package (and its prefix_sum
+# dependency) instead of this repo's local ./frnn source dir, which would otherwise
+# shadow it as an empty namespace package. Both must be built for the running Python.
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+for _p in (os.path.join(_ROOT, "xju2_frnn", "FRNN"),
+           os.path.join(_ROOT, "xju2_frnn", "prefix_sum")):
+    if os.path.isdir(_p) and _p not in sys.path:
+        sys.path.insert(0, _p)
+
+# Scoped to where the comparison is meaningful: xju2 only supports D in {2,3},
+# and clean timings apply at N >= 10K (N=1K is dominated by fixed launch overhead).
+# Dense N grid up to 200K for smooth scaling curves.
+N_SWEEP = [10_000, 25_000, 50_000, 75_000, 100_000, 150_000, 200_000]
+D_SWEEP = [2, 3]
 K, SEED, WARMUP, TRIALS = 16, 1234, 20, 10
 
 
@@ -25,14 +37,29 @@ def radius_for(D, N):
     return round(r, 5)
 
 
+def warmup_gpu(seconds=3.0):
+    # Spin the GPU under sustained load so its clocks reach boost before any cell is
+    # timed. The per-cell WARMUP loop runs only at N=1000 first, which is too small/
+    # brief to ramp clocks — so without this the first row (D2_N1000) is measured at
+    # idle clocks and comes out ~10x inflated across every framework. tanh keeps the
+    # repeated matmul bounded (no inf/nan).
+    a = torch.randn(2048, 2048, device="cuda")
+    t0 = time.perf_counter()
+    while time.perf_counter() - t0 < seconds:
+        a = torch.tanh(a @ a)
+    torch.cuda.synchronize()
+    del a
+    torch.cuda.empty_cache()
+
+
 def timed_gpu(fn):
     for _ in range(WARMUP):
         fn()
     torch.cuda.synchronize()
     times = []
     for _ in range(TRIALS):
-        torch.cuda.synchronize()
         t0 = time.perf_counter()
+        torch.cuda.synchronize()
         fn()
         torch.cuda.synchronize()
         times.append(time.perf_counter() - t0)
@@ -80,8 +107,9 @@ def run_baselines(pts_np, D, R):
         print(f"    [PyG] {e}")
     torch.cuda.empty_cache()
 
-    # xju2/FRNN — hardcoded 3D; skip all other dimensions
-    if D == 3:
+    # xju2/FRNN — the lxxue grid kernel only supports D in {2, 3}; higher dims
+    # are genuinely unsupported by the library, so they stay None (skip-logged).
+    if D in (2, 3):
         try:
             import frnn as xf
             # Resolve API — some pip builds nest the function differently
@@ -101,7 +129,7 @@ def run_baselines(pts_np, D, R):
             print(f"    [xju2] {e}")
     else:
         out["xfrnn_ms"] = None
-        print(f"    [xju2] D={D} unsupported (3D only), skipping")
+        print(f"    [xju2] D={D} unsupported (lxxue FRNN is 2D/3D only), skipping")
 
     del pts_t
     torch.cuda.empty_cache()
@@ -109,6 +137,7 @@ def run_baselines(pts_np, D, R):
 
 
 pynvml.nvmlInit()
+warmup_gpu()          # boost GPU clocks so the first timed cell isn't throttled
 all_results = {}
 
 for D in D_SWEEP:

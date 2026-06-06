@@ -19,8 +19,8 @@ __global__ void CountPointsNDKernel(
 
     for (int d = 0; d < dim; d++) {
         float pos = points[d * P + p];  // SoA: all coords for dim d are contiguous
-        // Dynamic scaling: cell size = radius
-        int grid_pos = floor((pos - params.min_val) / params.radius);
+        // Cell size = radius / radius_cell_ratio (see GridParams.cell_size)
+        int grid_pos = floor((pos - params.min_val) / params.cell_size);
         
         if (grid_pos < 0 || grid_pos >= params.res) {
             out_of_bounds = true;

@@ -23,7 +23,9 @@ void benchmark_scale(int P, int dim) {
     params.min_val = 0.0f;
     params.max_val = 1.0f;
     // Resolution is now based on radius to avoid sparseness
-    params.res = (int)std::ceil((params.max_val - params.min_val) / params.radius);
+    params.cell_size = params.radius;   // ratio=1 (cell = radius, 3^dim shell)
+    params.cell_radius = 1;
+    params.res = (int)std::ceil((params.max_val - params.min_val) / params.cell_size);
     params.total_cells = std::pow(params.res, params.dim);
 
     float *d_points, *d_dists;

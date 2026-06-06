@@ -59,6 +59,10 @@ __device__ void bf_insert_neighbor(float* local_dists, int* local_idxs, int K, f
 // memory once, then all query threads in the block reuse it.
 // This reduces global memory traffic by a factor of blockDim.x compared to
 // the naive per-thread approach.
+// CAP = compile-time per-thread heap capacity (>= K), so the scratch arrays are sized to
+// the actual K (dispatched below) rather than the 128 worst case — K=16 uses 64 B/thread
+// instead of 1 KB. K stays a runtime arg, so any K <= CAP remains correct.
+template<int CAP>
 __global__ void TiledBruteforceNDKernel(
     const float* __restrict__ p1,
     const float* __restrict__ p2,
@@ -72,8 +76,8 @@ __global__ void TiledBruteforceNDKernel(
 
     int i = blockIdx.x * blockDim.x + threadIdx.x;
 
-    float local_dists[128];
-    int   local_idxs[128];
+    float local_dists[CAP];
+    int   local_idxs[CAP];
     for (int k = 0; k < K; k++) { local_dists[k] = r2; local_idxs[k] = -1; }
 
     // Cache this thread's query point once: SoA global -> contiguous, 16-byte
@@ -131,7 +135,13 @@ extern "C" void run_bruteforce(
     float r2      = r * r;
     size_t smem   = (size_t)threads * dim * sizeof(float);
 
-    TiledBruteforceNDKernel<<<blocks, threads, smem>>>(
-        d_p1, d_p2, P1, P2, K, dim, r2, d_dists, d_idxs);
+    // Dispatch to the smallest compile-time heap capacity that holds K (<= MAX_K_CAPACITY).
+    #define LAUNCH_BF(CAP) TiledBruteforceNDKernel<CAP><<<blocks, threads, smem>>>( \
+        d_p1, d_p2, P1, P2, K, dim, r2, d_dists, d_idxs)
+    if      (K <= 16)  LAUNCH_BF(16);
+    else if (K <= 32)  LAUNCH_BF(32);
+    else if (K <= 64)  LAUNCH_BF(64);
+    else               LAUNCH_BF(128);
+    #undef LAUNCH_BF
     cudaDeviceSynchronize();
 }
