@@ -136,6 +136,63 @@ def run_baselines(pts_np, D, R):
     return out
 
 
+def plot_results(results, path="benchmark_comparison.png"):
+    # Latency vs N, one panel per D, four methods. The y-axis is LOG so FRNN's
+    # sub-millisecond line stays readable while FAISS/PyG climb ~300x at high N.
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except Exception as e:
+        print(f"  [plot] matplotlib unavailable ({e}); skipping graph")
+        return
+
+    methods = [("FRNN",  "latency_ms", "o", "-",  "#1f77b4"),
+               ("FAISS", "faiss_ms",   "s", "--", "#d62728"),
+               ("PyG",   "pyg_ms",     "^", "--", "#ff7f0e"),
+               ("xju2",  "xfrnn_ms",   "D", "-.", "#2ca02c")]
+
+    by_d = {}
+    for key, v in results.items():
+        D = int(key.split("_")[0][1:])
+        N = int(key.split("_N")[1])
+        by_d.setdefault(D, []).append((N, v))
+    Ds = sorted(by_d)
+    if not Ds:
+        return
+
+    fig, axes = plt.subplots(1, len(Ds), figsize=(6.5 * len(Ds), 5.0),
+                             squeeze=False, sharey=True)
+    for ax, D in zip(axes[0], Ds):
+        cells = sorted(by_d[D])
+        Ns = [n for n, _ in cells]
+        for name, field, mk, ls, col in methods:
+            xs = [n for n, v in cells if v.get(field) is not None]
+            ys = [v[field] for n, v in cells if v.get(field) is not None]
+            if ys:
+                ax.plot(xs, ys, marker=mk, ls=ls, color=col, lw=1.8, ms=6, label=name)
+        ax.set_yscale("log")                       # span the ~300x dynamic range
+        ax.set_title(f"D = {D}")
+        ax.set_xlabel("N (points)")
+        ax.grid(True, which="both", ls=":", alpha=0.4)
+        ax.set_xticks(Ns)
+        ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{int(x/1000)}K"))
+        ax.tick_params(axis="x", rotation=45)
+    axes[0][0].set_ylabel("Latency (ms) — log scale")
+    axes[0][0].legend(loc="upper left", frameon=True, framealpha=0.9, fontsize=9)
+    fig.suptitle("Fixed-radius KNN latency vs N (lower is better)", fontsize=13)
+    fig.tight_layout(rect=(0, 0, 1, 0.96))      # reserve top strip for the suptitle
+    fig.savefig(path, dpi=130, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  → {path}")
+
+
+if "--plot-only" in sys.argv:        # regenerate the graph from existing results
+    with open("benchmark_results.json") as f:
+        plot_results(json.load(f))
+    sys.exit(0)
+
+
 pynvml.nvmlInit()
 warmup_gpu()          # boost GPU clocks so the first timed cell isn't throttled
 all_results = {}
@@ -175,4 +232,5 @@ for D in D_SWEEP:
 with open("benchmark_results.json", "w") as f:
     json.dump(all_results, f, indent=2)
 print("\n→ benchmark_results.json")
+plot_results(all_results)
 pynvml.nvmlShutdown()

@@ -101,6 +101,20 @@ first so the first cell isn't measured at idle clocks. (Edit `D_SWEEP` / `N_SWEE
 top of the script to cover more of the engine's range — the engine itself handles `D` up
 to 128.)
 
+## 6. Validate correctness
+
+Checks FRNN returns the *right* neighbors, against xju2 and a float64 brute-force truth
+(exits 0 = all pass, for CI):
+
+```bash
+PYTHONPATH=. python3 Tests/validate_correctness.py
+```
+
+Confirms FRNN returns the exact **K-nearest** points within the radius (matches the
+brute-force oracle, and matches xju2 wherever the answer is unambiguous). On dense queries
+(>K points in radius) FRNN returns the nearest K while xju2 returns any K — a semantic
+difference the check accounts for, not a bug.
+
 ---
 
 ## Outputs

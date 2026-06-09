@@ -1,0 +1,159 @@
+#!/usr/bin/env python3
+# validate_correctness.py — is our FRNN returning the *right* neighbors?
+#
+# Runs our FRNN, xju2/lxxue FRNN, and an exact brute-force ground truth on identical
+# random clouds (D in {2,3}, xju2's supported dims) and cross-checks them.
+#
+# The crucial subtlety this validator gets right:
+#   Our FRNN returns the K *nearest* points within the radius (textbook fixed-radius KNN).
+#   xju2 returns *some* K points within the radius — when more than K are in range it does
+#   NOT guarantee the nearest ones. So a naive "do the neighbor lists match?" check FAILS
+#   on dense queries even though both are valid. The correct checks are:
+#     1. ours vs brute-force truth: must match (proves we return the true K-nearest).
+#     2. sparse queries (<=K points in radius, answer unambiguous): ours == xju2 (== truth).
+#     3. dense queries (>K in radius): both must return only in-radius points; ours must
+#        still match truth. The nearest-vs-any difference there is by design, not a bug.
+#
+# Two precision points that matter:
+#   * Truth distances are computed in float64. The kernels compute Sum (qi-pi)^2 directly;
+#     the textbook |q|^2+|p|^2-2 q.p form catastrophically cancels in float32 at small d^2,
+#     so a float32 "truth" is actually *less* accurate than the kernel.
+#   * Points within float32 epsilon of the radius are genuinely ambiguous (in or out), so a
+#     small boundary band (TAU) is treated as don't-care.
+#
+#   Truth is computed on a SAMPLE of query points (distances to all N points), so the check
+#   scales to any N without an N x N matrix.
+#
+#   Run from the repo root:  PYTHONPATH=. python3 Tests/validate_correctness.py
+import os, sys
+import numpy as np
+import torch
+import frnn_torch
+from math import pi, gamma, ceil
+
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+for _p in (os.path.join(_ROOT, "xju2_frnn", "FRNN"),
+           os.path.join(_ROOT, "xju2_frnn", "prefix_sum")):
+    if os.path.isdir(_p) and _p not in sys.path:
+        sys.path.insert(0, _p)
+import frnn as xju2
+
+K, SEED = 16, 1234
+D_SWEEP = [2, 3]
+N_SWEEP = [1_000, 10_000, 50_000, 100_000]
+N_SAMPLE = 2_000                    # query points spot-checked against exact truth per cell
+RTOL, ATOL = 1e-3, 1e-6
+TAU = 1e-4                          # radius boundary band (relative), float32-ambiguous zone
+
+
+def radius_for(D, N):
+    v = pi**(D / 2) / gamma(D / 2 + 1)
+    r = min((K / (N * v))**(1.0 / D), 2.0)
+    if r < 1.0 and ceil(1.0 / r)**D > 900_000:
+        r = 2.0
+    return round(r, 5)
+
+
+def ours(pts, R):
+    idx, dist = frnn_torch.FRNNTorch(pts.shape[0]).search(pts, K, R)
+    torch.cuda.synchronize()
+    return idx.cpu().numpy(), dist.cpu().numpy()
+
+
+def xju2_search(pts, R):
+    N = pts.shape[0]
+    L = torch.tensor([N], device="cuda")
+    d, i, _, _ = xju2.frnn_grid_points(pts.unsqueeze(0), pts.unsqueeze(0), L, L, K, R)
+    torch.cuda.synchronize()
+    return i[0].cpu().numpy(), d[0].cpu().numpy()
+
+
+def valid_set(idx_row, N):
+    return set(int(i) for i in idx_row if 0 <= int(i) < N)
+
+
+def valid_sorted_dists(idx_row, dist_row, N):
+    return np.sort([float(d) for i, d in zip(idx_row, dist_row)
+                    if 0 <= int(i) < N and np.isfinite(d)]).astype(np.float64)
+
+
+def knn_match(a, b, r2_lo):
+    # a (ours), b (truth): sorted ascending squared distances of the K-nearest in radius.
+    # Mismatches are allowed only among boundary entries (>= r2_lo), where in/out is
+    # float32-ambiguous; any disagreement on a clearly-inside distance is a real failure.
+    n = min(len(a), len(b))
+    if n:
+        bad = ~np.isclose(a[:n], b[:n], rtol=RTOL, atol=ATOL)
+        if np.any(a[:n][bad] < r2_lo) or np.any(b[:n][bad] < r2_lo):
+            return False
+    return all(x >= r2_lo for x in list(a[n:]) + list(b[n:]))
+
+
+print(f"Validating FRNN correctness  (K={K}, sample={N_SAMPLE} queries/cell)\n")
+all_pass = True
+for D in D_SWEEP:
+    for N in N_SWEEP:
+        R = radius_for(D, N)
+        np.random.seed(SEED)
+        pts_np = np.random.rand(N, D).astype(np.float32)
+        pts = torch.tensor(pts_np, device="cuda")
+
+        o_idx, o_dist = ours(pts, R)
+        x_idx, x_dist = xju2_search(pts, R)
+
+        # Exact truth (float64) for a sample of queries: distances to ALL N points.
+        rng = np.random.default_rng(SEED)
+        S = min(N_SAMPLE, N)
+        qs = rng.choice(N, S, replace=False)
+        Pd = pts.double()
+        Qd = Pd[qs]
+        sqd = (Pd * Pd).sum(1)
+        d2 = (Qd * Qd).sum(1)[:, None] + sqd[None, :] - 2.0 * (Qd @ Pd.T)
+        d2 = d2.clamp_(min=0).cpu().numpy()
+
+        r2_lo, r2_hi = R * R * (1 - TAU), R * R * (1 + TAU)
+        ours_truth = sparse = dense = sparse_ok = 0
+        ours_invalid = xju2_invalid = 0
+        for r, q in enumerate(qs):
+            row = d2[r]
+            core = set(np.where(row <= r2_lo)[0].tolist())                 # definitely in
+            inrad = core | set(np.where(row <= r2_hi)[0].tolist())         # in + boundary
+            true_knn = np.sort(row[row <= r2_hi])[:K]
+
+            o_set, x_set = valid_set(o_idx[q], N), valid_set(x_idx[q], N)
+            o_d = valid_sorted_dists(o_idx[q], o_dist[q], N)
+
+            ours_truth += knn_match(o_d, true_knn, r2_lo)
+            ours_invalid += not o_set.issubset(inrad)
+            xju2_invalid += not x_set.issubset(inrad)
+            if len(inrad) <= K:        # unambiguous: both must return the full in-radius set
+                sparse += 1
+                sparse_ok += (core <= o_set <= inrad) and (core <= x_set <= inrad)
+            else:
+                dense += 1
+
+        cell_ok = (ours_truth == S and sparse_ok == sparse
+                   and ours_invalid == 0 and xju2_invalid == 0)
+        all_pass &= cell_ok
+        print(f"  D{D}_N{N:<6} R={R:.5f}")
+        print(f"    ours vs brute-force truth (K-nearest): {ours_truth}/{S}"
+              f"   {'OK' if ours_truth == S else 'FAIL'}")
+        print(f"    sparse (<=K in radius): {sparse:>4}   ours==xju2(==truth): {sparse_ok}/{sparse}"
+              f"   {'OK' if sparse_ok == sparse else 'FAIL'}")
+        print(f"    dense  ( >K in radius): {dense:>4}   (ours=nearest-K matches truth; "
+              f"xju2=any-K — by design)")
+        print(f"    out-of-radius neighbors:  ours={ours_invalid}  xju2={xju2_invalid}")
+        print(f"    => {'PASS' if cell_ok else 'FAIL'}\n")
+
+        del pts
+        torch.cuda.empty_cache()
+
+print("=" * 70)
+if all_pass:
+    print("ALL PASS — our FRNN returns the exact K-nearest neighbors in radius\n"
+          "(matches the float64 brute-force truth, and matches xju2 wherever the\n"
+          "answer is unambiguous). The only ours-vs-xju2 differences are dense\n"
+          "queries where xju2 returns any-K-in-radius rather than the nearest-K.")
+else:
+    print("FAILURES above — investigate.")
+sys.exit(0 if all_pass else 1)
