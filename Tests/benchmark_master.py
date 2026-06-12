@@ -21,11 +21,11 @@ for _p in (os.path.join(_ROOT, "xju2_frnn", "FRNN"),
     if os.path.isdir(_p) and _p not in sys.path:
         sys.path.insert(0, _p)
 
-# Scoped to where the comparison is meaningful: xju2 only supports D in {2,3},
-# and clean timings apply at N >= 10K (N=1K is dominated by fixed launch overhead).
-# Dense N grid up to 200K for smooth scaling curves.
+# D=3 exercises the grid path; D=16 exercises the high-D brute-force path. xju2 only
+# supports D in {2,3}, so it shows up on the D=3 panel only (skip-logged at D=16).
+# Dense N grid up to 200K for smooth scaling curves (D=16 high-N cells are slow: O(N^2)).
 N_SWEEP = [10_000, 25_000, 50_000, 75_000, 100_000, 150_000, 200_000]
-D_SWEEP = [2, 3]
+D_SWEEP = [3, 16]
 K, SEED, WARMUP, TRIALS = 16, 1234, 20, 10
 
 

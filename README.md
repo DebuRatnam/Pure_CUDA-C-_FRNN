@@ -95,7 +95,7 @@ PYTHONPATH=. python3 Tests/benchmark_master.py 2>&1 | tee benchmark_run.log
 grep REGRESSION benchmark_run.log          # any cell where FRNN lost a baseline
 ```
 
-Sweeps `D ∈ {2,3}` × `N ∈ {10K, 25K, 50K, 75K, 100K, 150K, 200K}` (14 cells), timing
+Sweeps `D ∈ {3,16}` × `N ∈ {10K, 25K, 50K, 75K, 100K, 150K, 200K}` (14 cells), timing
 FRNN, FAISS, PyG, and xju2 in-process on GPU-resident tensors. A 3-second GPU warm-up runs
 first so the first cell isn't measured at idle clocks. (Edit `D_SWEEP` / `N_SWEEP` at the
 top of the script to cover more of the engine's range — the engine itself handles `D` up

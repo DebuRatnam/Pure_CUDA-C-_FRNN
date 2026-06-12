@@ -39,7 +39,7 @@ for _p in (os.path.join(_ROOT, "xju2_frnn", "FRNN"),
 import frnn as xju2
 
 K, SEED = 16, 1234
-D_SWEEP = [2, 3]
+D_SWEEP = [3, 16]                   # D=3 grid path, D=16 brute-force path
 N_SWEEP = [1_000, 10_000, 50_000, 100_000]
 N_SAMPLE = 2_000                    # query points spot-checked against exact truth per cell
 RTOL, ATOL = 1e-3, 1e-6
@@ -99,7 +99,9 @@ for D in D_SWEEP:
         pts = torch.tensor(pts_np, device="cuda")
 
         o_idx, o_dist = ours(pts, R)
-        x_idx, x_dist = xju2_search(pts, R)
+        has_xju2 = D in (2, 3)                  # xju2 reference only exists for 2-D/3-D
+        if has_xju2:
+            x_idx, x_dist = xju2_search(pts, R)
 
         # Exact truth (float64) for a sample of queries: distances to ALL N points.
         rng = np.random.default_rng(SEED)
@@ -120,29 +122,35 @@ for D in D_SWEEP:
             inrad = core | set(np.where(row <= r2_hi)[0].tolist())         # in + boundary
             true_knn = np.sort(row[row <= r2_hi])[:K]
 
-            o_set, x_set = valid_set(o_idx[q], N), valid_set(x_idx[q], N)
+            o_set = valid_set(o_idx[q], N)
             o_d = valid_sorted_dists(o_idx[q], o_dist[q], N)
-
             ours_truth += knn_match(o_d, true_knn, r2_lo)
             ours_invalid += not o_set.issubset(inrad)
-            xju2_invalid += not x_set.issubset(inrad)
-            if len(inrad) <= K:        # unambiguous: both must return the full in-radius set
-                sparse += 1
-                sparse_ok += (core <= o_set <= inrad) and (core <= x_set <= inrad)
-            else:
-                dense += 1
+            sparse += (len(inrad) <= K)
+            dense += (len(inrad) > K)
+            if has_xju2:               # unambiguous queries: ours and xju2 must agree (== truth)
+                x_set = valid_set(x_idx[q], N)
+                xju2_invalid += not x_set.issubset(inrad)
+                if len(inrad) <= K:
+                    sparse_ok += (core <= o_set <= inrad) and (core <= x_set <= inrad)
 
-        cell_ok = (ours_truth == S and sparse_ok == sparse
-                   and ours_invalid == 0 and xju2_invalid == 0)
+        # Correctness gate: ours always checked vs the brute-force truth; the xju2 cross-check
+        # only applies where xju2 exists (2-D/3-D).
+        cell_ok = (ours_truth == S and ours_invalid == 0
+                   and (not has_xju2 or (sparse_ok == sparse and xju2_invalid == 0)))
         all_pass &= cell_ok
         print(f"  D{D}_N{N:<6} R={R:.5f}")
         print(f"    ours vs brute-force truth (K-nearest): {ours_truth}/{S}"
               f"   {'OK' if ours_truth == S else 'FAIL'}")
-        print(f"    sparse (<=K in radius): {sparse:>4}   ours==xju2(==truth): {sparse_ok}/{sparse}"
-              f"   {'OK' if sparse_ok == sparse else 'FAIL'}")
-        print(f"    dense  ( >K in radius): {dense:>4}   (ours=nearest-K matches truth; "
-              f"xju2=any-K — by design)")
-        print(f"    out-of-radius neighbors:  ours={ours_invalid}  xju2={xju2_invalid}")
+        if has_xju2:
+            print(f"    sparse (<=K in radius): {sparse:>4}   ours==xju2(==truth): {sparse_ok}/{sparse}"
+                  f"   {'OK' if sparse_ok == sparse else 'FAIL'}")
+            print(f"    dense  ( >K in radius): {dense:>4}   (ours=nearest-K matches truth; "
+                  f"xju2=any-K — by design)")
+            print(f"    out-of-radius neighbors:  ours={ours_invalid}  xju2={xju2_invalid}")
+        else:
+            print(f"    xju2: N/A at D={D} (2-D/3-D only) — validated against brute-force truth")
+            print(f"    out-of-radius neighbors:  ours={ours_invalid}")
         print(f"    => {'PASS' if cell_ok else 'FAIL'}\n")
 
         del pts
