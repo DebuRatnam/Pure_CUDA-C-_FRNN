@@ -1,0 +1,592 @@
+{
+  "num_islands": 3,
+  "current_island": 0,
+  "iteration_count": 100,
+  "global_best_score": 1.0,
+  "decay": 0.9,
+  "intensity_min": 0.15,
+  "intensity_max": 0.5,
+  "migration_interval": 15,
+  "diversity_strategy_type": "code",
+  "use_unified_archive": true,
+  "use_adaptive_search": true,
+  "use_ucb_selection": true,
+  "fixed_intensity": 0.4,
+  "adapter": {
+    "states": [
+      {
+        "accumulated_signal": 0.09999999999999998,
+        "best_score": 1.0,
+        "improvement_count": 1,
+        "total_evaluations": 38,
+        "decay": 0.9,
+        "epsilon": 1e-08,
+        "intensity_min": 0.15,
+        "intensity_max": 0.5
+      },
+      {
+        "accumulated_signal": 0.09999999999999998,
+        "best_score": 1.0,
+        "improvement_count": 0,
+        "total_evaluations": 38,
+        "decay": 0.9,
+        "epsilon": 1e-08,
+        "intensity_min": 0.15,
+        "intensity_max": 0.5
+      },
+      {
+        "accumulated_signal": 0.09999999999999998,
+        "best_score": 1.0,
+        "improvement_count": 1,
+        "total_evaluations": 38,
+        "decay": 0.9,
+        "epsilon": 1e-08,
+        "intensity_min": 0.15,
+        "intensity_max": 0.5
+      }
+    ],
+    "dimension_visits": [
+      38,
+      38,
+      38
+    ],
+    "dimension_rewards": [
+      0.020275559590445278,
+      0.0,
+      0.020275559590445278
+    ],
+    "decayed_visits": [
+      9.817519963685994,
+      9.817519963685994,
+      9.817519963685994
+    ],
+    "global_best_score": 1.0,
+    "ucb_exploration": 1.41,
+    "min_visits": 3,
+    "decay": 0.9,
+    "epsilon": 1e-08
+  },
+  "island_config_names": [
+    "balanced",
+    "balanced",
+    "quality"
+  ],
+  "islands": [
+    [
+      "aeb51575-dde5-40b0-b74d-16f1d6c33047",
+      "ed4bb501-80bb-4433-a66f-72191c0f2f34",
+      "afa79990-4845-4937-9b02-f1734d88725b",
+      "f4f4d814-b546-4b80-8c8e-83944ac5d72a",
+      "a4e7e333-6525-4845-b024-f470589f79d2",
+      "1929095a-254a-453c-8d76-e0905dadc71d",
+      "bb439b94-07ba-4acd-a502-bdd601a05a67",
+      "ff4c3d50-f652-4e37-b747-db281d9c572e",
+      "f2c399a8-c6c6-4421-9de4-c772a58510a0",
+      "35410908-2389-4384-8c21-5587effc1509",
+      "74f7fde2-b00e-4123-a45d-52f86804457f",
+      "f66e02b3-64fa-4fd7-b20b-48baf7ac30a4",
+      "1f7c078b-9f15-42b5-ae43-ee9703145818",
+      "3c033144-728a-46e4-97bb-79daf59d4396",
+      "ea51a802-1af0-4b89-b751-4e22c2f1a018",
+      "74191d32-83ae-411b-9297-53b55a1c9558",
+      "518172ef-442a-49d0-a998-39110186008f",
+      "ef4e19dd-16f7-40b1-98e2-1ee45e493522",
+      "bbed0a1d-894b-4c78-8225-eead7689aed1",
+      "ce01be19-535c-498d-994b-15fbe341bd58"
+    ],
+    [
+      "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55",
+      "dfe3cef8-2bd2-490b-b36a-b7324e6d2584",
+      "039c9020-a6e1-443e-9671-8b7df399d825",
+      "f4f7ce1b-52a1-4315-9e62-4b8df4053698",
+      "a66931c1-6d2d-43bd-80a1-83d49a5cc94b",
+      "8b8d62b8-7f1b-4ead-a98c-5dac536ca04d",
+      "f9f85daa-49e6-4694-b6ff-483f882712aa",
+      "a20ed9a4-9f65-481b-9dff-fda7a42faeb6",
+      "491a9b0f-db36-4a4f-83c7-f7f000981faa",
+      "b4876d46-6c54-4591-8120-62ab2021eb8f",
+      "d4746720-f7ff-4f3d-b505-84e19252e7b0",
+      "075cf1a8-5194-4d8a-96c0-7eaf0a57411d",
+      "e43e502d-a51e-4c29-863b-2161d0cf3681",
+      "b6f3b0ac-62d8-432f-aba8-12c38c69b586",
+      "3f215f7b-4011-4941-89fc-706478c0634f",
+      "d4b69dbd-932f-46f3-84e6-5f1c348a8bd9",
+      "a21b4f32-882a-4c7c-a3bd-21f3537dd207",
+      "98371728-f6cc-4e50-942f-1b5b684a0930",
+      "89940b1d-a199-440d-8b76-74c45b42d5c6",
+      "6e35e233-274b-4601-80c6-1a300f3fd02a"
+    ],
+    [
+      "fa03c633-09ea-4c09-9a99-7a8d45acec0b",
+      "c8b501bc-2299-4a67-8289-0ee1af3117b3",
+      "f8f6f25c-93e9-43a3-b70a-dec82a584555",
+      "26ea1e06-3cb8-48f6-aa14-90152a1a4892",
+      "d243d013-7ff2-49f8-9569-f39260dbdf6e",
+      "2d7af6c8-166a-4f9e-a773-8da783e94222",
+      "3da6776a-c6fa-4037-8183-c092cc9bfd12",
+      "2b07203a-d2b6-470f-89cb-15251018e3f8",
+      "81d55fcd-7cfb-4f14-b2c4-67168a08e178",
+      "68c0e9ef-4e13-476c-bc00-95e448a40fca",
+      "00c7b824-5960-4aca-b27b-823f493e5d2a",
+      "9ad90deb-4608-4c00-9faf-6c75d22c4d0b",
+      "97c27c5c-ad4c-48e6-a712-e3fd9ad7cfdc",
+      "d2a3d604-34ea-4e49-8f6d-6ec82e0bac84",
+      "45c4fc83-ce4a-4163-9638-d040f56a4225",
+      "c37ae562-df77-43ce-be27-be25e222e5e3",
+      "b25ef7af-a98b-488b-be90-119332df7ba2",
+      "3a32488f-7740-4291-b98e-39e2784e600c",
+      "9c1c2589-f42d-45b2-834a-a708416e9a16",
+      "44cf73ac-923f-4aa2-b49d-9fe362ee3718"
+    ]
+  ],
+  "archive_genealogies": [
+    {
+      "parents": {
+        "aeb51575-dde5-40b0-b74d-16f1d6c33047": [],
+        "ed4bb501-80bb-4433-a66f-72191c0f2f34": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "afa79990-4845-4937-9b02-f1734d88725b": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "f4f4d814-b546-4b80-8c8e-83944ac5d72a": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "a4e7e333-6525-4845-b024-f470589f79d2": [
+          "dfe3cef8-2bd2-490b-b36a-b7324e6d2584"
+        ],
+        "1929095a-254a-453c-8d76-e0905dadc71d": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "bb439b94-07ba-4acd-a502-bdd601a05a67": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "ff4c3d50-f652-4e37-b747-db281d9c572e": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "f2c399a8-c6c6-4421-9de4-c772a58510a0": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "35410908-2389-4384-8c21-5587effc1509": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "74f7fde2-b00e-4123-a45d-52f86804457f": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "f66e02b3-64fa-4fd7-b20b-48baf7ac30a4": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "1f7c078b-9f15-42b5-ae43-ee9703145818": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "3c033144-728a-46e4-97bb-79daf59d4396": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "ea51a802-1af0-4b89-b751-4e22c2f1a018": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "74191d32-83ae-411b-9297-53b55a1c9558": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "518172ef-442a-49d0-a998-39110186008f": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "ef4e19dd-16f7-40b1-98e2-1ee45e493522": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "bbed0a1d-894b-4c78-8225-eead7689aed1": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "ce01be19-535c-498d-994b-15fbe341bd58": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ]
+      },
+      "children": {
+        "aeb51575-dde5-40b0-b74d-16f1d6c33047": [
+          "ed4bb501-80bb-4433-a66f-72191c0f2f34",
+          "afa79990-4845-4937-9b02-f1734d88725b",
+          "f4f4d814-b546-4b80-8c8e-83944ac5d72a",
+          "1929095a-254a-453c-8d76-e0905dadc71d",
+          "bb439b94-07ba-4acd-a502-bdd601a05a67",
+          "ff4c3d50-f652-4e37-b747-db281d9c572e",
+          "f2c399a8-c6c6-4421-9de4-c772a58510a0",
+          "35410908-2389-4384-8c21-5587effc1509",
+          "74f7fde2-b00e-4123-a45d-52f86804457f",
+          "f66e02b3-64fa-4fd7-b20b-48baf7ac30a4",
+          "1f7c078b-9f15-42b5-ae43-ee9703145818",
+          "3c033144-728a-46e4-97bb-79daf59d4396",
+          "ea51a802-1af0-4b89-b751-4e22c2f1a018",
+          "74191d32-83ae-411b-9297-53b55a1c9558",
+          "518172ef-442a-49d0-a998-39110186008f",
+          "ef4e19dd-16f7-40b1-98e2-1ee45e493522",
+          "bbed0a1d-894b-4c78-8225-eead7689aed1",
+          "ce01be19-535c-498d-994b-15fbe341bd58"
+        ],
+        "dfe3cef8-2bd2-490b-b36a-b7324e6d2584": [
+          "a4e7e333-6525-4845-b024-f470589f79d2"
+        ]
+      }
+    },
+    {
+      "parents": {
+        "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55": [],
+        "dfe3cef8-2bd2-490b-b36a-b7324e6d2584": [
+          "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55"
+        ],
+        "039c9020-a6e1-443e-9671-8b7df399d825": [
+          "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55"
+        ],
+        "f4f7ce1b-52a1-4315-9e62-4b8df4053698": [
+          "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55"
+        ],
+        "a66931c1-6d2d-43bd-80a1-83d49a5cc94b": [
+          "ed4bb501-80bb-4433-a66f-72191c0f2f34"
+        ],
+        "8b8d62b8-7f1b-4ead-a98c-5dac536ca04d": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "f9f85daa-49e6-4694-b6ff-483f882712aa": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "a20ed9a4-9f65-481b-9dff-fda7a42faeb6": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "491a9b0f-db36-4a4f-83c7-f7f000981faa": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "b4876d46-6c54-4591-8120-62ab2021eb8f": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "d4746720-f7ff-4f3d-b505-84e19252e7b0": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "075cf1a8-5194-4d8a-96c0-7eaf0a57411d": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "e43e502d-a51e-4c29-863b-2161d0cf3681": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "b6f3b0ac-62d8-432f-aba8-12c38c69b586": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "3f215f7b-4011-4941-89fc-706478c0634f": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "d4b69dbd-932f-46f3-84e6-5f1c348a8bd9": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "a21b4f32-882a-4c7c-a3bd-21f3537dd207": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "98371728-f6cc-4e50-942f-1b5b684a0930": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "89940b1d-a199-440d-8b76-74c45b42d5c6": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "6e35e233-274b-4601-80c6-1a300f3fd02a": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ]
+      },
+      "children": {
+        "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55": [
+          "dfe3cef8-2bd2-490b-b36a-b7324e6d2584",
+          "039c9020-a6e1-443e-9671-8b7df399d825",
+          "f4f7ce1b-52a1-4315-9e62-4b8df4053698"
+        ],
+        "aeb51575-dde5-40b0-b74d-16f1d6c33047": [
+          "8b8d62b8-7f1b-4ead-a98c-5dac536ca04d",
+          "f9f85daa-49e6-4694-b6ff-483f882712aa",
+          "a20ed9a4-9f65-481b-9dff-fda7a42faeb6",
+          "491a9b0f-db36-4a4f-83c7-f7f000981faa",
+          "b4876d46-6c54-4591-8120-62ab2021eb8f",
+          "d4746720-f7ff-4f3d-b505-84e19252e7b0",
+          "075cf1a8-5194-4d8a-96c0-7eaf0a57411d",
+          "e43e502d-a51e-4c29-863b-2161d0cf3681",
+          "b6f3b0ac-62d8-432f-aba8-12c38c69b586",
+          "3f215f7b-4011-4941-89fc-706478c0634f",
+          "d4b69dbd-932f-46f3-84e6-5f1c348a8bd9",
+          "a21b4f32-882a-4c7c-a3bd-21f3537dd207",
+          "98371728-f6cc-4e50-942f-1b5b684a0930",
+          "89940b1d-a199-440d-8b76-74c45b42d5c6",
+          "6e35e233-274b-4601-80c6-1a300f3fd02a"
+        ],
+        "ed4bb501-80bb-4433-a66f-72191c0f2f34": [
+          "a66931c1-6d2d-43bd-80a1-83d49a5cc94b"
+        ]
+      }
+    },
+    {
+      "parents": {
+        "fa03c633-09ea-4c09-9a99-7a8d45acec0b": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "c8b501bc-2299-4a67-8289-0ee1af3117b3": [
+          "ed4bb501-80bb-4433-a66f-72191c0f2f34"
+        ],
+        "f8f6f25c-93e9-43a3-b70a-dec82a584555": [
+          "afa79990-4845-4937-9b02-f1734d88725b"
+        ],
+        "26ea1e06-3cb8-48f6-aa14-90152a1a4892": [
+          "f4f4d814-b546-4b80-8c8e-83944ac5d72a"
+        ],
+        "d243d013-7ff2-49f8-9569-f39260dbdf6e": [
+          "3756e6da-0eb4-4f5b-af24-f5d1ed100874"
+        ],
+        "2d7af6c8-166a-4f9e-a773-8da783e94222": [
+          "dfe3cef8-2bd2-490b-b36a-b7324e6d2584"
+        ],
+        "3da6776a-c6fa-4037-8183-c092cc9bfd12": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "2b07203a-d2b6-470f-89cb-15251018e3f8": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "81d55fcd-7cfb-4f14-b2c4-67168a08e178": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "68c0e9ef-4e13-476c-bc00-95e448a40fca": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "00c7b824-5960-4aca-b27b-823f493e5d2a": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "9ad90deb-4608-4c00-9faf-6c75d22c4d0b": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "97c27c5c-ad4c-48e6-a712-e3fd9ad7cfdc": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "d2a3d604-34ea-4e49-8f6d-6ec82e0bac84": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "45c4fc83-ce4a-4163-9638-d040f56a4225": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "c37ae562-df77-43ce-be27-be25e222e5e3": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "b25ef7af-a98b-488b-be90-119332df7ba2": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "3a32488f-7740-4291-b98e-39e2784e600c": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "9c1c2589-f42d-45b2-834a-a708416e9a16": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "44cf73ac-923f-4aa2-b49d-9fe362ee3718": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ]
+      },
+      "children": {
+        "aeb51575-dde5-40b0-b74d-16f1d6c33047": [
+          "fa03c633-09ea-4c09-9a99-7a8d45acec0b",
+          "3da6776a-c6fa-4037-8183-c092cc9bfd12",
+          "2b07203a-d2b6-470f-89cb-15251018e3f8",
+          "81d55fcd-7cfb-4f14-b2c4-67168a08e178",
+          "68c0e9ef-4e13-476c-bc00-95e448a40fca",
+          "00c7b824-5960-4aca-b27b-823f493e5d2a",
+          "9ad90deb-4608-4c00-9faf-6c75d22c4d0b",
+          "97c27c5c-ad4c-48e6-a712-e3fd9ad7cfdc",
+          "d2a3d604-34ea-4e49-8f6d-6ec82e0bac84",
+          "45c4fc83-ce4a-4163-9638-d040f56a4225",
+          "c37ae562-df77-43ce-be27-be25e222e5e3",
+          "b25ef7af-a98b-488b-be90-119332df7ba2",
+          "3a32488f-7740-4291-b98e-39e2784e600c",
+          "9c1c2589-f42d-45b2-834a-a708416e9a16",
+          "44cf73ac-923f-4aa2-b49d-9fe362ee3718"
+        ],
+        "ed4bb501-80bb-4433-a66f-72191c0f2f34": [
+          "c8b501bc-2299-4a67-8289-0ee1af3117b3"
+        ],
+        "afa79990-4845-4937-9b02-f1734d88725b": [
+          "f8f6f25c-93e9-43a3-b70a-dec82a584555"
+        ],
+        "f4f4d814-b546-4b80-8c8e-83944ac5d72a": [
+          "26ea1e06-3cb8-48f6-aa14-90152a1a4892"
+        ],
+        "3756e6da-0eb4-4f5b-af24-f5d1ed100874": [
+          "d243d013-7ff2-49f8-9569-f39260dbdf6e"
+        ],
+        "dfe3cef8-2bd2-490b-b36a-b7324e6d2584": [
+          "2d7af6c8-166a-4f9e-a773-8da783e94222"
+        ]
+      }
+    }
+  ],
+  "use_dynamic_islands": true,
+  "max_islands": 5,
+  "last_spawn_iteration": 60,
+  "use_paradigm_breakthrough": true,
+  "paradigm_tracker": {
+    "window_size": 10,
+    "improvement_threshold": 0.12,
+    "max_paradigm_uses": 2,
+    "max_tried_paradigms": 10,
+    "num_paradigms_to_generate": 3,
+    "improvement_history": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "active_paradigms": [
+      {
+        "idea": "Implement Batched Execution with Overlapping Streams",
+        "description": "To improve latency for large data sets, implement a batched execution strategy where the input data is partitioned into smaller sub-batches. Utilize CUDA streams to overlap data transfer and computation. While one sub-batch is being processed by the FRNNEngine, offload the next sub-batch to the device memory using asynchronous memory copy operations. This approach minimizes idle time and maximizes GPU utilization, leading to reduced overall execution time.",
+        "what_to_optimize": "Wall-clock latency by minimizing idle GPU cycles and maximizing throughput.",
+        "cautions": "Ensure that sub-batch sizes are chosen carefully to balance computation and data transfer overheads. Be cautious of potential synchronization issues when managing multiple streams.",
+        "approach_type": "CUDA.streams"
+      },
+      {
+        "idea": "Use Adaptive Radius Tuning Based on Density Estimation",
+        "description": "Implement an adaptive radius tuning mechanism where the search radius is dynamically adjusted based on local point density estimations. Compute a local density estimate for each point or region and adjust the search radius accordingly. In denser regions, a smaller radius may suffice, while sparser areas might require an increased radius. This strategy can lead to more efficient boundary checks and reduces unnecessary computations in low-density areas.",
+        "what_to_optimize": "FRNN search efficiency by optimizing radius parameter to reduce boundary checks.",
+        "cautions": "Ensure that the density estimation does not introduce significant computational overhead. Consider using efficient approximations or precomputed density metrics.",
+        "approach_type": "algorithmic.adaptive_radius"
+      },
+      {
+        "idea": "Optimize Input Data Layout for Dimensional Coalescing",
+        "description": "For high-dimensional data (D \u2265 8), transform the input data layout to a Structure of Arrays (SoA) format to enhance memory coalescing during CUDA kernel execution. Reshape the input data to separate the dimensions, arranging them for coalesced access patterns. Pass an SoA flag to the FRNNEngine, if supported, to leverage this optimized data layout during execution. This transformation can lead to improved memory access patterns and reduced latency.",
+        "what_to_optimize": "Memory access efficiency and data transfer latency during FRNN execution.",
+        "cautions": "Verify compatibility with the FRNNEngine regarding SoA input. Ensure that the transformation does not introduce excessive overhead for small datasets.",
+        "approach_type": "algorithmic.data_layout"
+      }
+    ],
+    "paradigm_usage_counts": {
+      "0": 1
+    },
+    "current_paradigm_index": 1,
+    "tried_paradigms": [
+      {
+        "idea": "Apply KD-Tree Partitioning for Initial Guess Optimization",
+        "description": "Pre-process the dataset using a KD-tree to partition the space into regions. This structure can be used to quickly approximate the nearest neighbors, providing an initial guess for the FRNN engine. By using the KD-tree to narrow down the candidate points quickly, the engine can focus the search more effectively, potentially reducing the overall search time. This technique leverages the efficiency of KD-trees for high-dimensional nearest neighbor searches.",
+        "what_to_optimize": "Reduce the search space and guide the engine using an initial guess from the KD-tree.",
+        "cautions": "Ensure that the KD-tree construction and querying overhead is offset by the reduction in search time. This approach may require careful balancing to ensure efficiency in high dimensions.",
+        "approach_type": "scipy.spatial.KDTree",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Implement a Hierarchical Grid Search",
+        "description": "This approach involves using a hierarchical grid system to break the problem space into smaller, manageable parts. The main idea is to initially perform a coarse search over a larger grid, identifying potential areas of interest, and then refine the search in those areas with a finer grid. This multilevel approach can help in reducing the number of checks significantly by focusing computational resources on areas more likely to contain neighbors within the specified radius. Transitioning between grid levels should be managed to ensure continuity and avoid missing edge cases.",
+        "what_to_optimize": "Reduce unnecessary computations and focus on areas with higher likelihood of containing neighbors.",
+        "cautions": "Ensure that transitions between grid levels are seamless, and no potential neighbors are missed due to misalignment of grid boundaries.",
+        "approach_type": "algorithmic.hierarchical_grid",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Utilize a Distance Matrix Preprocessing Technique",
+        "description": "Precompute a distance matrix for the input points, which can help in quickly ruling out points that are out of range. This approach can be particularly useful when dealing with a fixed dataset size. By leveraging the precomputed matrix, the search can be reduced to a simple lookup for points that are guaranteed to be within the radius. This approach requires additional memory but can significantly speed up the search if the preprocessing time and memory overhead are justified by the reduction in search time.",
+        "what_to_optimize": "Minimize search time by using precomputed data for quick decision-making.",
+        "cautions": "This approach requires careful memory management, as the distance matrix can grow large, especially for high-dimensional data.",
+        "approach_type": "data_structure.distance_matrix",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Employ a Dynamic Radius Adjustment Based on Density Estimation",
+        "description": "Alter the fixed-radius search to dynamically adjust the search radius based on local point density estimates. This can be implemented by initially estimating the local density of points and scaling the radius accordingly. In regions with high density, a smaller radius can be used to reduce computation, while in sparse areas, the radius can be slightly increased to ensure no points are missed. This dynamic adjustment can lead to significant performance gains by avoiding unnecessary computations in dense areas while ensuring coverage in sparse regions.",
+        "what_to_optimize": "Balance between computation time and search completeness by adapting radius based on local density.",
+        "cautions": "Ensure that density estimation is efficient and does not introduce significant overhead. The algorithm should handle edge cases where density estimation might be inaccurate.",
+        "approach_type": "algorithmic.dynamic_radius",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Implement a Spatial Hashing Approach",
+        "description": "Spatial hashing involves mapping spatial information into a hash table to efficiently manage spatial data. By partitioning the space into grid cells and hashing spatial data accordingly, this method can quickly narrow down the list of potential neighbors for a given point. This can be particularly effective in higher dimensions where direct computation of all pairwise distances is impractically expensive. The hash function should be designed to minimize collisions and maximize the uniformity of spatial data distribution across the hash table.",
+        "what_to_optimize": "Reduce the overall search space and number of distance calculations, thus minimizing wall-clock latency.",
+        "cautions": "Ensure the hash function is well-suited to the spatial characteristics of the data. Test the approach across different density distributions to ensure consistent performance.",
+        "approach_type": "algorithmic.spatial_hashing",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Leverage GPU-based Radix Sort for Efficient Data Reordering",
+        "description": "Before performing the FRNN search, use a GPU-accelerated radix sort to reorder the points based on one or more dimensions. This can improve cache coherence and memory access patterns during the parallel search process. By sorting the data, the search algorithm can potentially skip large blocks of points that are guaranteed to be out of range, thus reducing unnecessary computations.",
+        "what_to_optimize": "Improve memory access patterns and reduce unnecessary distance checks during FRNN search.",
+        "cautions": "Ensure the sorting does not introduce significant overhead that negates its benefits. The sorting step should be efficiently implemented using existing GPU libraries to leverage hardware acceleration.",
+        "approach_type": "gpu.radix_sort",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Apply Dimensionality Reduction Techniques",
+        "description": "Implement dimensionality reduction methods such as PCA or t-SNE to project the data into a lower-dimensional space before performing the FRNN search. This can drastically reduce the computational complexity by decreasing the number of dimensions, thereby reducing the number of operations required to compute distances. It is crucial, however, to ensure that the reduced dimensions preserve the necessary neighborhood structure of the data.",
+        "what_to_optimize": "Reduce computational complexity by minimizing the dimensionality of the data without losing important neighborhood relationships.",
+        "cautions": "Carefully choose dimensionality reduction parameters to balance reduction benefits with potential loss of essential spatial information. Validate that the reduced dimensional representation maintains sufficient accuracy for neighborhood searches.",
+        "approach_type": "dimensionality_reduction.pca",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Use a Custom Grid Partitioning Strategy",
+        "description": "Implement a custom grid partitioning strategy that adapts the grid size dynamically based on the distribution of points in the dataset. By analyzing the density of points in different regions of the space, the algorithm can create finer grids in denser areas and coarser grids in sparser areas. This adaptive partitioning can reduce the number of candidate points that need to be checked for each query, thereby reducing computation time. The FRNNEngine can then be used with these custom grids to perform the search efficiently.",
+        "what_to_optimize": "Reduce computation time by minimizing the number of distance calculations needed per query.",
+        "cautions": "Ensure the custom grid partitioning does not violate the constraints of the FRNNEngine API. Careful handling of edge cases in partition boundaries is crucial to maintain correctness.",
+        "approach_type": "custom.grid_partitioning",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Implement Preprocessing for Dimensionality Reduction",
+        "description": "Before invoking the FRNNEngine, apply a dimensionality reduction technique such as Principal Component Analysis (PCA) or t-SNE to reduce the number of dimensions (D) while preserving the structure of the data. This can significantly reduce the computational load, especially for high-dimensional datasets, without major loss of accuracy. The reduced-dimensional data can then be processed by the FRNNEngine, potentially improving execution speed due to the smaller size of the data being processed.",
+        "what_to_optimize": "Reduce the dimensionality of data to decrease computation complexity and improve execution speed.",
+        "cautions": "Ensure the dimensionality reduction does not significantly alter the neighborhood structure of the data. It might require some trial runs to determine the optimal number of dimensions to retain.",
+        "approach_type": "sklearn.decomposition.PCA",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Leverage GPU Occupancy Tuning with Dynamic Block Sizes",
+        "description": "Optimize the GPU occupancy by dynamically selecting the block sizes based on the problem size and GPU characteristics. By fine-tuning block sizes, you can ensure that the GPU resources are utilized more efficiently, which can lead to faster execution times. This involves profiling the GPU to determine the optimal block sizes that maximize throughput for the current dataset configuration. Adjust the block sizes each time based on the number of points (N) and dimensions (D) to ensure maximum occupancy.",
+        "what_to_optimize": "Maximize GPU resource utilization to reduce latency.",
+        "cautions": "This requires careful profiling and tuning to avoid underutilizing the GPU or causing excessive context switching. Ensure the block sizes are compatible with the constraints of the FRNNEngine.",
+        "approach_type": "custom.gpu_occupancy_tuning",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      }
+    ],
+    "best_score_at_paradigm_gen": 1.0,
+    "best_score_during_paradigm": 1.0
+  }
+}

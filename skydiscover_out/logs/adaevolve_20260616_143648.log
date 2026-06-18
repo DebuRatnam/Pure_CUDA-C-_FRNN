@@ -1,0 +1,54 @@
+2026-06-16 14:36:48,212 - skydiscover.search.utils.logging_utils - INFO - Logging to /global/u1/d/dratnam/FRNN-master/skydiscover_out/logs/adaevolve_20260616_143648.log
+2026-06-16 14:36:48,218 - skydiscover.search.adaevolve.database - INFO - AdaEvolveDatabase initialized: num_islands=2, decay=0.9, intensity=[0.15, 0.5], migration=True (interval=15), unified_archive=True, adaptive_search=True, ucb_selection=True, dynamic_islands=True, paradigm_breakthrough=True, multiobjective=False
+2026-06-16 14:36:48,223 - skydiscover.runner - INFO - Runner ready: search=adaevolve, program=/global/u1/d/dratnam/FRNN-master/skydiscover_task/initial_program.py
+2026-06-16 14:36:50,474 - skydiscover.llm - INFO - OpenAI LLM: gpt-4o
+2026-06-16 14:36:51,174 - skydiscover.evaluation.evaluator - WARNING - cascade_evaluation is true but /global/u1/d/dratnam/FRNN-master/skydiscover_task/evaluator.py has no evaluate_stage1 — will fall back to direct evaluation
+2026-06-16 14:36:51,182 - skydiscover.evaluation.evaluator - INFO - Initialized evaluator with /global/u1/d/dratnam/FRNN-master/skydiscover_task/evaluator.py
+2026-06-16 14:36:51,190 - skydiscover.search.default_discovery_controller - INFO - DiscoveryController initialized: num_context_programs=4
+2026-06-16 14:36:51,830 - skydiscover.search.adaevolve.controller - INFO - Paradigm LLM: using guide_models [gpt-4o]
+2026-06-16 14:36:51,837 - skydiscover.search.adaevolve.controller - INFO - AdaEvolveController initialized (language=python, paradigm_breakthrough=True)
+2026-06-16 14:36:51,845 - skydiscover.runner - INFO - Adding initial program to database
+2026-06-16 14:36:51,887 - skydiscover.evaluation.evaluator - INFO - Evaluated program 1be0e801-32fa-4a26-8a54-bfaa7a27deda in 0.03s: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}
+2026-06-16 14:36:51,890 - skydiscover.search.base_database - INFO - Database has 1 programs, best program score is combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}
+2026-06-16 14:36:51,893 - skydiscover.search.adaevolve.controller - INFO - AdaEvolve: Running 100 iterations across 2 islands
+2026-06-16 14:36:51,901 - skydiscover.search.adaevolve.controller - INFO - AdaEvolve iteration stats will be logged to: /global/u1/d/dratnam/FRNN-master/skydiscover_out/adaevolve_iteration_stats_20260616_143651.jsonl
+2026-06-16 14:36:51,905 - skydiscover.search.adaevolve.controller - INFO - Seeded island 1
+2026-06-16 14:37:24,966 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:37:25,021 - skydiscover.evaluation.evaluator - INFO - Evaluated program 7a639c14-ede3-4df4-816d-704808363b67 in 0.04s: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}
+2026-06-16 14:37:25,026 - skydiscover.search.adaevolve.controller - INFO - Iteration 1: Program 7a639c14 (parent: 1be0e801) completed in 33.12s (llm: 33.07s, eval: 0.05s)
+2026-06-16 14:37:25,029 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}
+2026-06-16 14:37:28,335 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:37:28,367 - skydiscover.evaluation.evaluator - INFO - Evaluated program 30907904-86af-47eb-ba06-ed352b69ed1b in 0.03s: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}
+2026-06-16 14:37:28,371 - skydiscover.search.adaevolve.controller - INFO - Iteration 2: Program 30907904 (parent: f1f83785) completed in 3.32s (llm: 3.29s, eval: 0.03s)
+2026-06-16 14:37:28,377 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}
+2026-06-16 14:37:33,632 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:37:33,678 - skydiscover.evaluation.evaluator - INFO - Evaluated program d64605fa-54ed-443c-8f1b-14edee0ffabf in 0.04s: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}
+2026-06-16 14:37:33,682 - skydiscover.search.adaevolve.controller - INFO - Iteration 3: Program d64605fa (parent: 30907904) completed in 5.29s (llm: 5.24s, eval: 0.04s)
+2026-06-16 14:37:33,688 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}
+2026-06-16 14:37:37,184 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:37:37,269 - skydiscover.evaluation.evaluator - INFO - Evaluated program 6af0a1aa-4b71-4658-b632-e582b1ae6674 in 0.08s: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}
+2026-06-16 14:37:37,274 - skydiscover.search.adaevolve.controller - INFO - Iteration 4: Program 6af0a1aa (parent: 1be0e801) completed in 3.56s (llm: 3.48s, eval: 0.08s)
+2026-06-16 14:37:37,277 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}
+2026-06-16 14:37:42,007 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:37:42,063 - skydiscover.evaluation.evaluator - INFO - Evaluated program fedbeaa6-adb6-4b10-a5f5-fe144cde27a8 in 0.05s: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}
+2026-06-16 14:37:42,068 - skydiscover.search.adaevolve.controller - INFO - Iteration 5: Program fedbeaa6 (parent: d64605fa) completed in 4.75s (llm: 4.69s, eval: 0.06s)
+2026-06-16 14:37:42,073 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}
+2026-06-16 14:37:48,894 - skydiscover.runner - INFO - Signal 2 received, shutting down...
+2026-06-16 14:37:48,901 - skydiscover.search.default_discovery_controller - INFO - Graceful shutdown requested...
+2026-06-16 14:37:48,909 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:37:48,968 - skydiscover.evaluation.evaluator - INFO - Evaluated program cee69066-affc-4ef8-b297-42b5b55cdaf8 in 0.05s: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}
+2026-06-16 14:37:48,972 - skydiscover.search.adaevolve.controller - INFO - Iteration 6: Program cee69066 (parent: 6af0a1aa) completed in 6.86s (llm: 6.81s, eval: 0.06s)
+2026-06-16 14:37:48,976 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}
+2026-06-16 14:37:49,050 - skydiscover.search.adaevolve.controller - INFO - Shutdown requested
+2026-06-16 14:37:49,054 - skydiscover.search.adaevolve.controller - INFO - AdaEvolve completed
+2026-06-16 14:37:49,059 - skydiscover.search.base_database - INFO - Database has 8 programs, best program score is combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}
+2026-06-16 14:37:49,064 - skydiscover.search.adaevolve.controller - INFO - AdaEvolve iteration stats saved to: /global/u1/d/dratnam/FRNN-master/skydiscover_out/adaevolve_iteration_stats_20260616_143651.jsonl
+2026-06-16 14:37:49,471 - skydiscover.search.utils.checkpoint_manager - INFO - [CHECKPOINT] Saved database with 8 programs to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_100
+2026-06-16 14:37:49,495 - skydiscover.search.adaevolve.database - INFO - Saved AdaEvolve state to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_100
+2026-06-16 14:37:49,525 - skydiscover.runner - INFO - Checkpoint 100: best=combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}
+2026-06-16 14:37:49,529 - skydiscover.runner - INFO - Checkpoint saved to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_100
+2026-06-16 14:37:49,578 - skydiscover.evaluation.evaluator - INFO - Evaluated program 1be0e801-32fa-4a26-8a54-bfaa7a27deda in 0.05s: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}
+2026-06-16 14:37:49,583 - skydiscover.runner - INFO - Test evaluation for best program: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}
+2026-06-16 14:37:49,634 - skydiscover.runner - INFO - Best program saved to /global/u1/d/dratnam/FRNN-master/skydiscover_out/best
+2026-06-16 14:37:49,640 - skydiscover.runner - INFO - Discovery completed. Best: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}, test_combined_score=0.0000, test_artifacts={'feedback': 'Runtime / Compilation failure: libc10.so: cannot open shared object file: No such file or directory'}
+2026-06-16 14:37:49,687 - skydiscover.runner - INFO - Best program saved to /global/u1/d/dratnam/FRNN-master/skydiscover_out/best

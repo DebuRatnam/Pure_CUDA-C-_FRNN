@@ -11,6 +11,7 @@ namespace py = pybind11;
 // 1. Updated Externs: Matching the N-Dimensional Signatures
 extern "C" void run_insert_points(float* d_points, int* d_grid_cnt, int* d_pc_grid_idx, int P, int dim, GridParams params);
 extern "C" void run_reorder_points(int* d_pc_grid_idx, int* d_grid_offsets, int* d_sorted_idxs, int P, int total_cells);
+extern "C" void run_counting_sort(float* d_points, int* d_pc_grid_idx, int* d_grid_offsets, int* d_sorted_idxs, float* d_points_sorted, int P, int dim);
 extern "C" void run_find_nbrs(float* d_points1, float* d_points2, int* d_pc2_grid_off, int* d_sorted_idxs, int P1, int K, int dim, float radius, float* d_dists, int* d_idxs, GridParams params);
 extern "C" void run_bruteforce(const float* d_p1, const float* d_p2, int P1, int P2, int K, int dim, float r, float* d_dists, int* d_idxs);
 
@@ -18,9 +19,10 @@ extern "C" void run_bruteforce(const float* d_p1, const float* d_p2, int P1, int
 FRNNEngine::FRNNEngine(int max_points) : max_p(max_points) {
     // We assume a base dimension of 3 for allocation, or better yet, 
     // allocate for the largest expected ML latent space (e.g., 32D)
-    int default_dim = 32; 
+    int default_dim = 32;
     cudaMalloc(&d_points, max_p * default_dim * sizeof(float));
-    
+    cudaMalloc(&d_points_sorted, max_p * default_dim * sizeof(float));
+
     cudaMalloc(&d_grid_idx, max_p * sizeof(int));
     cudaMalloc(&d_sorted_idxs, max_p * sizeof(int));
     
@@ -34,7 +36,7 @@ FRNNEngine::FRNNEngine(int max_points) : max_p(max_points) {
 }
 
 FRNNEngine::~FRNNEngine() {
-    cudaFree(d_points); cudaFree(d_grid_cnt); cudaFree(d_grid_offsets);
+    cudaFree(d_points); cudaFree(d_points_sorted); cudaFree(d_grid_cnt); cudaFree(d_grid_offsets);
     cudaFree(d_grid_idx); cudaFree(d_sorted_idxs);
     cudaFree(d_dists); cudaFree(d_idxs);
 }
@@ -88,8 +90,8 @@ std::pair<std::vector<int>, std::vector<float>> FRNNEngine::search(std::vector<f
             thrust::device_ptr<int>(d_grid_cnt),
             thrust::device_ptr<int>(d_grid_cnt + params.total_cells),
             thrust::device_ptr<int>(d_grid_offsets));
-        run_reorder_points(d_grid_idx, d_grid_offsets, d_sorted_idxs, P, params.total_cells);
-        run_find_nbrs(d_points, d_points, d_grid_offsets, d_sorted_idxs, P, K, dim, radius, d_dists, d_idxs, params);
+        run_counting_sort(d_points, d_grid_idx, d_grid_offsets, d_sorted_idxs, d_points_sorted, P, dim);
+        run_find_nbrs(d_points, d_points_sorted, d_grid_offsets, d_sorted_idxs, P, K, dim, radius, d_dists, d_idxs, params);
     }
 
     // 5. Device-to-Host Copy (GPU output is SoA: d_idxs[k*P+p], d_dists[k*P+p])
@@ -140,8 +142,8 @@ std::pair<uintptr_t, uintptr_t> FRNNEngine::search_gpu(
             thrust::device_ptr<int>(d_grid_cnt),
             thrust::device_ptr<int>(d_grid_cnt + params.total_cells),
             thrust::device_ptr<int>(d_grid_offsets));
-        run_reorder_points(d_grid_idx, d_grid_offsets, d_sorted_idxs, P, params.total_cells);
-        run_find_nbrs(d_input, d_input, d_grid_offsets, d_sorted_idxs,
+        run_counting_sort(d_input, d_grid_idx, d_grid_offsets, d_sorted_idxs, d_points_sorted, P, dim);
+        run_find_nbrs(d_input, d_points_sorted, d_grid_offsets, d_sorted_idxs,
                       P, K, dim, radius, d_dists, d_idxs, params);
     }
 

@@ -1,0 +1,606 @@
+{
+  "num_islands": 3,
+  "current_island": 2,
+  "iteration_count": 79,
+  "global_best_score": 1.0,
+  "decay": 0.9,
+  "intensity_min": 0.15,
+  "intensity_max": 0.5,
+  "migration_interval": 15,
+  "diversity_strategy_type": "code",
+  "use_unified_archive": true,
+  "use_adaptive_search": true,
+  "use_ucb_selection": true,
+  "fixed_intensity": 0.4,
+  "adapter": {
+    "states": [
+      {
+        "accumulated_signal": 0.09999999999999998,
+        "best_score": 1.0,
+        "improvement_count": 1,
+        "total_evaluations": 34,
+        "decay": 0.9,
+        "epsilon": 1e-08,
+        "intensity_min": 0.15,
+        "intensity_max": 0.5
+      },
+      {
+        "accumulated_signal": 0.09999999999999998,
+        "best_score": 1.0,
+        "improvement_count": 0,
+        "total_evaluations": 33,
+        "decay": 0.9,
+        "epsilon": 1e-08,
+        "intensity_min": 0.15,
+        "intensity_max": 0.5
+      },
+      {
+        "accumulated_signal": 0.09999999999999998,
+        "best_score": 1.0,
+        "improvement_count": 1,
+        "total_evaluations": 24,
+        "decay": 0.9,
+        "epsilon": 1e-08,
+        "intensity_min": 0.15,
+        "intensity_max": 0.5
+      }
+    ],
+    "dimension_visits": [
+      34,
+      33,
+      24
+    ],
+    "dimension_rewards": [
+      0.030903154382632643,
+      0.0,
+      0.08862938119652508
+    ],
+    "decayed_visits": [
+      9.72187161055631,
+      9.690968456173676,
+      9.202335569231277
+    ],
+    "global_best_score": 1.0,
+    "ucb_exploration": 1.41,
+    "min_visits": 3,
+    "decay": 0.9,
+    "epsilon": 1e-08
+  },
+  "island_config_names": [
+    "balanced",
+    "balanced",
+    "quality"
+  ],
+  "islands": [
+    [
+      "aeb51575-dde5-40b0-b74d-16f1d6c33047",
+      "ed4bb501-80bb-4433-a66f-72191c0f2f34",
+      "afa79990-4845-4937-9b02-f1734d88725b",
+      "f4f4d814-b546-4b80-8c8e-83944ac5d72a",
+      "3756e6da-0eb4-4f5b-af24-f5d1ed100874",
+      "8885d5d8-8fb7-4011-b3cd-2dd137d14a99",
+      "a4e7e333-6525-4845-b024-f470589f79d2",
+      "1929095a-254a-453c-8d76-e0905dadc71d",
+      "bb439b94-07ba-4acd-a502-bdd601a05a67",
+      "ff4c3d50-f652-4e37-b747-db281d9c572e",
+      "f2c399a8-c6c6-4421-9de4-c772a58510a0",
+      "35410908-2389-4384-8c21-5587effc1509",
+      "74f7fde2-b00e-4123-a45d-52f86804457f",
+      "f66e02b3-64fa-4fd7-b20b-48baf7ac30a4",
+      "1f7c078b-9f15-42b5-ae43-ee9703145818",
+      "f6c06749-3f86-46cb-b8ff-00115262e4d8",
+      "fa466c48-7498-4bbf-8934-abcecff0c543",
+      "3c033144-728a-46e4-97bb-79daf59d4396",
+      "ea51a802-1af0-4b89-b751-4e22c2f1a018",
+      "74191d32-83ae-411b-9297-53b55a1c9558"
+    ],
+    [
+      "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55",
+      "dfe3cef8-2bd2-490b-b36a-b7324e6d2584",
+      "039c9020-a6e1-443e-9671-8b7df399d825",
+      "f4f7ce1b-52a1-4315-9e62-4b8df4053698",
+      "e2069256-14c8-4ee5-9730-3ebca58db952",
+      "a66931c1-6d2d-43bd-80a1-83d49a5cc94b",
+      "8b8d62b8-7f1b-4ead-a98c-5dac536ca04d",
+      "f9f85daa-49e6-4694-b6ff-483f882712aa",
+      "a20ed9a4-9f65-481b-9dff-fda7a42faeb6",
+      "491a9b0f-db36-4a4f-83c7-f7f000981faa",
+      "b4876d46-6c54-4591-8120-62ab2021eb8f",
+      "d4746720-f7ff-4f3d-b505-84e19252e7b0",
+      "075cf1a8-5194-4d8a-96c0-7eaf0a57411d",
+      "e43e502d-a51e-4c29-863b-2161d0cf3681",
+      "b6f3b0ac-62d8-432f-aba8-12c38c69b586",
+      "3f215f7b-4011-4941-89fc-706478c0634f",
+      "d4b69dbd-932f-46f3-84e6-5f1c348a8bd9",
+      "a21b4f32-882a-4c7c-a3bd-21f3537dd207",
+      "98371728-f6cc-4e50-942f-1b5b684a0930",
+      "a2ce975c-95db-4424-bd99-3ea7eea7d92a"
+    ],
+    [
+      "fa03c633-09ea-4c09-9a99-7a8d45acec0b",
+      "c8b501bc-2299-4a67-8289-0ee1af3117b3",
+      "f8f6f25c-93e9-43a3-b70a-dec82a584555",
+      "26ea1e06-3cb8-48f6-aa14-90152a1a4892",
+      "d243d013-7ff2-49f8-9569-f39260dbdf6e",
+      "2d7af6c8-166a-4f9e-a773-8da783e94222",
+      "ff00789d-5ed9-4e44-8c4d-a327223b32ac",
+      "ee878004-ea30-459e-83c2-59aee70060a7",
+      "49fdd178-84fa-4a9f-9a69-86e5d21f055d",
+      "57a5ec8c-2c53-4588-89f9-c0ec8bfc2098",
+      "46e0a4a5-5dba-46ff-ad59-bb5ee5f9a1e8",
+      "54e4d198-fcaf-4d04-9c62-fe20d2af15c6",
+      "1bfd0ad7-3560-4891-9477-84dc78a89b27",
+      "3da6776a-c6fa-4037-8183-c092cc9bfd12",
+      "2b07203a-d2b6-470f-89cb-15251018e3f8",
+      "e077d4d1-f527-406a-b60a-520ef3562453",
+      "81d55fcd-7cfb-4f14-b2c4-67168a08e178",
+      "68c0e9ef-4e13-476c-bc00-95e448a40fca",
+      "75d2e01c-5170-4c24-b04f-f85363ff7bb8",
+      "bf9d6f2a-a018-4965-8cea-02e6f156b481"
+    ]
+  ],
+  "archive_genealogies": [
+    {
+      "parents": {
+        "aeb51575-dde5-40b0-b74d-16f1d6c33047": [],
+        "ed4bb501-80bb-4433-a66f-72191c0f2f34": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "afa79990-4845-4937-9b02-f1734d88725b": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "f4f4d814-b546-4b80-8c8e-83944ac5d72a": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "3756e6da-0eb4-4f5b-af24-f5d1ed100874": [
+          "f4f4d814-b546-4b80-8c8e-83944ac5d72a"
+        ],
+        "8885d5d8-8fb7-4011-b3cd-2dd137d14a99": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "a4e7e333-6525-4845-b024-f470589f79d2": [
+          "dfe3cef8-2bd2-490b-b36a-b7324e6d2584"
+        ],
+        "1929095a-254a-453c-8d76-e0905dadc71d": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "bb439b94-07ba-4acd-a502-bdd601a05a67": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "ff4c3d50-f652-4e37-b747-db281d9c572e": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "f2c399a8-c6c6-4421-9de4-c772a58510a0": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "35410908-2389-4384-8c21-5587effc1509": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "74f7fde2-b00e-4123-a45d-52f86804457f": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "f66e02b3-64fa-4fd7-b20b-48baf7ac30a4": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "1f7c078b-9f15-42b5-ae43-ee9703145818": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "f6c06749-3f86-46cb-b8ff-00115262e4d8": [
+          "e2069256-14c8-4ee5-9730-3ebca58db952"
+        ],
+        "fa466c48-7498-4bbf-8934-abcecff0c543": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "3c033144-728a-46e4-97bb-79daf59d4396": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "ea51a802-1af0-4b89-b751-4e22c2f1a018": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "74191d32-83ae-411b-9297-53b55a1c9558": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ]
+      },
+      "children": {
+        "aeb51575-dde5-40b0-b74d-16f1d6c33047": [
+          "ed4bb501-80bb-4433-a66f-72191c0f2f34",
+          "afa79990-4845-4937-9b02-f1734d88725b",
+          "f4f4d814-b546-4b80-8c8e-83944ac5d72a",
+          "8885d5d8-8fb7-4011-b3cd-2dd137d14a99",
+          "1929095a-254a-453c-8d76-e0905dadc71d",
+          "bb439b94-07ba-4acd-a502-bdd601a05a67",
+          "ff4c3d50-f652-4e37-b747-db281d9c572e",
+          "f2c399a8-c6c6-4421-9de4-c772a58510a0",
+          "35410908-2389-4384-8c21-5587effc1509",
+          "74f7fde2-b00e-4123-a45d-52f86804457f",
+          "f66e02b3-64fa-4fd7-b20b-48baf7ac30a4",
+          "1f7c078b-9f15-42b5-ae43-ee9703145818",
+          "fa466c48-7498-4bbf-8934-abcecff0c543",
+          "3c033144-728a-46e4-97bb-79daf59d4396",
+          "ea51a802-1af0-4b89-b751-4e22c2f1a018",
+          "74191d32-83ae-411b-9297-53b55a1c9558"
+        ],
+        "f4f4d814-b546-4b80-8c8e-83944ac5d72a": [
+          "3756e6da-0eb4-4f5b-af24-f5d1ed100874"
+        ],
+        "dfe3cef8-2bd2-490b-b36a-b7324e6d2584": [
+          "a4e7e333-6525-4845-b024-f470589f79d2"
+        ],
+        "e2069256-14c8-4ee5-9730-3ebca58db952": [
+          "f6c06749-3f86-46cb-b8ff-00115262e4d8"
+        ]
+      }
+    },
+    {
+      "parents": {
+        "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55": [],
+        "dfe3cef8-2bd2-490b-b36a-b7324e6d2584": [
+          "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55"
+        ],
+        "039c9020-a6e1-443e-9671-8b7df399d825": [
+          "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55"
+        ],
+        "f4f7ce1b-52a1-4315-9e62-4b8df4053698": [
+          "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55"
+        ],
+        "e2069256-14c8-4ee5-9730-3ebca58db952": [
+          "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55"
+        ],
+        "a66931c1-6d2d-43bd-80a1-83d49a5cc94b": [
+          "ed4bb501-80bb-4433-a66f-72191c0f2f34"
+        ],
+        "8b8d62b8-7f1b-4ead-a98c-5dac536ca04d": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "f9f85daa-49e6-4694-b6ff-483f882712aa": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "a20ed9a4-9f65-481b-9dff-fda7a42faeb6": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "491a9b0f-db36-4a4f-83c7-f7f000981faa": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "b4876d46-6c54-4591-8120-62ab2021eb8f": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "d4746720-f7ff-4f3d-b505-84e19252e7b0": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "075cf1a8-5194-4d8a-96c0-7eaf0a57411d": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "e43e502d-a51e-4c29-863b-2161d0cf3681": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "b6f3b0ac-62d8-432f-aba8-12c38c69b586": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "3f215f7b-4011-4941-89fc-706478c0634f": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "d4b69dbd-932f-46f3-84e6-5f1c348a8bd9": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "a21b4f32-882a-4c7c-a3bd-21f3537dd207": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "98371728-f6cc-4e50-942f-1b5b684a0930": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "a2ce975c-95db-4424-bd99-3ea7eea7d92a": [
+          "3756e6da-0eb4-4f5b-af24-f5d1ed100874"
+        ]
+      },
+      "children": {
+        "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55": [
+          "dfe3cef8-2bd2-490b-b36a-b7324e6d2584",
+          "039c9020-a6e1-443e-9671-8b7df399d825",
+          "f4f7ce1b-52a1-4315-9e62-4b8df4053698",
+          "e2069256-14c8-4ee5-9730-3ebca58db952"
+        ],
+        "aeb51575-dde5-40b0-b74d-16f1d6c33047": [
+          "8b8d62b8-7f1b-4ead-a98c-5dac536ca04d",
+          "f9f85daa-49e6-4694-b6ff-483f882712aa",
+          "a20ed9a4-9f65-481b-9dff-fda7a42faeb6",
+          "491a9b0f-db36-4a4f-83c7-f7f000981faa",
+          "b4876d46-6c54-4591-8120-62ab2021eb8f",
+          "d4746720-f7ff-4f3d-b505-84e19252e7b0",
+          "075cf1a8-5194-4d8a-96c0-7eaf0a57411d",
+          "e43e502d-a51e-4c29-863b-2161d0cf3681",
+          "b6f3b0ac-62d8-432f-aba8-12c38c69b586",
+          "3f215f7b-4011-4941-89fc-706478c0634f",
+          "d4b69dbd-932f-46f3-84e6-5f1c348a8bd9",
+          "a21b4f32-882a-4c7c-a3bd-21f3537dd207",
+          "98371728-f6cc-4e50-942f-1b5b684a0930"
+        ],
+        "ed4bb501-80bb-4433-a66f-72191c0f2f34": [
+          "a66931c1-6d2d-43bd-80a1-83d49a5cc94b"
+        ],
+        "3756e6da-0eb4-4f5b-af24-f5d1ed100874": [
+          "a2ce975c-95db-4424-bd99-3ea7eea7d92a"
+        ]
+      }
+    },
+    {
+      "parents": {
+        "fa03c633-09ea-4c09-9a99-7a8d45acec0b": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "c8b501bc-2299-4a67-8289-0ee1af3117b3": [
+          "ed4bb501-80bb-4433-a66f-72191c0f2f34"
+        ],
+        "f8f6f25c-93e9-43a3-b70a-dec82a584555": [
+          "afa79990-4845-4937-9b02-f1734d88725b"
+        ],
+        "26ea1e06-3cb8-48f6-aa14-90152a1a4892": [
+          "f4f4d814-b546-4b80-8c8e-83944ac5d72a"
+        ],
+        "d243d013-7ff2-49f8-9569-f39260dbdf6e": [
+          "3756e6da-0eb4-4f5b-af24-f5d1ed100874"
+        ],
+        "2d7af6c8-166a-4f9e-a773-8da783e94222": [
+          "dfe3cef8-2bd2-490b-b36a-b7324e6d2584"
+        ],
+        "ff00789d-5ed9-4e44-8c4d-a327223b32ac": [
+          "039c9020-a6e1-443e-9671-8b7df399d825"
+        ],
+        "ee878004-ea30-459e-83c2-59aee70060a7": [
+          "f4f7ce1b-52a1-4315-9e62-4b8df4053698"
+        ],
+        "49fdd178-84fa-4a9f-9a69-86e5d21f055d": [
+          "e2069256-14c8-4ee5-9730-3ebca58db952"
+        ],
+        "57a5ec8c-2c53-4588-89f9-c0ec8bfc2098": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "46e0a4a5-5dba-46ff-ad59-bb5ee5f9a1e8": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "54e4d198-fcaf-4d04-9c62-fe20d2af15c6": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "1bfd0ad7-3560-4891-9477-84dc78a89b27": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "3da6776a-c6fa-4037-8183-c092cc9bfd12": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "2b07203a-d2b6-470f-89cb-15251018e3f8": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "e077d4d1-f527-406a-b60a-520ef3562453": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "81d55fcd-7cfb-4f14-b2c4-67168a08e178": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "68c0e9ef-4e13-476c-bc00-95e448a40fca": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "75d2e01c-5170-4c24-b04f-f85363ff7bb8": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "bf9d6f2a-a018-4965-8cea-02e6f156b481": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ]
+      },
+      "children": {
+        "aeb51575-dde5-40b0-b74d-16f1d6c33047": [
+          "fa03c633-09ea-4c09-9a99-7a8d45acec0b",
+          "57a5ec8c-2c53-4588-89f9-c0ec8bfc2098",
+          "46e0a4a5-5dba-46ff-ad59-bb5ee5f9a1e8",
+          "54e4d198-fcaf-4d04-9c62-fe20d2af15c6",
+          "1bfd0ad7-3560-4891-9477-84dc78a89b27",
+          "3da6776a-c6fa-4037-8183-c092cc9bfd12",
+          "2b07203a-d2b6-470f-89cb-15251018e3f8",
+          "e077d4d1-f527-406a-b60a-520ef3562453",
+          "81d55fcd-7cfb-4f14-b2c4-67168a08e178",
+          "68c0e9ef-4e13-476c-bc00-95e448a40fca",
+          "75d2e01c-5170-4c24-b04f-f85363ff7bb8",
+          "bf9d6f2a-a018-4965-8cea-02e6f156b481"
+        ],
+        "ed4bb501-80bb-4433-a66f-72191c0f2f34": [
+          "c8b501bc-2299-4a67-8289-0ee1af3117b3"
+        ],
+        "afa79990-4845-4937-9b02-f1734d88725b": [
+          "f8f6f25c-93e9-43a3-b70a-dec82a584555"
+        ],
+        "f4f4d814-b546-4b80-8c8e-83944ac5d72a": [
+          "26ea1e06-3cb8-48f6-aa14-90152a1a4892"
+        ],
+        "3756e6da-0eb4-4f5b-af24-f5d1ed100874": [
+          "d243d013-7ff2-49f8-9569-f39260dbdf6e"
+        ],
+        "dfe3cef8-2bd2-490b-b36a-b7324e6d2584": [
+          "2d7af6c8-166a-4f9e-a773-8da783e94222"
+        ],
+        "039c9020-a6e1-443e-9671-8b7df399d825": [
+          "ff00789d-5ed9-4e44-8c4d-a327223b32ac"
+        ],
+        "f4f7ce1b-52a1-4315-9e62-4b8df4053698": [
+          "ee878004-ea30-459e-83c2-59aee70060a7"
+        ],
+        "e2069256-14c8-4ee5-9730-3ebca58db952": [
+          "49fdd178-84fa-4a9f-9a69-86e5d21f055d"
+        ]
+      }
+    }
+  ],
+  "use_dynamic_islands": true,
+  "max_islands": 5,
+  "last_spawn_iteration": 60,
+  "use_paradigm_breakthrough": true,
+  "paradigm_tracker": {
+    "window_size": 10,
+    "improvement_threshold": 0.12,
+    "max_paradigm_uses": 2,
+    "max_tried_paradigms": 10,
+    "num_paradigms_to_generate": 3,
+    "improvement_history": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "active_paradigms": [
+      {
+        "idea": "Implement Space-Filling Curves for Data Layout Optimization",
+        "description": "Use space-filling curves, such as Hilbert or Morton (Z-order), to reorder the input data points before passing them to the FRNN engine. This reordering can help improve data locality and cache performance by ensuring spatially close points are also close in memory. The Hilbert curve is particularly suitable for higher dimensions due to its locality-preserving properties. This approach requires transforming the data points into a space-filling curve index, sorting based on this index, and then passing the reordered data to the engine.",
+        "what_to_optimize": "Improve data locality and cache efficiency leading to reduced latency.",
+        "cautions": "Ensure that the transformation and reordering process is efficient and does not introduce significant overhead. Verify that the FRNN engine can handle the reordered data without requiring changes to its API.",
+        "approach_type": "custom.space_filling_curves"
+      },
+      {
+        "idea": "Utilize GPU Shared Memory for Repeated Data Access",
+        "description": "Leverage the GPU's shared memory to store subsets of the input data that are accessed frequently during the search process. This can reduce the global memory access latency by taking advantage of the faster access times of shared memory. Implement a strategy to identify which parts of the data are most frequently accessed and copy these into shared memory at the start of each kernel execution. This approach is particularly beneficial for reducing access times in high-dimensional data scenarios.",
+        "what_to_optimize": "Decrease global memory access latency by using shared memory.",
+        "cautions": "Ensure that the shared memory usage does not exceed its size limitations on the GPU. Proper synchronization is also necessary to avoid race conditions.",
+        "approach_type": "CUDA.shared_memory"
+      },
+      {
+        "idea": "Apply KD-Tree Partitioning for Initial Guess Optimization",
+        "description": "Pre-process the dataset using a KD-tree to partition the space into regions. This structure can be used to quickly approximate the nearest neighbors, providing an initial guess for the FRNN engine. By using the KD-tree to narrow down the candidate points quickly, the engine can focus the search more effectively, potentially reducing the overall search time. This technique leverages the efficiency of KD-trees for high-dimensional nearest neighbor searches.",
+        "what_to_optimize": "Reduce the search space and guide the engine using an initial guess from the KD-tree.",
+        "cautions": "Ensure that the KD-tree construction and querying overhead is offset by the reduction in search time. This approach may require careful balancing to ensure efficiency in high dimensions.",
+        "approach_type": "scipy.spatial.KDTree"
+      }
+    ],
+    "paradigm_usage_counts": {
+      "0": 2,
+      "1": 2,
+      "2": 1
+    },
+    "current_paradigm_index": 2,
+    "tried_paradigms": [
+      {
+        "idea": "Adaptive Radius Decomposition Based on Spatial Clustering",
+        "description": "Implement an adaptive radius decomposition strategy that groups points into clusters before conducting the FRNN search. By using a spatial clustering algorithm like DBSCAN to pre-process the data, you can identify dense regions and adjust the search radius dynamically based on local point density. This allows for more efficient searches by focusing computational resources on areas with higher point density, potentially reducing the number of boundary checks and improving speed.",
+        "what_to_optimize": "Enhance search efficiency by adapting radius based on local densities.",
+        "cautions": "Selecting appropriate parameters for the clustering algorithm is crucial. The clustering step should not introduce significant overhead that negates its benefits.",
+        "approach_type": "clustering.radius_adaptation",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Implement Memory Coalescing Using Array of Structures (AoS) Layout",
+        "description": "Instead of the current Structure of Arrays (SoA) layout, transform pts_flat into an Array of Structures (AoS) format. This can potentially enhance memory coalescing on the GPU by allowing each thread to read contiguous memory locations when accessing the x, y, z coordinates of a point. Use numpy to reshape the input array into a format where each structure contains all dimensions of a point. This could improve performance for scenarios where D is not extremely high but still benefits from more localized memory access patterns.",
+        "what_to_optimize": "GPU memory access patterns and coalescing, leading to reduced latency",
+        "cautions": "Ensure that the frnn_torch.FRNNEngine can handle AoS format, or perform conversion internally without significant overhead.",
+        "approach_type": "numpy.reshape",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Implement Adaptive Sub-Batch Processing Based on L2 Cache Size",
+        "description": "Dynamically divide the input points into sub-batches that fit within the L2 cache of the GPU. This involves profiling the GPU to identify the optimal sub-batch size that maximizes reuse of data within the cache, reducing the need to fetch data from slower global memory. By iterating over these sub-batches, the algorithm can maintain high throughput and reduce wall-clock time. This approach requires an initial profiling step to determine the cache size and effective sub-batch dimensions.",
+        "what_to_optimize": "Data reuse and cache efficiency, which can decrease execution time",
+        "cautions": "Ensure that the overhead of dividing and managing sub-batches does not outweigh the benefits of improved cache usage.",
+        "approach_type": "GPU profiling and adaptive sub-batching",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Utilize Asynchronous CUDA Streams for Overlapping Data Transfers and Computation",
+        "description": "Leverage asynchronous CUDA streams to overlap data transfer and computation. While one batch is being processed by the GPU, the next batch's data can be loaded into the GPU memory. This can be achieved by using CUDA's stream API to manage concurrent execution of different tasks. The goal is to hide data transfer latency behind computation workloads, effectively utilizing the GPU's ability to handle multiple tasks simultaneously.",
+        "what_to_optimize": "Overlap of computation and data transfer, reducing perceived latency",
+        "cautions": "Proper management of CUDA streams is crucial to prevent data race conditions and ensure synchronization between data transfers and kernel execution.",
+        "approach_type": "CUDA streams for asynchronous processing",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Use Memory Coalescing Techniques for Data Access",
+        "description": "Reorganize the data layout of the input points to optimize for GPU memory access patterns. Specifically, convert the input data to a Structure of Arrays (SoA) format for better coalesced memory access during kernel execution. This format will enable the CUDA engine to efficiently load data into memory, especially for higher dimensions (D \u2265 8). This can be realized by reshaping the input array and ensuring contiguous memory access patterns during the CUDA kernel execution, potentially improving the wall-clock latency.",
+        "what_to_optimize": "GPU memory access efficiency to reduce latency",
+        "cautions": "Ensure that the FRNNEngine's data input supports SoA format or transformations as needed. Verify correctness after data reordering.",
+        "approach_type": "Memory Coalescing",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Implement Adaptive Sub-batching Based on Input Size",
+        "description": "Introduce an adaptive strategy for partitioning the input dataset into smaller chunks or sub-batches. This strategy would dynamically adjust the sub-batch size based on the input size and available GPU memory resources. By processing smaller batches, the algorithm can enhance cache utilization and reduce memory overhead, potentially improving the FRNN search performance by leveraging temporal locality better.",
+        "what_to_optimize": "Latency by improving cache utilization and reducing memory overhead",
+        "cautions": "Ensure that sub-batching does not introduce significant overhead in managing batches. Test for different input sizes to find an optimal sub-batch size.",
+        "approach_type": "Adaptive Sub-batching",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Utilize Overlapping Computation with Memory Transfers",
+        "description": "Leverage CUDA streams to overlap computation with memory transfers. By initiating asynchronous data transfers for the next batch while the current batch is being processed, you can hide memory latency and improve the overall throughput. This requires careful management of CUDA streams and synchronization to ensure data consistency across batches without introducing race conditions.",
+        "what_to_optimize": "Overall throughput by overlapping data transfers with computation",
+        "cautions": "Ensure proper synchronization between streams to prevent data races. Test thoroughly to confirm that overlapping does not introduce errors.",
+        "approach_type": "CUDA Streams",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Implement a Space-Filling Curve Ordering",
+        "description": "Utilize a space-filling curve like the Hilbert or Z-order curve to reorder the points in memory before passing them to the FRNN engine. This approach can improve spatial locality, which may reduce cache misses and optimize memory access patterns, particularly when D is large. The idea is to map the multi-dimensional space into a one-dimensional order that preserves locality, which could lead to better performance as the FRNN engine processes the points more efficiently.",
+        "what_to_optimize": "Memory access patterns and cache efficiency to reduce wall-clock latency.",
+        "cautions": "Ensure the space-filling curve transformation does not introduce significant overhead relative to the performance gains. Also, validate that the reordering maintains the correct indices for the search results.",
+        "approach_type": "algorithmic.space_filling_curve",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Precompute and Cache Distance Matrix for Small R or D",
+        "description": "For cases where the radius R or dimensionality D is small, precompute the pairwise distance matrix and cache it for reuse across multiple calls to the run_search function. This can drastically reduce computation time for repeated queries on the same dataset, as the FRNN search can be accelerated by referencing precomputed distances instead of recalculating them.",
+        "what_to_optimize": "Computation time for repeated queries with constant inputs, particularly in low-dimensional cases.",
+        "cautions": "Ensure that the memory overhead of storing the distance matrix is manageable and that the caching mechanism is robust against changes in input data.",
+        "approach_type": "data_structure.caching",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Use LSH (Locality-Sensitive Hashing) for Approximate Nearest Neighbors",
+        "description": "Integrate a Locality-Sensitive Hashing (LSH) preprocessing step to quickly partition the data into buckets of nearby points. This can significantly reduce the number of distance computations required by the FRNN engine, especially in high-dimensional spaces. LSH can be configured to trade off between accuracy and speed, giving flexibility based on the application's performance requirements.",
+        "what_to_optimize": "Reduction in distance computations and overall search time for large datasets.",
+        "cautions": "Carefully tune the LSH parameters to balance accuracy and performance. Ensure that the approximate results meet the application's accuracy requirements.",
+        "approach_type": "algorithmic.lsh",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      }
+    ],
+    "best_score_at_paradigm_gen": 1.0,
+    "best_score_during_paradigm": 1.0
+  }
+}

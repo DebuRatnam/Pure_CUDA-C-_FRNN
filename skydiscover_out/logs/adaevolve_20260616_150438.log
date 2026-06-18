@@ -1,0 +1,16 @@
+2026-06-16 15:04:38,640 - skydiscover.search.utils.logging_utils - INFO - Logging to /global/u1/d/dratnam/FRNN-master/skydiscover_out/logs/adaevolve_20260616_150438.log
+2026-06-16 15:04:38,683 - skydiscover.search.adaevolve.database - INFO - AdaEvolveDatabase initialized: num_islands=2, decay=0.9, intensity=[0.15, 0.5], migration=True (interval=15), unified_archive=True, adaptive_search=True, ucb_selection=True, dynamic_islands=True, paradigm_breakthrough=True, multiobjective=False
+2026-06-16 15:04:38,697 - skydiscover.runner - INFO - Runner ready: search=adaevolve, program=/global/u1/d/dratnam/FRNN-master/frnn/csrc/grid/find_nbrs.cu
+2026-06-16 15:04:41,650 - skydiscover.llm - INFO - OpenAI LLM: gpt-4o
+2026-06-16 15:04:42,278 - skydiscover.evaluation.evaluator - WARNING - cascade_evaluation is true but /tmp/evaluator_4e20aaf9.py has no evaluate_stage1 — will fall back to direct evaluation
+2026-06-16 15:04:42,278 - skydiscover.evaluation.evaluator - INFO - Initialized evaluator with /tmp/evaluator_4e20aaf9.py
+2026-06-16 15:04:42,281 - skydiscover.search.default_discovery_controller - INFO - DiscoveryController initialized: num_context_programs=4
+2026-06-16 15:04:42,896 - skydiscover.search.adaevolve.controller - INFO - Paradigm LLM: using guide_models [gpt-4o]
+2026-06-16 15:04:42,897 - skydiscover.search.adaevolve.controller - INFO - AdaEvolveController initialized (language=cpp, paradigm_breakthrough=True)
+2026-06-16 15:04:42,898 - skydiscover.runner - INFO - Adding initial program to database
+2026-06-16 15:10:18,517 - skydiscover.evaluation.evaluator - INFO - Evaluated program 4ff01515-79a2-49a4-852d-87405fa2317d in 335.62s: combined_score=10.0000, artifacts={'feedback': 'Successfully compiled and benchmarked. Latency: 100.0000 ms'}
+2026-06-16 15:10:18,523 - skydiscover.search.base_database - INFO - Database has 1 programs, best program score is combined_score=10.0000, artifacts={'feedback': 'Successfully compiled and benchmarked. Latency: 100.0000 ms'}
+2026-06-16 15:10:18,527 - skydiscover.search.adaevolve.controller - INFO - AdaEvolve: Running 50 iterations across 2 islands
+2026-06-16 15:10:18,567 - skydiscover.search.adaevolve.controller - INFO - AdaEvolve iteration stats will be logged to: /global/u1/d/dratnam/FRNN-master/skydiscover_out/adaevolve_iteration_stats_20260616_151018.jsonl
+2026-06-16 15:10:18,571 - skydiscover.search.adaevolve.controller - INFO - Seeded island 1
+2026-06-16 15:10:54,815 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"

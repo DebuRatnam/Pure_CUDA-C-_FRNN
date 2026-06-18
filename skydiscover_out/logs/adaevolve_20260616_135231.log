@@ -1,0 +1,128 @@
+2026-06-16 13:52:31,942 - skydiscover.search.utils.logging_utils - INFO - Logging to /global/u1/d/dratnam/FRNN-master/skydiscover_out/logs/adaevolve_20260616_135231.log
+2026-06-16 13:52:31,949 - skydiscover.search.adaevolve.database - INFO - AdaEvolveDatabase initialized: num_islands=2, decay=0.9, intensity=[0.15, 0.5], migration=True (interval=15), unified_archive=True, adaptive_search=True, ucb_selection=True, dynamic_islands=True, paradigm_breakthrough=True, multiobjective=False
+2026-06-16 13:52:31,949 - skydiscover.runner - INFO - Runner ready: search=adaevolve, program=/global/u1/d/dratnam/FRNN-master/skydiscover_task/initial_program.py
+2026-06-16 13:52:32,788 - skydiscover.llm - INFO - OpenAI LLM: gpt-4o
+2026-06-16 13:52:34,303 - skydiscover.evaluation.evaluator - WARNING - cascade_evaluation is true but /global/u1/d/dratnam/FRNN-master/skydiscover_task/evaluator.py has no evaluate_stage1 — will fall back to direct evaluation
+2026-06-16 13:52:34,307 - skydiscover.evaluation.evaluator - INFO - Initialized evaluator with /global/u1/d/dratnam/FRNN-master/skydiscover_task/evaluator.py
+2026-06-16 13:52:34,309 - skydiscover.search.default_discovery_controller - INFO - DiscoveryController initialized: num_context_programs=4
+2026-06-16 13:52:34,817 - skydiscover.search.adaevolve.controller - INFO - Paradigm LLM: using guide_models [gpt-4o]
+2026-06-16 13:52:34,821 - skydiscover.search.adaevolve.controller - INFO - AdaEvolveController initialized (language=python, paradigm_breakthrough=True)
+2026-06-16 13:52:34,827 - skydiscover.runner - INFO - Adding initial program to database
+2026-06-16 13:52:34,905 - skydiscover.evaluation.evaluator - INFO - Evaluated program 3a4ff9c6-ad8d-4ffd-b5e5-78c42f5c233d in 0.07s: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:52:34,910 - skydiscover.search.base_database - INFO - Database has 1 programs, best program score is combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:52:34,915 - skydiscover.search.adaevolve.controller - INFO - AdaEvolve: Running 100 iterations across 2 islands
+2026-06-16 13:52:34,923 - skydiscover.search.adaevolve.controller - INFO - AdaEvolve iteration stats will be logged to: /global/u1/d/dratnam/FRNN-master/skydiscover_out/adaevolve_iteration_stats_20260616_135234.jsonl
+2026-06-16 13:52:34,936 - skydiscover.search.adaevolve.controller - INFO - Seeded island 1
+2026-06-16 13:53:01,798 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:53:01,870 - skydiscover.evaluation.evaluator - INFO - Evaluated program 85f6d570-7879-44ed-9190-ed5b8a86baec in 0.06s: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:53:01,875 - skydiscover.search.adaevolve.controller - INFO - Iteration 1: Program 85f6d570 (parent: 3a4ff9c6) completed in 26.93s (llm: 26.87s, eval: 0.06s)
+2026-06-16 13:53:01,878 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:53:10,416 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:53:10,512 - skydiscover.evaluation.evaluator - INFO - Evaluated program c836aa25-8b73-4fcf-a4d2-eff51093ab56 in 0.09s: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:53:10,524 - skydiscover.search.adaevolve.controller - INFO - Iteration 2: Program c836aa25 (parent: 3a4ff9c6) completed in 8.61s (llm: 8.51s, eval: 0.10s)
+2026-06-16 13:53:10,529 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:53:17,968 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:53:18,071 - skydiscover.evaluation.evaluator - INFO - Evaluated program 19ef988e-02bb-4a70-871a-ca1cdd817a06 in 0.10s: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:53:18,078 - skydiscover.search.adaevolve.controller - INFO - Iteration 3: Program 19ef988e (parent: b17472d2) completed in 7.49s (llm: 7.38s, eval: 0.10s)
+2026-06-16 13:53:18,082 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:53:28,369 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:53:28,374 - skydiscover.evaluation.evaluator - INFO - Evaluated program 86e1481a-c64c-41bd-aa05-c4862b1ba40c in 0.00s: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: invalid syntax (tmpfnjd619s.py, line 22)'}
+2026-06-16 13:53:28,376 - skydiscover.search.adaevolve.controller - INFO - Iteration 4: Program 86e1481a (parent: b17472d2) completed in 10.19s (llm: 10.19s, eval: 0.00s)
+2026-06-16 13:53:28,377 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: invalid syntax (tmpfnjd619s.py, line 22)'}
+2026-06-16 13:53:35,917 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:53:35,990 - skydiscover.evaluation.evaluator - INFO - Evaluated program 4430a2a6-8a46-4427-8e76-a109f351d503 in 0.06s: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:53:35,991 - skydiscover.search.adaevolve.controller - INFO - Iteration 5: Program 4430a2a6 (parent: b17472d2) completed in 7.53s (llm: 7.46s, eval: 0.06s)
+2026-06-16 13:53:35,991 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:53:44,080 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:53:44,158 - skydiscover.evaluation.evaluator - INFO - Evaluated program fab261c4-92ad-42af-8e6a-8b6ff27fb2da in 0.07s: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:53:44,164 - skydiscover.search.adaevolve.controller - INFO - Iteration 6: Program fab261c4 (parent: 85f6d570) completed in 8.15s (llm: 8.07s, eval: 0.08s)
+2026-06-16 13:53:44,169 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:53:47,797 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:53:47,888 - skydiscover.evaluation.evaluator - INFO - Evaluated program 81ae0001-4c8e-4648-9c8c-bdcab1bb13b1 in 0.08s: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:53:47,891 - skydiscover.search.adaevolve.controller - INFO - Iteration 7: Program 81ae0001 (parent: 3a4ff9c6) completed in 3.70s (llm: 3.61s, eval: 0.09s)
+2026-06-16 13:53:47,896 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:53:55,175 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:53:55,180 - skydiscover.evaluation.evaluator - INFO - Evaluated program 869ca60f-15ca-4baa-b3a6-3d38e1d048d8 in 0.00s: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: invalid syntax (tmpr3qdg0zx.py, line 22)'}
+2026-06-16 13:53:55,185 - skydiscover.search.adaevolve.controller - INFO - Iteration 8: Program 869ca60f (parent: 86e1481a) completed in 7.26s (llm: 7.25s, eval: 0.01s)
+2026-06-16 13:53:55,188 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': 'Runtime / Compilation failure: invalid syntax (tmpr3qdg0zx.py, line 22)'}
+2026-06-16 13:54:02,310 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:54:02,363 - skydiscover.evaluation.evaluator - INFO - Evaluated program 01b1b5c8-86a8-41cb-99f6-41dcb45885d2 in 0.04s: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:54:02,366 - skydiscover.search.adaevolve.controller - INFO - Iteration 9: Program 01b1b5c8 (parent: 3a4ff9c6) completed in 7.15s (llm: 7.10s, eval: 0.05s)
+2026-06-16 13:54:02,368 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:54:02,429 - skydiscover.search.adaevolve.controller - INFO - Global paradigm stagnation detected, generating breakthrough ideas...
+2026-06-16 13:54:15,958 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:54:15,960 - skydiscover.search.adaevolve.paradigm.generator - INFO - Generated 3 paradigms:
+2026-06-16 13:54:15,960 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [1] Implement a Space-Filling Curve for Efficient Memory Access (approach: algorithmic transformation)
+2026-06-16 13:54:15,961 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [2] Adaptive Radius Search for Reduced Computational Overhead (approach: adaptive algorithm design)
+2026-06-16 13:54:15,961 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [3] Utilize Multi-Stream CUDA Processing for Overlapping Data Transfer and Computation (approach: CUDA stream management)
+2026-06-16 13:54:15,961 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Set 3 new paradigms (best score: 0.000000)
+2026-06-16 13:54:15,962 - skydiscover.search.adaevolve.controller - INFO - Generated 3 breakthrough paradigms
+2026-06-16 13:54:15,964 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (1/2): Implement a Space-Filling Curve for Efficient Memory Access
+2026-06-16 13:54:27,573 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:54:27,630 - skydiscover.evaluation.evaluator - INFO - Evaluated program 58913cb9-226f-4faa-8947-a4ddd240a630 in 0.05s: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:54:27,633 - skydiscover.search.adaevolve.controller - INFO - Iteration 10: Program 58913cb9 (parent: 3a4ff9c6) completed in 11.67s (llm: 11.61s, eval: 0.05s)
+2026-06-16 13:54:27,634 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:54:27,634 - skydiscover.search.adaevolve.controller - INFO - Checkpoint interval reached at iteration 10
+2026-06-16 13:54:27,635 - skydiscover.search.base_database - INFO - Database has 12 programs, best program score is combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:54:28,012 - skydiscover.search.utils.checkpoint_manager - INFO - [CHECKPOINT] Saved database with 12 programs to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_10
+2026-06-16 13:54:28,077 - skydiscover.search.adaevolve.database - INFO - Saved AdaEvolve state to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_10
+2026-06-16 13:54:28,138 - skydiscover.runner - INFO - Checkpoint 10: best=combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:54:28,139 - skydiscover.runner - INFO - Checkpoint saved to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_10
+2026-06-16 13:54:28,205 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (1/2): Adaptive Radius Search for Reduced Computational Overhead
+2026-06-16 13:54:34,410 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:54:34,534 - skydiscover.evaluation.evaluator - INFO - Evaluated program fb087a46-9ed1-4943-850e-7b6c2bbd1f4b in 0.12s: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:54:34,539 - skydiscover.search.adaevolve.controller - INFO - Iteration 11: Program fb087a46 (parent: 3a4ff9c6) completed in 6.32s (llm: 6.20s, eval: 0.12s)
+2026-06-16 13:54:34,542 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:54:34,585 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (1/2): Utilize Multi-Stream CUDA Processing for Overlapping Data Transfer and Computation
+2026-06-16 13:54:45,187 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:54:45,273 - skydiscover.evaluation.evaluator - INFO - Evaluated program a04e0116-d191-43a2-a86d-20832cb3c5d7 in 0.08s: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:54:45,273 - skydiscover.search.adaevolve.controller - INFO - Iteration 12: Program a04e0116 (parent: 3a4ff9c6) completed in 10.69s (llm: 10.60s, eval: 0.08s)
+2026-06-16 13:54:45,274 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:54:45,326 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (2/2): Implement a Space-Filling Curve for Efficient Memory Access
+2026-06-16 13:54:57,296 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:54:57,367 - skydiscover.evaluation.evaluator - INFO - Evaluated program 996aca27-90f3-4ceb-a7a8-9721ab69bf4e in 0.06s: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:54:57,373 - skydiscover.search.adaevolve.controller - INFO - Iteration 13: Program 996aca27 (parent: 3a4ff9c6) completed in 12.05s (llm: 11.98s, eval: 0.06s)
+2026-06-16 13:54:57,375 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:54:57,419 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (2/2): Adaptive Radius Search for Reduced Computational Overhead
+2026-06-16 13:55:07,350 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:55:07,438 - skydiscover.evaluation.evaluator - INFO - Evaluated program a45ebee7-3a3d-40ca-acd0-320addcc5acc in 0.09s: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:55:07,439 - skydiscover.search.adaevolve.controller - INFO - Iteration 14: Program a45ebee7 (parent: 3a4ff9c6) completed in 10.02s (llm: 9.93s, eval: 0.09s)
+2026-06-16 13:55:07,439 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:55:07,495 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (2/2): Utilize Multi-Stream CUDA Processing for Overlapping Data Transfer and Computation
+2026-06-16 13:55:07,495 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 13:55:13,909 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:55:13,980 - skydiscover.evaluation.evaluator - INFO - Evaluated program 687f5f5d-a163-411a-a1e9-7b7f8cff2f87 in 0.06s: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:55:13,981 - skydiscover.search.adaevolve.controller - INFO - Iteration 15: Program 687f5f5d (parent: 3a4ff9c6) completed in 6.48s (llm: 6.43s, eval: 0.06s)
+2026-06-16 13:55:13,981 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:55:14,011 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 13:55:14,011 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 13:55:14,011 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 13:55:14,043 - skydiscover.search.adaevolve.database - INFO - Migration completed at iteration 15
+2026-06-16 13:55:14,043 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 13:55:14,044 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 13:55:14,044 - skydiscover.search.adaevolve.controller - INFO - Global paradigm stagnation detected, generating breakthrough ideas...
+2026-06-16 13:55:26,162 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:55:26,171 - skydiscover.search.adaevolve.paradigm.generator - INFO - Generated 3 paradigms:
+2026-06-16 13:55:26,177 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [1] Implement a Pre-processing Step with SoA Layout for Coalesced Access (approach: Data Transformation)
+2026-06-16 13:55:26,182 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [2] Leverage Batched Processing with Overlapping I/O (approach: GPU Stream Management)
+2026-06-16 13:55:26,185 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [3] Adaptive Radius Expansion with Tolerance Parameter (approach: Algorithmic Tuning)
+2026-06-16 13:55:26,190 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Archived 3 paradigms (improvement: +0.000000):
+2026-06-16 13:55:26,192 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Implement a Space-Filling Curve for Efficient Memory Access (uses: 2)
+2026-06-16 13:55:26,194 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Adaptive Radius Search for Reduced Computational Overhead (uses: 2)
+2026-06-16 13:55:26,195 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Utilize Multi-Stream CUDA Processing for Overlapping Data Transfer and Computation (uses: 2)
+2026-06-16 13:55:26,195 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Set 3 new paradigms (best score: 0.000000)
+2026-06-16 13:55:26,196 - skydiscover.search.adaevolve.controller - INFO - Generated 3 breakthrough paradigms
+2026-06-16 13:55:26,265 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (1/2): Implement a Pre-processing Step with SoA Layout for Coalesced Access
+2026-06-16 13:55:30,787 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:55:30,908 - skydiscover.evaluation.evaluator - INFO - Evaluated program 46f4fbfb-f43d-4d16-8956-1bca8b441668 in 0.11s: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:55:30,913 - skydiscover.search.adaevolve.controller - INFO - Iteration 16: Program 46f4fbfb (parent: 3a4ff9c6) completed in 4.65s (llm: 4.53s, eval: 0.12s)
+2026-06-16 13:55:30,921 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:55:31,086 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (1/2): Leverage Batched Processing with Overlapping I/O
+2026-06-16 13:55:39,461 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:55:39,579 - skydiscover.evaluation.evaluator - INFO - Evaluated program 06699c8a-b8cb-49e3-9959-4b26b1686e81 in 0.12s: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:55:39,588 - skydiscover.search.adaevolve.controller - INFO - Iteration 17: Program 06699c8a (parent: 3a4ff9c6) completed in 8.50s (llm: 8.37s, eval: 0.12s)
+2026-06-16 13:55:39,596 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'frnn_cuda'"}
+2026-06-16 13:55:39,710 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (1/2): Adaptive Radius Expansion with Tolerance Parameter
+2026-06-16 13:55:40,704 - skydiscover.runner - INFO - Signal 2 received, shutting down...
+2026-06-16 13:55:40,705 - skydiscover.search.default_discovery_controller - INFO - Graceful shutdown requested...
+2026-06-16 13:55:43,785 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"

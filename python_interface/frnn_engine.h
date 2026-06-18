@@ -33,7 +33,8 @@ class FRNNEngine {
         int max_p;
         // GPU Pointers
         // Changed d_points from float3* to float* to support N-dimensions
-        float* d_points; 
+        float* d_points;
+        float* d_points_sorted;   // coordinates physically reordered into cell order (counting sort)
         int *d_grid_cnt, *d_grid_offsets, *d_grid_idx, *d_sorted_idxs;
         float *d_dists; 
         int *d_idxs;

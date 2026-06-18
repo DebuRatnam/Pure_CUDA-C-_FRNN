@@ -56,6 +56,7 @@ old `make` build (the Makefile is stale — its `.cu` sources moved into `Tests/
 ```bash
 rm -rf build frnn_torch*.so                 # clean any stale build
 python3 setup_frnn_torch.py build_ext --inplace
+export LD_LIBRARY_PATH=$(python3 -c "import torch; import os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))"):$LD_LIBRARY_PATH
 ```
 
 Produces `frnn_torch.cpython-312-*.so` in the repo root. Verify:
@@ -114,6 +115,25 @@ Confirms FRNN returns the exact **K-nearest** points within the radius (matches 
 brute-force oracle, and matches xju2 wherever the answer is unambiguous). On dense queries
 (>K points in radius) FRNN returns the nearest K while xju2 returns any K — a semantic
 difference the check accounts for, not a bug.
+
+
+## 7. Hyperparameter & Kernel Optimization via SkyDiscover (AdaEvolve)
+
+This repository includes a machine-learning-driven optimization pipeline utilizing SkyDiscover's **AdaEvolve (Adaptive Evolution)** algorithm. It uses a Large Language Model (LLM) feedback loop to automatically mutate, compile, and benchmark low-level CUDA code inside `frnn/csrc/grid/find_nbrs.cu` to maximize A100 GPU occupancy, fix warp divergence, and optimize memory coalescing.
+
+### Prerequisites
+
+The optimization driver requires `openai`, `pyyaml`, `tqdm`, and `python-dotenv`. Install them along with the SkyDiscover submodule directly on a login node:
+
+```bash
+# From Perlmutter login node:
+module load pytorch/2.8.0
+pip install --user openai python-dotenv pyyaml tqdm
+pip install --user -e skydiscover/skydiscover
+
+export LD_LIBRARY_PATH=$(python3 -c "import torch; import os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))"):$LD_LIBRARY_PATH
+
+OPENAI_API_KEY="sk-..." PYTHONPATH=. python3 discover_frnn_opts.py --iterations 50
 
 ---
 

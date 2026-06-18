@@ -27,6 +27,8 @@ extern "C" void run_insert_points(float* d_points, int* d_grid_cnt, int* d_pc_gr
                                   int P, int dim, GridParams params);
 extern "C" void run_reorder_points(int* d_pc_grid_idx, int* d_grid_offsets,
                                    int* d_sorted_idxs, int P, int total_cells);
+extern "C" void run_counting_sort(float* d_points, int* d_pc_grid_idx, int* d_grid_offsets,
+                                  int* d_sorted_idxs, float* d_points_sorted, int P, int dim);
 extern "C" void run_find_nbrs(float* d_points1, float* d_points2, int* d_pc2_grid_off,
                               int* d_sorted_idxs, int P1, int K, int dim, float radius,
                               float* d_dists, int* d_idxs, GridParams params);
@@ -116,9 +118,14 @@ public:
                 thrust::device_ptr<int>(d_grid_cnt_),
                 thrust::device_ptr<int>(d_grid_cnt_ + params.total_cells),
                 thrust::device_ptr<int>(d_grid_offsets_));
-            run_reorder_points(d_grid_idx_, d_grid_offsets_, d_sorted_idxs_, N,
-                               params.total_cells);
-            run_find_nbrs(d_points, d_points, d_grid_offsets_, d_sorted_idxs_,
+            // Counting sort: physically reorder coords into cell order so find_nbrs
+            // streams contiguous candidates. The sorted buffer is a transient (dim, N)
+            // tensor — torch's caching allocator makes this effectively free after warm-up.
+            auto pts_sorted = torch::empty({dim, N}, f32);
+            float* d_points_sorted = pts_sorted.data_ptr<float>();
+            run_counting_sort(d_points, d_grid_idx_, d_grid_offsets_, d_sorted_idxs_,
+                              d_points_sorted, N, dim);
+            run_find_nbrs(d_points, d_points_sorted, d_grid_offsets_, d_sorted_idxs_,
                           N, K, dim, r, d_dists, d_idxs, params);
         }
 

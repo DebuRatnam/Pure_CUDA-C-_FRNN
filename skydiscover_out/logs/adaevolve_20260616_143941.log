@@ -1,0 +1,870 @@
+2026-06-16 14:39:41,348 - skydiscover.search.utils.logging_utils - INFO - Logging to /global/u1/d/dratnam/FRNN-master/skydiscover_out/logs/adaevolve_20260616_143941.log
+2026-06-16 14:39:41,355 - skydiscover.search.adaevolve.database - INFO - AdaEvolveDatabase initialized: num_islands=2, decay=0.9, intensity=[0.15, 0.5], migration=True (interval=15), unified_archive=True, adaptive_search=True, ucb_selection=True, dynamic_islands=True, paradigm_breakthrough=True, multiobjective=False
+2026-06-16 14:39:41,359 - skydiscover.runner - INFO - Runner ready: search=adaevolve, program=/global/u1/d/dratnam/FRNN-master/skydiscover_task/initial_program.py
+2026-06-16 14:39:43,828 - skydiscover.llm - INFO - OpenAI LLM: gpt-4o
+2026-06-16 14:39:45,619 - skydiscover.evaluation.evaluator - WARNING - cascade_evaluation is true but /global/u1/d/dratnam/FRNN-master/skydiscover_task/evaluator.py has no evaluate_stage1 — will fall back to direct evaluation
+2026-06-16 14:39:45,625 - skydiscover.evaluation.evaluator - INFO - Initialized evaluator with /global/u1/d/dratnam/FRNN-master/skydiscover_task/evaluator.py
+2026-06-16 14:39:45,629 - skydiscover.search.default_discovery_controller - INFO - DiscoveryController initialized: num_context_programs=4
+2026-06-16 14:39:46,402 - skydiscover.search.adaevolve.controller - INFO - Paradigm LLM: using guide_models [gpt-4o]
+2026-06-16 14:39:46,417 - skydiscover.search.adaevolve.controller - INFO - AdaEvolveController initialized (language=python, paradigm_breakthrough=True)
+2026-06-16 14:39:46,421 - skydiscover.runner - INFO - Adding initial program to database
+2026-06-16 14:39:47,408 - skydiscover.evaluation.evaluator - INFO - Evaluated program aeb51575-dde5-40b0-b74d-16f1d6c33047 in 0.98s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:39:47,413 - skydiscover.search.base_database - INFO - Database has 1 programs, best program score is combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:39:47,417 - skydiscover.search.adaevolve.controller - INFO - AdaEvolve: Running 100 iterations across 2 islands
+2026-06-16 14:39:47,458 - skydiscover.search.adaevolve.controller - INFO - AdaEvolve iteration stats will be logged to: /global/u1/d/dratnam/FRNN-master/skydiscover_out/adaevolve_iteration_stats_20260616_143947.jsonl
+2026-06-16 14:39:47,463 - skydiscover.search.adaevolve.controller - INFO - Seeded island 1
+2026-06-16 14:40:13,772 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:40:13,788 - skydiscover.evaluation.evaluator - INFO - Evaluated program ed4bb501-80bb-4433-a66f-72191c0f2f34 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:13,798 - skydiscover.search.adaevolve.controller - INFO - Iteration 1: Program ed4bb501 (parent: aeb51575) completed in 26.33s (llm: 26.32s, eval: 0.01s)
+2026-06-16 14:40:13,803 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:19,123 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:40:19,132 - skydiscover.evaluation.evaluator - INFO - Evaluated program dfe3cef8-2bd2-490b-b36a-b7324e6d2584 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:19,136 - skydiscover.search.adaevolve.controller - INFO - Iteration 2: Program dfe3cef8 (parent: f8ce5d1f) completed in 5.25s (llm: 5.24s, eval: 0.00s)
+2026-06-16 14:40:19,140 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:21,664 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:40:21,669 - skydiscover.evaluation.evaluator - INFO - Evaluated program afa79990-4845-4937-9b02-f1734d88725b in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:21,675 - skydiscover.search.adaevolve.controller - INFO - Iteration 3: Program afa79990 (parent: aeb51575) completed in 2.44s (llm: 2.43s, eval: 0.01s)
+2026-06-16 14:40:21,679 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:24,879 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:40:24,885 - skydiscover.evaluation.evaluator - INFO - Evaluated program 039c9020-a6e1-443e-9671-8b7df399d825 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:24,890 - skydiscover.search.adaevolve.controller - INFO - Iteration 4: Program 039c9020 (parent: f8ce5d1f) completed in 3.14s (llm: 3.14s, eval: 0.01s)
+2026-06-16 14:40:24,893 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:27,133 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:40:27,139 - skydiscover.evaluation.evaluator - INFO - Evaluated program f4f7ce1b-52a1-4315-9e62-4b8df4053698 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:27,145 - skydiscover.search.adaevolve.controller - INFO - Iteration 5: Program f4f7ce1b (parent: f8ce5d1f) completed in 2.16s (llm: 2.15s, eval: 0.01s)
+2026-06-16 14:40:27,150 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:32,737 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:40:32,741 - skydiscover.evaluation.evaluator - INFO - Evaluated program f4f4d814-b546-4b80-8c8e-83944ac5d72a in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:32,745 - skydiscover.search.adaevolve.controller - INFO - Iteration 6: Program f4f4d814 (parent: aeb51575) completed in 5.53s (llm: 5.53s, eval: 0.01s)
+2026-06-16 14:40:32,752 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:37,969 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:40:37,974 - skydiscover.evaluation.evaluator - INFO - Evaluated program 3756e6da-0eb4-4f5b-af24-f5d1ed100874 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:37,978 - skydiscover.search.adaevolve.controller - INFO - Iteration 7: Program 3756e6da (parent: f4f4d814) completed in 5.13s (llm: 5.12s, eval: 0.00s)
+2026-06-16 14:40:37,982 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:40,520 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:40:40,524 - skydiscover.evaluation.evaluator - INFO - Evaluated program e2069256-14c8-4ee5-9730-3ebca58db952 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:40,526 - skydiscover.search.adaevolve.controller - INFO - Iteration 8: Program e2069256 (parent: f8ce5d1f) completed in 2.51s (llm: 2.51s, eval: 0.00s)
+2026-06-16 14:40:40,528 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:45,978 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:40:45,985 - skydiscover.evaluation.evaluator - INFO - Evaluated program f974ca2c-56f8-4086-bc88-7759d0c9fe7d in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:45,991 - skydiscover.search.adaevolve.controller - INFO - Iteration 9: Program f974ca2c (parent: aeb51575) completed in 5.39s (llm: 5.38s, eval: 0.01s)
+2026-06-16 14:40:45,995 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:46,044 - skydiscover.search.adaevolve.controller - INFO - Global paradigm stagnation detected, generating breakthrough ideas...
+2026-06-16 14:40:54,408 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:40:54,412 - skydiscover.search.adaevolve.paradigm.generator - INFO - Generated 3 paradigms:
+2026-06-16 14:40:54,418 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [1] Implement Memory Pooling for CUDA Allocations (approach: CUDA Memory Management)
+2026-06-16 14:40:54,422 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [2] Utilize Asynchronous Data Transfer with CUDA Streams (approach: CUDA Streams)
+2026-06-16 14:40:54,428 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [3] Adopt Space-Filling Curves for Data Layout Optimization (approach: Spatial Data Structures)
+2026-06-16 14:40:54,431 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Set 3 new paradigms (best score: 1.000000)
+2026-06-16 14:40:54,435 - skydiscover.search.adaevolve.controller - INFO - Generated 3 breakthrough paradigms
+2026-06-16 14:40:54,441 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (1/2): Implement Memory Pooling for CUDA Allocations
+2026-06-16 14:40:58,421 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:40:58,426 - skydiscover.evaluation.evaluator - INFO - Evaluated program 4a78ad13-e033-490f-a728-a3bbff8bc3c9 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:58,430 - skydiscover.search.adaevolve.controller - INFO - Iteration 10: Program 4a78ad13 (parent: aeb51575) completed in 3.98s (llm: 3.98s, eval: 0.00s)
+2026-06-16 14:40:58,432 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:58,456 - skydiscover.search.adaevolve.controller - INFO - Checkpoint interval reached at iteration 10
+2026-06-16 14:40:58,462 - skydiscover.search.base_database - INFO - Database has 12 programs, best program score is combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:59,067 - skydiscover.search.utils.checkpoint_manager - INFO - [CHECKPOINT] Saved database with 12 programs to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_10
+2026-06-16 14:40:59,096 - skydiscover.search.adaevolve.database - INFO - Saved AdaEvolve state to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_10
+2026-06-16 14:40:59,189 - skydiscover.runner - INFO - Checkpoint 10: best=combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:40:59,191 - skydiscover.runner - INFO - Checkpoint saved to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_10
+2026-06-16 14:40:59,257 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (1/2): Utilize Asynchronous Data Transfer with CUDA Streams
+2026-06-16 14:41:02,236 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:41:02,243 - skydiscover.evaluation.evaluator - INFO - Evaluated program 8885d5d8-8fb7-4011-b3cd-2dd137d14a99 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:02,246 - skydiscover.search.adaevolve.controller - INFO - Iteration 11: Program 8885d5d8 (parent: aeb51575) completed in 2.98s (llm: 2.98s, eval: 0.00s)
+2026-06-16 14:41:02,253 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:02,318 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (1/2): Adopt Space-Filling Curves for Data Layout Optimization
+2026-06-16 14:41:05,422 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:41:05,429 - skydiscover.evaluation.evaluator - INFO - Evaluated program 01a5e055-bf78-48a2-a160-9031c41bd8d1 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:05,433 - skydiscover.search.adaevolve.controller - INFO - Iteration 12: Program 01a5e055 (parent: aeb51575) completed in 3.11s (llm: 3.10s, eval: 0.00s)
+2026-06-16 14:41:05,436 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:05,484 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (2/2): Implement Memory Pooling for CUDA Allocations
+2026-06-16 14:41:10,234 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:41:10,240 - skydiscover.evaluation.evaluator - INFO - Evaluated program 8610ee92-ce23-44ea-8d3e-172009d5bfda in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:10,245 - skydiscover.search.adaevolve.controller - INFO - Iteration 13: Program 8610ee92 (parent: aeb51575) completed in 4.76s (llm: 4.75s, eval: 0.01s)
+2026-06-16 14:41:10,249 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:10,300 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (2/2): Utilize Asynchronous Data Transfer with CUDA Streams
+2026-06-16 14:41:15,878 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:41:15,887 - skydiscover.evaluation.evaluator - INFO - Evaluated program f7e47de9-ccab-4f61-ad30-78f3d6d08726 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:15,893 - skydiscover.search.adaevolve.controller - INFO - Iteration 14: Program f7e47de9 (parent: aeb51575) completed in 5.59s (llm: 5.58s, eval: 0.01s)
+2026-06-16 14:41:15,898 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:15,975 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (2/2): Adopt Space-Filling Curves for Data Layout Optimization
+2026-06-16 14:41:15,979 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:41:16,035 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 502 Bad Gateway"
+2026-06-16 14:41:16,040 - openai._base_client - INFO - Retrying request to /chat/completions in 0.398100 seconds
+2026-06-16 14:41:18,499 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:41:18,503 - skydiscover.evaluation.evaluator - INFO - Evaluated program 77fc9941-0e52-42e0-9ed6-c2d9f123d813 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:18,508 - skydiscover.search.adaevolve.controller - INFO - Iteration 15: Program 77fc9941 (parent: aeb51575) completed in 2.52s (llm: 2.52s, eval: 0.01s)
+2026-06-16 14:41:18,515 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:18,545 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:41:18,550 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:41:18,555 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:41:18,584 - skydiscover.search.adaevolve.database - INFO - Migration completed at iteration 15
+2026-06-16 14:41:18,592 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:41:18,597 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:41:18,602 - skydiscover.search.adaevolve.controller - INFO - Global paradigm stagnation detected, generating breakthrough ideas...
+2026-06-16 14:41:26,259 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:41:26,263 - skydiscover.search.adaevolve.paradigm.generator - INFO - Generated 3 paradigms:
+2026-06-16 14:41:26,270 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [1] Batch Processing with Overlapping Streams (approach: CUDA streams and batch processing)
+2026-06-16 14:41:26,274 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [2] Adaptive Radius Scaling for Boundary Reduction (approach: Dynamic parameter tuning)
+2026-06-16 14:41:26,279 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [3] Space-filling Curve Reordering (approach: Data reordering using space-filling curves)
+2026-06-16 14:41:26,286 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Archived 3 paradigms (improvement: +0.000000):
+2026-06-16 14:41:26,290 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Implement Memory Pooling for CUDA Allocations (uses: 2)
+2026-06-16 14:41:26,297 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Utilize Asynchronous Data Transfer with CUDA Streams (uses: 2)
+2026-06-16 14:41:26,302 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Adopt Space-Filling Curves for Data Layout Optimization (uses: 2)
+2026-06-16 14:41:26,308 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Set 3 new paradigms (best score: 1.000000)
+2026-06-16 14:41:26,311 - skydiscover.search.adaevolve.controller - INFO - Generated 3 breakthrough paradigms
+2026-06-16 14:41:26,368 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (1/2): Batch Processing with Overlapping Streams
+2026-06-16 14:41:31,228 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:41:31,235 - skydiscover.evaluation.evaluator - INFO - Evaluated program 8b8d62b8-7f1b-4ead-a98c-5dac536ca04d in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:31,240 - skydiscover.search.adaevolve.controller - INFO - Iteration 16: Program 8b8d62b8 (parent: aeb51575) completed in 4.87s (llm: 4.86s, eval: 0.01s)
+2026-06-16 14:41:31,243 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:31,398 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (1/2): Adaptive Radius Scaling for Boundary Reduction
+2026-06-16 14:41:34,483 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:41:34,492 - skydiscover.evaluation.evaluator - INFO - Evaluated program 0b2a300c-ebf8-4527-b003-ee105718b584 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:34,497 - skydiscover.search.adaevolve.controller - INFO - Iteration 17: Program 0b2a300c (parent: aeb51575) completed in 3.09s (llm: 3.09s, eval: 0.01s)
+2026-06-16 14:41:34,506 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:34,642 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (1/2): Space-filling Curve Reordering
+2026-06-16 14:41:39,265 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:41:39,271 - skydiscover.evaluation.evaluator - INFO - Evaluated program 1929095a-254a-453c-8d76-e0905dadc71d in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:39,275 - skydiscover.search.adaevolve.controller - INFO - Iteration 18: Program 1929095a (parent: aeb51575) completed in 4.63s (llm: 4.62s, eval: 0.00s)
+2026-06-16 14:41:39,278 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:39,400 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (2/2): Batch Processing with Overlapping Streams
+2026-06-16 14:41:43,696 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:41:43,704 - skydiscover.evaluation.evaluator - INFO - Evaluated program 85f3fe34-e2aa-4360-b7a6-8868843096a1 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:43,711 - skydiscover.search.adaevolve.controller - INFO - Iteration 19: Program 85f3fe34 (parent: aeb51575) completed in 4.30s (llm: 4.30s, eval: 0.01s)
+2026-06-16 14:41:43,714 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:43,841 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (2/2): Adaptive Radius Scaling for Boundary Reduction
+2026-06-16 14:41:48,882 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:41:48,891 - skydiscover.evaluation.evaluator - INFO - Evaluated program bb439b94-07ba-4acd-a502-bdd601a05a67 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:48,897 - skydiscover.search.adaevolve.controller - INFO - Iteration 20: Program bb439b94 (parent: aeb51575) completed in 5.05s (llm: 5.05s, eval: 0.01s)
+2026-06-16 14:41:48,911 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:48,916 - skydiscover.search.adaevolve.controller - INFO - Checkpoint interval reached at iteration 20
+2026-06-16 14:41:48,928 - skydiscover.search.base_database - INFO - Database has 30 programs, best program score is combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:50,546 - skydiscover.search.utils.checkpoint_manager - INFO - [CHECKPOINT] Saved database with 30 programs to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_20
+2026-06-16 14:41:50,590 - skydiscover.search.adaevolve.database - INFO - Saved AdaEvolve state to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_20
+2026-06-16 14:41:50,693 - skydiscover.runner - INFO - Checkpoint 20: best=combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:50,698 - skydiscover.runner - INFO - Checkpoint saved to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_20
+2026-06-16 14:41:50,837 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (2/2): Space-filling Curve Reordering
+2026-06-16 14:41:50,842 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:41:55,331 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:41:55,338 - skydiscover.evaluation.evaluator - INFO - Evaluated program af1ece3f-b75f-4e03-8fe1-f1926caa6fae in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:55,345 - skydiscover.search.adaevolve.controller - INFO - Iteration 21: Program af1ece3f (parent: aeb51575) completed in 4.50s (llm: 4.49s, eval: 0.01s)
+2026-06-16 14:41:55,347 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:41:55,473 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:41:55,481 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:41:55,485 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:41:55,548 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:41:55,551 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:41:55,554 - skydiscover.search.adaevolve.controller - INFO - Global paradigm stagnation detected, generating breakthrough ideas...
+2026-06-16 14:42:01,696 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:42:01,702 - skydiscover.search.adaevolve.paradigm.generator - INFO - Generated 3 paradigms:
+2026-06-16 14:42:01,706 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [1] Implement a Custom Load Balancing Strategy for CUDA Kernels (approach: Custom CUDA load balancing)
+2026-06-16 14:42:01,709 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [2] Integrate a Hierarchical Spatial Partitioning Scheme (approach: Hierarchical spatial partitioning)
+2026-06-16 14:42:01,712 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [3] Develop a Hybrid CPU-GPU Execution Model (approach: Hybrid CPU-GPU model)
+2026-06-16 14:42:01,714 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Archived 3 paradigms (improvement: +0.000000):
+2026-06-16 14:42:01,718 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Batch Processing with Overlapping Streams (uses: 2)
+2026-06-16 14:42:01,722 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Adaptive Radius Scaling for Boundary Reduction (uses: 2)
+2026-06-16 14:42:01,726 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Space-filling Curve Reordering (uses: 2)
+2026-06-16 14:42:01,729 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Set 3 new paradigms (best score: 1.000000)
+2026-06-16 14:42:01,734 - skydiscover.search.adaevolve.controller - INFO - Generated 3 breakthrough paradigms
+2026-06-16 14:42:01,741 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (1/2): Implement a Custom Load Balancing Strategy for CUDA Kernels
+2026-06-16 14:42:04,642 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:42:04,646 - skydiscover.evaluation.evaluator - INFO - Evaluated program f9f85daa-49e6-4694-b6ff-483f882712aa in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:04,651 - skydiscover.search.adaevolve.controller - INFO - Iteration 22: Program f9f85daa (parent: aeb51575) completed in 2.91s (llm: 2.90s, eval: 0.01s)
+2026-06-16 14:42:04,654 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:04,779 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (1/2): Integrate a Hierarchical Spatial Partitioning Scheme
+2026-06-16 14:42:07,341 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:42:07,347 - skydiscover.evaluation.evaluator - INFO - Evaluated program cb5422f6-1c20-448f-8617-0bcc8f7b05f3 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:07,351 - skydiscover.search.adaevolve.controller - INFO - Iteration 23: Program cb5422f6 (parent: aeb51575) completed in 2.57s (llm: 2.56s, eval: 0.00s)
+2026-06-16 14:42:07,356 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:07,544 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (1/2): Develop a Hybrid CPU-GPU Execution Model
+2026-06-16 14:42:10,954 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:42:10,961 - skydiscover.evaluation.evaluator - INFO - Evaluated program a20ed9a4-9f65-481b-9dff-fda7a42faeb6 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:10,969 - skydiscover.search.adaevolve.controller - INFO - Iteration 24: Program a20ed9a4 (parent: aeb51575) completed in 3.42s (llm: 3.41s, eval: 0.01s)
+2026-06-16 14:42:10,972 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:11,118 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (2/2): Implement a Custom Load Balancing Strategy for CUDA Kernels
+2026-06-16 14:42:14,102 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:42:14,106 - skydiscover.evaluation.evaluator - INFO - Evaluated program ff8e11f4-4d95-4f9d-81bc-bf97c2651962 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:14,111 - skydiscover.search.adaevolve.controller - INFO - Iteration 25: Program ff8e11f4 (parent: aeb51575) completed in 2.99s (llm: 2.98s, eval: 0.01s)
+2026-06-16 14:42:14,112 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:14,340 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (2/2): Integrate a Hierarchical Spatial Partitioning Scheme
+2026-06-16 14:42:17,994 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:42:17,996 - skydiscover.evaluation.evaluator - INFO - Evaluated program e1aa72ca-800b-4ca5-8786-4b2295f82c51 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:17,997 - skydiscover.search.adaevolve.controller - INFO - Iteration 26: Program e1aa72ca (parent: aeb51575) completed in 3.65s (llm: 3.65s, eval: 0.00s)
+2026-06-16 14:42:17,998 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:18,155 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (2/2): Develop a Hybrid CPU-GPU Execution Model
+2026-06-16 14:42:18,163 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:42:20,463 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:42:20,468 - skydiscover.evaluation.evaluator - INFO - Evaluated program ff4c3d50-f652-4e37-b747-db281d9c572e in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:20,491 - skydiscover.search.adaevolve.controller - INFO - Iteration 27: Program ff4c3d50 (parent: aeb51575) completed in 2.31s (llm: 2.30s, eval: 0.01s)
+2026-06-16 14:42:20,497 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:20,686 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:42:20,693 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:42:20,698 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:42:20,766 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:42:20,772 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:42:20,776 - skydiscover.search.adaevolve.controller - INFO - Global paradigm stagnation detected, generating breakthrough ideas...
+2026-06-16 14:42:28,534 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:42:28,539 - skydiscover.search.adaevolve.paradigm.generator - INFO - Generated 3 paradigms:
+2026-06-16 14:42:28,543 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [1] Implement a Preprocessing Step for Data Augmentation (approach: numpy.random)
+2026-06-16 14:42:28,545 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [2] Apply a Dimensionality Reduction Technique Before Search (approach: numpy.linalg.svd)
+2026-06-16 14:42:28,549 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [3] Experiment with Non-Uniform Radius Scaling Based on Density (approach: scipy.spatial.cKDTree)
+2026-06-16 14:42:28,553 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Archived 3 paradigms (improvement: +0.000000):
+2026-06-16 14:42:28,555 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Implement a Custom Load Balancing Strategy for CUDA Kernels (uses: 2)
+2026-06-16 14:42:28,559 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Integrate a Hierarchical Spatial Partitioning Scheme (uses: 2)
+2026-06-16 14:42:28,562 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Develop a Hybrid CPU-GPU Execution Model (uses: 2)
+2026-06-16 14:42:28,567 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Set 3 new paradigms (best score: 1.000000)
+2026-06-16 14:42:28,570 - skydiscover.search.adaevolve.controller - INFO - Generated 3 breakthrough paradigms
+2026-06-16 14:42:28,580 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (1/2): Implement a Preprocessing Step for Data Augmentation
+2026-06-16 14:42:32,261 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:42:32,269 - skydiscover.evaluation.evaluator - INFO - Evaluated program 491a9b0f-db36-4a4f-83c7-f7f000981faa in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:32,285 - skydiscover.search.adaevolve.controller - INFO - Iteration 28: Program 491a9b0f (parent: aeb51575) completed in 3.70s (llm: 3.69s, eval: 0.02s)
+2026-06-16 14:42:32,291 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:32,483 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (1/2): Apply a Dimensionality Reduction Technique Before Search
+2026-06-16 14:42:38,787 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:42:38,791 - skydiscover.evaluation.evaluator - INFO - Evaluated program f2c399a8-c6c6-4421-9de4-c772a58510a0 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:38,822 - skydiscover.search.adaevolve.controller - INFO - Iteration 29: Program f2c399a8 (parent: aeb51575) completed in 6.32s (llm: 6.30s, eval: 0.02s)
+2026-06-16 14:42:38,828 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:39,082 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (1/2): Experiment with Non-Uniform Radius Scaling Based on Density
+2026-06-16 14:42:41,706 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:42:41,711 - skydiscover.evaluation.evaluator - INFO - Evaluated program 08fd6ac5-f7d0-4753-9548-b044ef54df61 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:41,721 - skydiscover.search.adaevolve.controller - INFO - Iteration 30: Program 08fd6ac5 (parent: aeb51575) completed in 2.63s (llm: 2.62s, eval: 0.01s)
+2026-06-16 14:42:41,724 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:41,737 - skydiscover.search.adaevolve.controller - INFO - Checkpoint interval reached at iteration 30
+2026-06-16 14:42:41,749 - skydiscover.search.base_database - INFO - Database has 40 programs, best program score is combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:43,689 - skydiscover.search.utils.checkpoint_manager - INFO - [CHECKPOINT] Saved database with 38 programs to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_30
+2026-06-16 14:42:43,737 - skydiscover.search.adaevolve.database - INFO - Saved AdaEvolve state to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_30
+2026-06-16 14:42:43,784 - skydiscover.runner - INFO - Checkpoint 30: best=combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:43,789 - skydiscover.runner - INFO - Checkpoint saved to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_30
+2026-06-16 14:42:44,029 - skydiscover.search.adaevolve.database - INFO - Migration completed at iteration 30
+2026-06-16 14:42:44,042 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (2/2): Implement a Preprocessing Step for Data Augmentation
+2026-06-16 14:42:46,471 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:42:46,484 - skydiscover.evaluation.evaluator - INFO - Evaluated program 9f682220-6340-4810-86ce-b0b41dbd2cc7 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:46,504 - skydiscover.search.adaevolve.controller - INFO - Iteration 31: Program 9f682220 (parent: aeb51575) completed in 2.43s (llm: 2.42s, eval: 0.01s)
+2026-06-16 14:42:46,507 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:46,721 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (2/2): Apply a Dimensionality Reduction Technique Before Search
+2026-06-16 14:42:50,485 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:42:50,486 - skydiscover.evaluation.evaluator - INFO - Evaluated program b4876d46-6c54-4591-8120-62ab2021eb8f in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:50,487 - skydiscover.search.adaevolve.controller - INFO - Iteration 32: Program b4876d46 (parent: aeb51575) completed in 3.75s (llm: 3.75s, eval: 0.00s)
+2026-06-16 14:42:50,488 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:50,731 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (2/2): Experiment with Non-Uniform Radius Scaling Based on Density
+2026-06-16 14:42:50,732 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:42:53,469 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:42:53,485 - skydiscover.evaluation.evaluator - INFO - Evaluated program 35410908-2389-4384-8c21-5587effc1509 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:53,502 - skydiscover.search.adaevolve.controller - INFO - Iteration 33: Program 35410908 (parent: aeb51575) completed in 2.75s (llm: 2.75s, eval: 0.00s)
+2026-06-16 14:42:53,522 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:42:53,687 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:42:53,689 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:42:53,706 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:42:53,786 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:42:53,787 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:42:53,788 - skydiscover.search.adaevolve.controller - INFO - Global paradigm stagnation detected, generating breakthrough ideas...
+2026-06-16 14:42:59,660 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:42:59,663 - skydiscover.search.adaevolve.paradigm.generator - INFO - Generated 3 paradigms:
+2026-06-16 14:42:59,664 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [1] Implement Coalesced Memory Access Patterns (approach: Data layout transformation)
+2026-06-16 14:42:59,666 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [2] Adaptive Radius Expansion with Heuristic Tuning (approach: Heuristic parameter tuning)
+2026-06-16 14:42:59,666 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [3] Utilize CUDA Shared Memory for Intermediate Storage (approach: CUDA shared memory)
+2026-06-16 14:42:59,670 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Archived 3 paradigms (improvement: +0.000000):
+2026-06-16 14:42:59,677 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Implement a Preprocessing Step for Data Augmentation (uses: 2)
+2026-06-16 14:42:59,680 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Apply a Dimensionality Reduction Technique Before Search (uses: 2)
+2026-06-16 14:42:59,681 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Experiment with Non-Uniform Radius Scaling Based on Density (uses: 2)
+2026-06-16 14:42:59,681 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Set 3 new paradigms (best score: 1.000000)
+2026-06-16 14:42:59,682 - skydiscover.search.adaevolve.controller - INFO - Generated 3 breakthrough paradigms
+2026-06-16 14:42:59,685 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (1/2): Implement Coalesced Memory Access Patterns
+2026-06-16 14:43:01,568 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:43:01,574 - skydiscover.evaluation.evaluator - INFO - Evaluated program 7c93fd33-91a4-43e9-8dd1-e526bcd77ad7 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:01,583 - skydiscover.search.adaevolve.controller - INFO - Iteration 34: Program 7c93fd33 (parent: aeb51575) completed in 1.88s (llm: 1.87s, eval: 0.01s)
+2026-06-16 14:43:01,590 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:01,798 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (1/2): Adaptive Radius Expansion with Heuristic Tuning
+2026-06-16 14:43:03,897 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:43:03,902 - skydiscover.evaluation.evaluator - INFO - Evaluated program 375605ec-98f4-4d1e-9df7-6ef0f15ee2ec in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:03,926 - skydiscover.search.adaevolve.controller - INFO - Iteration 35: Program 375605ec (parent: aeb51575) completed in 2.11s (llm: 2.10s, eval: 0.01s)
+2026-06-16 14:43:03,927 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:04,159 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (1/2): Utilize CUDA Shared Memory for Intermediate Storage
+2026-06-16 14:43:07,593 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:43:07,600 - skydiscover.evaluation.evaluator - INFO - Evaluated program bc5069d4-c592-45ff-8b58-8e94c7d24680 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:07,621 - skydiscover.search.adaevolve.controller - INFO - Iteration 36: Program bc5069d4 (parent: aeb51575) completed in 3.44s (llm: 3.43s, eval: 0.01s)
+2026-06-16 14:43:07,635 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:07,893 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (2/2): Implement Coalesced Memory Access Patterns
+2026-06-16 14:43:10,235 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:43:10,237 - skydiscover.evaluation.evaluator - INFO - Evaluated program d4746720-f7ff-4f3d-b505-84e19252e7b0 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:10,255 - skydiscover.search.adaevolve.controller - INFO - Iteration 37: Program d4746720 (parent: aeb51575) completed in 2.34s (llm: 2.33s, eval: 0.01s)
+2026-06-16 14:43:10,273 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:10,498 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (2/2): Adaptive Radius Expansion with Heuristic Tuning
+2026-06-16 14:43:13,648 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:43:13,650 - skydiscover.evaluation.evaluator - INFO - Evaluated program 760cbcb3-b6ea-4e3c-9841-2a9d952ddcd6 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:13,666 - skydiscover.search.adaevolve.controller - INFO - Iteration 38: Program 760cbcb3 (parent: aeb51575) completed in 3.15s (llm: 3.15s, eval: 0.00s)
+2026-06-16 14:43:13,673 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:13,880 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (2/2): Utilize CUDA Shared Memory for Intermediate Storage
+2026-06-16 14:43:13,887 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:43:16,532 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:43:16,534 - skydiscover.evaluation.evaluator - INFO - Evaluated program 5e4844d6-510c-4379-b174-12479d621b78 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:16,554 - skydiscover.search.adaevolve.controller - INFO - Iteration 39: Program 5e4844d6 (parent: aeb51575) completed in 2.65s (llm: 2.65s, eval: 0.00s)
+2026-06-16 14:43:16,558 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:16,717 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:43:16,724 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:43:16,728 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:43:16,806 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:43:16,818 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:43:16,820 - skydiscover.search.adaevolve.controller - INFO - Global paradigm stagnation detected, generating breakthrough ideas...
+2026-06-16 14:43:24,332 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:43:24,335 - skydiscover.search.adaevolve.paradigm.generator - INFO - Generated 3 paradigms:
+2026-06-16 14:43:24,349 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [1] Implement Data-Driven Kernel Fusion (approach: CUDA Kernel Fusion)
+2026-06-16 14:43:24,351 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [2] Utilize Multi-GPU Parallelism (approach: Multi-GPU Parallelism)
+2026-06-16 14:43:24,355 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [3] Adaptive Radius Adjustment Based on Density (approach: Density-Based Adaptive Radius)
+2026-06-16 14:43:24,357 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Archived 3 paradigms (improvement: +0.000000):
+2026-06-16 14:43:24,361 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Implement Coalesced Memory Access Patterns (uses: 2)
+2026-06-16 14:43:24,363 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Adaptive Radius Expansion with Heuristic Tuning (uses: 2)
+2026-06-16 14:43:24,367 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Utilize CUDA Shared Memory for Intermediate Storage (uses: 2)
+2026-06-16 14:43:24,371 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Set 3 new paradigms (best score: 1.000000)
+2026-06-16 14:43:24,382 - skydiscover.search.adaevolve.controller - INFO - Generated 3 breakthrough paradigms
+2026-06-16 14:43:24,388 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (1/2): Implement Data-Driven Kernel Fusion
+2026-06-16 14:43:27,449 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:43:27,455 - skydiscover.evaluation.evaluator - INFO - Evaluated program 74f7fde2-b00e-4123-a45d-52f86804457f in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:27,477 - skydiscover.search.adaevolve.controller - INFO - Iteration 40: Program 74f7fde2 (parent: aeb51575) completed in 3.07s (llm: 3.06s, eval: 0.00s)
+2026-06-16 14:43:27,495 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:27,508 - skydiscover.search.adaevolve.controller - INFO - Checkpoint interval reached at iteration 40
+2026-06-16 14:43:27,510 - skydiscover.search.base_database - INFO - Database has 48 programs, best program score is combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:28,959 - skydiscover.search.utils.checkpoint_manager - INFO - [CHECKPOINT] Saved database with 40 programs to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_40
+2026-06-16 14:43:28,975 - skydiscover.search.adaevolve.database - INFO - Saved AdaEvolve state to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_40
+2026-06-16 14:43:29,001 - skydiscover.runner - INFO - Checkpoint 40: best=combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:29,008 - skydiscover.runner - INFO - Checkpoint saved to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_40
+2026-06-16 14:43:29,201 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (1/2): Utilize Multi-GPU Parallelism
+2026-06-16 14:43:32,093 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:43:32,102 - skydiscover.evaluation.evaluator - INFO - Evaluated program 075cf1a8-5194-4d8a-96c0-7eaf0a57411d in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:32,119 - skydiscover.search.adaevolve.controller - INFO - Iteration 41: Program 075cf1a8 (parent: aeb51575) completed in 2.90s (llm: 2.90s, eval: 0.00s)
+2026-06-16 14:43:32,119 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:32,327 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (1/2): Adaptive Radius Adjustment Based on Density
+2026-06-16 14:43:36,097 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:43:36,102 - skydiscover.evaluation.evaluator - INFO - Evaluated program f66e02b3-64fa-4fd7-b20b-48baf7ac30a4 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:36,121 - skydiscover.search.adaevolve.controller - INFO - Iteration 42: Program f66e02b3 (parent: aeb51575) completed in 3.78s (llm: 3.77s, eval: 0.00s)
+2026-06-16 14:43:36,122 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:36,362 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (2/2): Implement Data-Driven Kernel Fusion
+2026-06-16 14:43:42,081 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:43:42,084 - skydiscover.evaluation.evaluator - INFO - Evaluated program e43e502d-a51e-4c29-863b-2161d0cf3681 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:42,103 - skydiscover.search.adaevolve.controller - INFO - Iteration 43: Program e43e502d (parent: aeb51575) completed in 5.72s (llm: 5.72s, eval: 0.00s)
+2026-06-16 14:43:42,103 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:42,323 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (2/2): Utilize Multi-GPU Parallelism
+2026-06-16 14:43:45,858 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:43:45,860 - skydiscover.evaluation.evaluator - INFO - Evaluated program 1f7c078b-9f15-42b5-ae43-ee9703145818 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:45,878 - skydiscover.search.adaevolve.controller - INFO - Iteration 44: Program 1f7c078b (parent: aeb51575) completed in 3.53s (llm: 3.53s, eval: 0.00s)
+2026-06-16 14:43:45,878 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:46,100 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (2/2): Adaptive Radius Adjustment Based on Density
+2026-06-16 14:43:46,100 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:43:48,530 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:43:48,535 - skydiscover.evaluation.evaluator - INFO - Evaluated program b6f3b0ac-62d8-432f-aba8-12c38c69b586 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:48,555 - skydiscover.search.adaevolve.controller - INFO - Iteration 45: Program b6f3b0ac (parent: aeb51575) completed in 2.44s (llm: 2.43s, eval: 0.00s)
+2026-06-16 14:43:48,557 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:48,726 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:43:48,729 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:43:48,740 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:43:49,339 - skydiscover.search.adaevolve.database - INFO - Migration completed at iteration 45
+2026-06-16 14:43:49,347 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:43:49,351 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:43:49,362 - skydiscover.search.adaevolve.controller - INFO - Global paradigm stagnation detected, generating breakthrough ideas...
+2026-06-16 14:43:54,424 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:43:54,432 - skydiscover.search.adaevolve.paradigm.generator - INFO - Generated 3 paradigms:
+2026-06-16 14:43:54,434 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [1] Implement a Hierarchical Grid Strategy (approach: Custom hierarchical grid implementation)
+2026-06-16 14:43:54,442 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [2] Leverage CUDA Streams for Overlapping Execution (approach: CUDA Streams)
+2026-06-16 14:43:54,445 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [3] Adaptive Radius Scaling Based on Local Density (approach: Adaptive radius scaling)
+2026-06-16 14:43:54,449 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Archived 3 paradigms (improvement: +0.000000):
+2026-06-16 14:43:54,455 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Implement Data-Driven Kernel Fusion (uses: 2)
+2026-06-16 14:43:54,456 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Utilize Multi-GPU Parallelism (uses: 2)
+2026-06-16 14:43:54,457 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Adaptive Radius Adjustment Based on Density (uses: 2)
+2026-06-16 14:43:54,457 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Set 3 new paradigms (best score: 1.000000)
+2026-06-16 14:43:54,459 - skydiscover.search.adaevolve.controller - INFO - Generated 3 breakthrough paradigms
+2026-06-16 14:43:54,462 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (1/2): Implement a Hierarchical Grid Strategy
+2026-06-16 14:43:56,750 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:43:56,769 - skydiscover.evaluation.evaluator - INFO - Evaluated program 2bfa5070-e5a6-49b0-a167-44f7e6770af8 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:56,945 - skydiscover.search.adaevolve.controller - INFO - Iteration 46: Program 2bfa5070 (parent: aeb51575) completed in 2.31s (llm: 2.30s, eval: 0.00s)
+2026-06-16 14:43:56,951 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:43:57,311 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (1/2): Leverage CUDA Streams for Overlapping Execution
+2026-06-16 14:44:00,903 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:44:00,908 - skydiscover.evaluation.evaluator - INFO - Evaluated program 3f215f7b-4011-4941-89fc-706478c0634f in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:00,927 - skydiscover.search.adaevolve.controller - INFO - Iteration 47: Program 3f215f7b (parent: aeb51575) completed in 3.58s (llm: 3.58s, eval: 0.00s)
+2026-06-16 14:44:00,930 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:01,155 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (1/2): Adaptive Radius Scaling Based on Local Density
+2026-06-16 14:44:06,569 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:44:06,573 - skydiscover.evaluation.evaluator - INFO - Evaluated program d4b69dbd-932f-46f3-84e6-5f1c348a8bd9 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:06,592 - skydiscover.search.adaevolve.controller - INFO - Iteration 48: Program d4b69dbd (parent: aeb51575) completed in 5.41s (llm: 5.41s, eval: 0.00s)
+2026-06-16 14:44:06,596 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:06,826 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (2/2): Implement a Hierarchical Grid Strategy
+2026-06-16 14:44:10,405 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:44:10,408 - skydiscover.evaluation.evaluator - INFO - Evaluated program a21b4f32-882a-4c7c-a3bd-21f3537dd207 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:10,429 - skydiscover.search.adaevolve.controller - INFO - Iteration 49: Program a21b4f32 (parent: aeb51575) completed in 3.58s (llm: 3.57s, eval: 0.00s)
+2026-06-16 14:44:10,429 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:10,678 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (2/2): Leverage CUDA Streams for Overlapping Execution
+2026-06-16 14:44:14,228 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:44:14,278 - skydiscover.evaluation.evaluator - INFO - Evaluated program 6fdf8453-87dc-4584-be45-2542d460b41a in 0.05s: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'cupy'"}
+2026-06-16 14:44:14,299 - skydiscover.search.adaevolve.controller - INFO - Iteration 50: Program 6fdf8453 (parent: aeb51575) completed in 3.60s (llm: 3.55s, eval: 0.05s)
+2026-06-16 14:44:14,299 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=0.0000, artifacts={'feedback': "Runtime / Compilation failure: No module named 'cupy'"}
+2026-06-16 14:44:14,300 - skydiscover.search.adaevolve.controller - INFO - Checkpoint interval reached at iteration 50
+2026-06-16 14:44:14,300 - skydiscover.search.base_database - INFO - Database has 54 programs, best program score is combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:15,756 - skydiscover.search.utils.checkpoint_manager - INFO - [CHECKPOINT] Saved database with 40 programs to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_50
+2026-06-16 14:44:15,774 - skydiscover.search.adaevolve.database - INFO - Saved AdaEvolve state to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_50
+2026-06-16 14:44:15,827 - skydiscover.runner - INFO - Checkpoint 50: best=combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:15,828 - skydiscover.runner - INFO - Checkpoint saved to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_50
+2026-06-16 14:44:15,854 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (2/2): Adaptive Radius Scaling Based on Local Density
+2026-06-16 14:44:15,856 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:44:18,391 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:44:18,393 - skydiscover.evaluation.evaluator - INFO - Evaluated program cef5afd1-92cf-48ed-8e18-e6351f5fb86c in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:18,416 - skydiscover.search.adaevolve.controller - INFO - Iteration 51: Program cef5afd1 (parent: aeb51575) completed in 2.54s (llm: 2.53s, eval: 0.01s)
+2026-06-16 14:44:18,417 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:18,586 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:44:18,593 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:44:18,594 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:44:18,625 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:44:18,625 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:44:18,625 - skydiscover.search.adaevolve.controller - INFO - Global paradigm stagnation detected, generating breakthrough ideas...
+2026-06-16 14:44:27,803 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:44:27,805 - skydiscover.search.adaevolve.paradigm.generator - INFO - Generated 3 paradigms:
+2026-06-16 14:44:27,805 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [1] Implement Memory Pooling for GPU Resource Optimization (approach: custom.memory_pooling)
+2026-06-16 14:44:27,805 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [2] Dynamic Load Balancing via Work Stealing (approach: dynamic.load_balancing)
+2026-06-16 14:44:27,806 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [3] Adaptive Radius Decomposition Based on Spatial Clustering (approach: clustering.radius_adaptation)
+2026-06-16 14:44:27,806 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Archived 3 paradigms (improvement: +0.000000):
+2026-06-16 14:44:27,806 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Implement a Hierarchical Grid Strategy (uses: 2)
+2026-06-16 14:44:27,807 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Leverage CUDA Streams for Overlapping Execution (uses: 2)
+2026-06-16 14:44:27,807 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Adaptive Radius Scaling Based on Local Density (uses: 2)
+2026-06-16 14:44:27,807 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Set 3 new paradigms (best score: 1.000000)
+2026-06-16 14:44:27,808 - skydiscover.search.adaevolve.controller - INFO - Generated 3 breakthrough paradigms
+2026-06-16 14:44:27,812 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (1/2): Implement Memory Pooling for GPU Resource Optimization
+2026-06-16 14:44:31,198 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:44:31,203 - skydiscover.evaluation.evaluator - INFO - Evaluated program 1f0db4c0-1e3a-4601-af09-d96d3f920fb4 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:31,220 - skydiscover.search.adaevolve.controller - INFO - Iteration 52: Program 1f0db4c0 (parent: aeb51575) completed in 3.40s (llm: 3.39s, eval: 0.00s)
+2026-06-16 14:44:31,222 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:31,434 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (1/2): Dynamic Load Balancing via Work Stealing
+2026-06-16 14:44:34,314 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:44:34,319 - skydiscover.evaluation.evaluator - INFO - Evaluated program f0be063f-1c1e-4ef6-931b-eb75aea0973b in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:34,336 - skydiscover.search.adaevolve.controller - INFO - Iteration 53: Program f0be063f (parent: aeb51575) completed in 2.88s (llm: 2.88s, eval: 0.00s)
+2026-06-16 14:44:34,341 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:34,570 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (1/2): Adaptive Radius Decomposition Based on Spatial Clustering
+2026-06-16 14:44:36,507 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:44:36,515 - skydiscover.evaluation.evaluator - INFO - Evaluated program fa466c48-7498-4bbf-8934-abcecff0c543 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:36,532 - skydiscover.search.adaevolve.controller - INFO - Iteration 54: Program fa466c48 (parent: aeb51575) completed in 1.95s (llm: 1.94s, eval: 0.01s)
+2026-06-16 14:44:36,537 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:36,743 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (2/2): Implement Memory Pooling for GPU Resource Optimization
+2026-06-16 14:44:39,637 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:44:39,644 - skydiscover.evaluation.evaluator - INFO - Evaluated program 4881b82a-eaa2-4160-919d-25f5f3e3cd69 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:39,669 - skydiscover.search.adaevolve.controller - INFO - Iteration 55: Program 4881b82a (parent: aeb51575) completed in 2.91s (llm: 2.90s, eval: 0.01s)
+2026-06-16 14:44:39,672 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:39,942 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (2/2): Dynamic Load Balancing via Work Stealing
+2026-06-16 14:44:42,803 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:44:42,805 - skydiscover.evaluation.evaluator - INFO - Evaluated program 3c033144-728a-46e4-97bb-79daf59d4396 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:42,821 - skydiscover.search.adaevolve.controller - INFO - Iteration 56: Program 3c033144 (parent: aeb51575) completed in 2.86s (llm: 2.86s, eval: 0.00s)
+2026-06-16 14:44:42,822 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:43,046 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (2/2): Adaptive Radius Decomposition Based on Spatial Clustering
+2026-06-16 14:44:43,047 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:44:47,400 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:44:47,403 - skydiscover.evaluation.evaluator - INFO - Evaluated program e9bc4b2f-f3d7-44ac-84e5-a7c0703b5c98 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:47,420 - skydiscover.search.adaevolve.controller - INFO - Iteration 57: Program e9bc4b2f (parent: aeb51575) completed in 4.36s (llm: 4.35s, eval: 0.00s)
+2026-06-16 14:44:47,420 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:47,588 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:44:47,589 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:44:47,589 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:44:47,664 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:44:47,664 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:44:47,664 - skydiscover.search.adaevolve.controller - INFO - Global paradigm stagnation detected, generating breakthrough ideas...
+2026-06-16 14:44:55,689 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:44:55,695 - skydiscover.search.adaevolve.paradigm.generator - INFO - Generated 3 paradigms:
+2026-06-16 14:44:55,704 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [1] Implement Memory Coalescing Using Array of Structures (AoS) Layout (approach: numpy.reshape)
+2026-06-16 14:44:55,708 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [2] Implement Adaptive Sub-Batch Processing Based on L2 Cache Size (approach: GPU profiling and adaptive sub-batching)
+2026-06-16 14:44:55,714 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [3] Utilize Asynchronous CUDA Streams for Overlapping Data Transfers and Computation (approach: CUDA streams for asynchronous processing)
+2026-06-16 14:44:55,717 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Archived 3 paradigms (improvement: +0.000000):
+2026-06-16 14:44:55,718 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Implement Memory Pooling for GPU Resource Optimization (uses: 2)
+2026-06-16 14:44:55,718 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Dynamic Load Balancing via Work Stealing (uses: 2)
+2026-06-16 14:44:55,719 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Adaptive Radius Decomposition Based on Spatial Clustering (uses: 2)
+2026-06-16 14:44:55,719 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Set 3 new paradigms (best score: 1.000000)
+2026-06-16 14:44:55,719 - skydiscover.search.adaevolve.controller - INFO - Generated 3 breakthrough paradigms
+2026-06-16 14:44:55,724 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (1/2): Implement Memory Coalescing Using Array of Structures (AoS) Layout
+2026-06-16 14:44:58,396 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:44:58,400 - skydiscover.evaluation.evaluator - INFO - Evaluated program ea51a802-1af0-4b89-b751-4e22c2f1a018 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:58,418 - skydiscover.search.adaevolve.controller - INFO - Iteration 58: Program ea51a802 (parent: aeb51575) completed in 2.67s (llm: 2.67s, eval: 0.00s)
+2026-06-16 14:44:58,423 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:44:58,685 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (1/2): Implement Adaptive Sub-Batch Processing Based on L2 Cache Size
+2026-06-16 14:45:02,065 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:45:02,071 - skydiscover.evaluation.evaluator - INFO - Evaluated program 98371728-f6cc-4e50-942f-1b5b684a0930 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:02,101 - skydiscover.search.adaevolve.controller - INFO - Iteration 59: Program 98371728 (parent: aeb51575) completed in 3.39s (llm: 3.38s, eval: 0.01s)
+2026-06-16 14:45:02,116 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:02,366 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (1/2): Utilize Asynchronous CUDA Streams for Overlapping Data Transfers and Computation
+2026-06-16 14:45:05,230 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:45:05,237 - skydiscover.evaluation.evaluator - INFO - Evaluated program 74191d32-83ae-411b-9297-53b55a1c9558 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:05,261 - skydiscover.search.adaevolve.controller - INFO - Iteration 60: Program 74191d32 (parent: aeb51575) completed in 2.87s (llm: 2.87s, eval: 0.01s)
+2026-06-16 14:45:05,263 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:05,267 - skydiscover.search.adaevolve.controller - INFO - Checkpoint interval reached at iteration 60
+2026-06-16 14:45:05,271 - skydiscover.search.base_database - INFO - Database has 50 programs, best program score is combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:07,117 - skydiscover.search.utils.checkpoint_manager - INFO - [CHECKPOINT] Saved database with 40 programs to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_60
+2026-06-16 14:45:07,142 - skydiscover.search.adaevolve.database - INFO - Saved AdaEvolve state to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_60
+2026-06-16 14:45:07,184 - skydiscover.runner - INFO - Checkpoint 60: best=combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:07,195 - skydiscover.runner - INFO - Checkpoint saved to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_60
+2026-06-16 14:45:07,362 - skydiscover.search.adaevolve.database - INFO - Spawn conditions met: global_productivity=0.015 < threshold=0.015, islands=2/5
+2026-06-16 14:45:07,461 - skydiscover.search.adaevolve.database - INFO - Spawn conditions met: global_productivity=0.015 < threshold=0.015, islands=2/5
+2026-06-16 14:45:07,463 - skydiscover.search.adaevolve.database - INFO - Spawned new island 2 with config 'quality' (total islands: 3/5)
+2026-06-16 14:45:07,839 - skydiscover.search.adaevolve.database - INFO - Migration completed at iteration 60
+2026-06-16 14:45:07,868 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (2/2): Implement Memory Coalescing Using Array of Structures (AoS) Layout
+2026-06-16 14:45:12,873 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:45:12,887 - skydiscover.evaluation.evaluator - INFO - Evaluated program 57a43cf6-a943-4a9c-b5eb-3cbdfc44308f in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:12,892 - skydiscover.search.adaevolve.controller - INFO - Iteration 61: Program 57a43cf6 (parent: aeb51575) completed in 5.02s (llm: 5.01s, eval: 0.01s)
+2026-06-16 14:45:12,896 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:13,152 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (2/2): Implement Adaptive Sub-Batch Processing Based on L2 Cache Size
+2026-06-16 14:45:18,225 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:45:18,231 - skydiscover.evaluation.evaluator - INFO - Evaluated program 63a68679-2996-4f6c-9ff5-98fe5135ada7 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:18,235 - skydiscover.search.adaevolve.controller - INFO - Iteration 62: Program 63a68679 (parent: aeb51575) completed in 5.08s (llm: 5.07s, eval: 0.00s)
+2026-06-16 14:45:18,240 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:18,371 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (2/2): Utilize Asynchronous CUDA Streams for Overlapping Data Transfers and Computation
+2026-06-16 14:45:18,377 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:45:23,895 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:45:23,906 - skydiscover.evaluation.evaluator - INFO - Evaluated program 70b6def4-9e1f-488a-9ecc-4098820f20a7 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:23,910 - skydiscover.search.adaevolve.controller - INFO - Iteration 63: Program 70b6def4 (parent: aeb51575) completed in 5.53s (llm: 5.52s, eval: 0.00s)
+2026-06-16 14:45:23,915 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:23,967 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:45:23,971 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:45:23,974 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:45:24,006 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:45:24,009 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:45:24,011 - skydiscover.search.adaevolve.controller - INFO - Global paradigm stagnation detected, generating breakthrough ideas...
+2026-06-16 14:45:30,120 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:45:30,124 - skydiscover.search.adaevolve.paradigm.generator - INFO - Generated 3 paradigms:
+2026-06-16 14:45:30,129 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [1] Use Memory Coalescing Techniques for Data Access (approach: Memory Coalescing)
+2026-06-16 14:45:30,133 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [2] Implement Adaptive Sub-batching Based on Input Size (approach: Adaptive Sub-batching)
+2026-06-16 14:45:30,136 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [3] Utilize Overlapping Computation with Memory Transfers (approach: CUDA Streams)
+2026-06-16 14:45:30,141 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Archived 3 paradigms (improvement: +0.000000):
+2026-06-16 14:45:30,142 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Implement Memory Coalescing Using Array of Structures (AoS) Layout (uses: 2)
+2026-06-16 14:45:30,147 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Implement Adaptive Sub-Batch Processing Based on L2 Cache Size (uses: 2)
+2026-06-16 14:45:30,151 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Utilize Asynchronous CUDA Streams for Overlapping Data Transfers and Computation (uses: 2)
+2026-06-16 14:45:30,155 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Set 3 new paradigms (best score: 1.000000)
+2026-06-16 14:45:30,158 - skydiscover.search.adaevolve.controller - INFO - Generated 3 breakthrough paradigms
+2026-06-16 14:45:30,162 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (1/2): Use Memory Coalescing Techniques for Data Access
+2026-06-16 14:45:33,075 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:45:33,080 - skydiscover.evaluation.evaluator - INFO - Evaluated program 57a5ec8c-2c53-4588-89f9-c0ec8bfc2098 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:33,083 - skydiscover.search.adaevolve.controller - INFO - Iteration 64: Program 57a5ec8c (parent: aeb51575) completed in 2.92s (llm: 2.91s, eval: 0.00s)
+2026-06-16 14:45:33,087 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:33,233 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (1/2): Implement Adaptive Sub-batching Based on Input Size
+2026-06-16 14:45:36,466 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:45:36,474 - skydiscover.evaluation.evaluator - INFO - Evaluated program 46e0a4a5-5dba-46ff-ad59-bb5ee5f9a1e8 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:36,479 - skydiscover.search.adaevolve.controller - INFO - Iteration 65: Program 46e0a4a5 (parent: aeb51575) completed in 3.24s (llm: 3.23s, eval: 0.01s)
+2026-06-16 14:45:36,485 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:36,591 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (1/2): Utilize Overlapping Computation with Memory Transfers
+2026-06-16 14:45:39,775 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:45:39,780 - skydiscover.evaluation.evaluator - INFO - Evaluated program 6f479f87-ff05-4ee6-9eae-2d1191fa2f6c in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:39,783 - skydiscover.search.adaevolve.controller - INFO - Iteration 66: Program 6f479f87 (parent: aeb51575) completed in 3.19s (llm: 3.19s, eval: 0.00s)
+2026-06-16 14:45:39,786 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:39,910 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (2/2): Use Memory Coalescing Techniques for Data Access
+2026-06-16 14:45:42,052 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:45:42,057 - skydiscover.evaluation.evaluator - INFO - Evaluated program e6139f9c-d595-4f75-b833-9ef52805713d in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:42,061 - skydiscover.search.adaevolve.controller - INFO - Iteration 67: Program e6139f9c (parent: aeb51575) completed in 2.15s (llm: 2.14s, eval: 0.00s)
+2026-06-16 14:45:42,067 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:42,179 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (2/2): Implement Adaptive Sub-batching Based on Input Size
+2026-06-16 14:45:45,905 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:45:45,911 - skydiscover.evaluation.evaluator - INFO - Evaluated program 54e4d198-fcaf-4d04-9c62-fe20d2af15c6 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:45,916 - skydiscover.search.adaevolve.controller - INFO - Iteration 68: Program 54e4d198 (parent: aeb51575) completed in 3.73s (llm: 3.73s, eval: 0.01s)
+2026-06-16 14:45:45,920 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:46,083 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (2/2): Utilize Overlapping Computation with Memory Transfers
+2026-06-16 14:45:46,086 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:45:49,197 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:45:49,202 - skydiscover.evaluation.evaluator - INFO - Evaluated program 1bfd0ad7-3560-4891-9477-84dc78a89b27 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:49,233 - skydiscover.search.adaevolve.controller - INFO - Iteration 69: Program 1bfd0ad7 (parent: aeb51575) completed in 3.14s (llm: 3.11s, eval: 0.03s)
+2026-06-16 14:45:49,245 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:49,368 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:45:49,372 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:45:49,377 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:45:49,478 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:45:49,482 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:45:49,488 - skydiscover.search.adaevolve.controller - INFO - Global paradigm stagnation detected, generating breakthrough ideas...
+2026-06-16 14:45:56,210 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:45:56,215 - skydiscover.search.adaevolve.paradigm.generator - INFO - Generated 3 paradigms:
+2026-06-16 14:45:56,220 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [1] Implement a Space-Filling Curve Ordering (approach: algorithmic.space_filling_curve)
+2026-06-16 14:45:56,223 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [2] Precompute and Cache Distance Matrix for Small R or D (approach: data_structure.caching)
+2026-06-16 14:45:56,225 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [3] Use LSH (Locality-Sensitive Hashing) for Approximate Nearest Neighbors (approach: algorithmic.lsh)
+2026-06-16 14:45:56,233 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Archived 3 paradigms (improvement: +0.000000):
+2026-06-16 14:45:56,237 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Use Memory Coalescing Techniques for Data Access (uses: 2)
+2026-06-16 14:45:56,241 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Implement Adaptive Sub-batching Based on Input Size (uses: 2)
+2026-06-16 14:45:56,247 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Utilize Overlapping Computation with Memory Transfers (uses: 2)
+2026-06-16 14:45:56,251 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Set 3 new paradigms (best score: 1.000000)
+2026-06-16 14:45:56,256 - skydiscover.search.adaevolve.controller - INFO - Generated 3 breakthrough paradigms
+2026-06-16 14:45:56,266 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (1/2): Implement a Space-Filling Curve Ordering
+2026-06-16 14:45:58,614 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:45:58,621 - skydiscover.evaluation.evaluator - INFO - Evaluated program 88bd5ee6-43d8-4a4e-80f6-035b14d8cc6e in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:58,625 - skydiscover.search.adaevolve.controller - INFO - Iteration 70: Program 88bd5ee6 (parent: aeb51575) completed in 2.35s (llm: 2.35s, eval: 0.00s)
+2026-06-16 14:45:58,628 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:45:58,633 - skydiscover.search.adaevolve.controller - INFO - Checkpoint interval reached at iteration 70
+2026-06-16 14:45:58,638 - skydiscover.search.base_database - INFO - Database has 62 programs, best program score is combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:46:01,708 - skydiscover.search.utils.checkpoint_manager - INFO - [CHECKPOINT] Saved database with 59 programs to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_70
+2026-06-16 14:46:01,772 - skydiscover.search.adaevolve.database - INFO - Saved AdaEvolve state to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_70
+2026-06-16 14:46:01,841 - skydiscover.runner - INFO - Checkpoint 70: best=combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:46:01,845 - skydiscover.runner - INFO - Checkpoint saved to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_70
+2026-06-16 14:46:02,028 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (1/2): Precompute and Cache Distance Matrix for Small R or D
+2026-06-16 14:46:07,636 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:46:07,648 - skydiscover.evaluation.evaluator - INFO - Evaluated program 3da6776a-c6fa-4037-8183-c092cc9bfd12 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:46:07,656 - skydiscover.search.adaevolve.controller - INFO - Iteration 71: Program 3da6776a (parent: aeb51575) completed in 5.62s (llm: 5.61s, eval: 0.01s)
+2026-06-16 14:46:07,663 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:46:07,905 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (1/2): Use LSH (Locality-Sensitive Hashing) for Approximate Nearest Neighbors
+2026-06-16 14:46:11,594 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:46:11,599 - skydiscover.evaluation.evaluator - INFO - Evaluated program 2a92af39-f735-4ec8-82c9-db99017328e1 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:46:11,626 - skydiscover.search.adaevolve.controller - INFO - Iteration 72: Program 2a92af39 (parent: aeb51575) completed in 3.68s (llm: 3.67s, eval: 0.01s)
+2026-06-16 14:46:11,640 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:46:11,879 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (2/2): Implement a Space-Filling Curve Ordering
+2026-06-16 14:46:18,675 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:46:18,682 - skydiscover.evaluation.evaluator - INFO - Evaluated program 2b07203a-d2b6-470f-89cb-15251018e3f8 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:46:18,696 - skydiscover.search.adaevolve.controller - INFO - Iteration 73: Program 2b07203a (parent: aeb51575) completed in 6.80s (llm: 6.80s, eval: 0.00s)
+2026-06-16 14:46:18,698 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:46:18,937 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (2/2): Precompute and Cache Distance Matrix for Small R or D
+2026-06-16 14:46:21,963 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:46:21,965 - skydiscover.evaluation.evaluator - INFO - Evaluated program 73c52120-33af-498f-b0f2-b9964fe6cfa5 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:46:21,984 - skydiscover.search.adaevolve.controller - INFO - Iteration 74: Program 73c52120 (parent: aeb51575) completed in 3.03s (llm: 3.02s, eval: 0.00s)
+2026-06-16 14:46:21,992 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:46:22,227 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (2/2): Use LSH (Locality-Sensitive Hashing) for Approximate Nearest Neighbors
+2026-06-16 14:46:22,230 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:46:27,061 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:46:27,067 - skydiscover.evaluation.evaluator - INFO - Evaluated program e077d4d1-f527-406a-b60a-520ef3562453 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:46:27,085 - skydiscover.search.adaevolve.controller - INFO - Iteration 75: Program e077d4d1 (parent: aeb51575) completed in 4.83s (llm: 4.83s, eval: 0.00s)
+2026-06-16 14:46:27,095 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:46:27,245 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:46:27,256 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:46:27,263 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:46:27,698 - skydiscover.search.adaevolve.database - INFO - Migration completed at iteration 75
+2026-06-16 14:46:27,702 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:46:27,707 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:46:27,710 - skydiscover.search.adaevolve.controller - INFO - Global paradigm stagnation detected, generating breakthrough ideas...
+2026-06-16 14:46:35,282 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:46:35,284 - skydiscover.search.adaevolve.paradigm.generator - INFO - Generated 3 paradigms:
+2026-06-16 14:46:35,284 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [1] Implement Space-Filling Curves for Data Layout Optimization (approach: custom.space_filling_curves)
+2026-06-16 14:46:35,285 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [2] Utilize GPU Shared Memory for Repeated Data Access (approach: CUDA.shared_memory)
+2026-06-16 14:46:35,285 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [3] Apply KD-Tree Partitioning for Initial Guess Optimization (approach: scipy.spatial.KDTree)
+2026-06-16 14:46:35,285 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Archived 3 paradigms (improvement: +0.000000):
+2026-06-16 14:46:35,286 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Implement a Space-Filling Curve Ordering (uses: 2)
+2026-06-16 14:46:35,286 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Precompute and Cache Distance Matrix for Small R or D (uses: 2)
+2026-06-16 14:46:35,286 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Use LSH (Locality-Sensitive Hashing) for Approximate Nearest Neighbors (uses: 2)
+2026-06-16 14:46:35,287 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Set 3 new paradigms (best score: 1.000000)
+2026-06-16 14:46:35,287 - skydiscover.search.adaevolve.controller - INFO - Generated 3 breakthrough paradigms
+2026-06-16 14:46:35,291 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (1/2): Implement Space-Filling Curves for Data Layout Optimization
+2026-06-16 14:46:40,223 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:46:40,231 - skydiscover.evaluation.evaluator - INFO - Evaluated program 81d55fcd-7cfb-4f14-b2c4-67168a08e178 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:46:40,264 - skydiscover.search.adaevolve.controller - INFO - Iteration 76: Program 81d55fcd (parent: aeb51575) completed in 4.96s (llm: 4.94s, eval: 0.02s)
+2026-06-16 14:46:40,268 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:46:40,606 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (1/2): Utilize GPU Shared Memory for Repeated Data Access
+2026-06-16 14:46:43,003 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:46:43,008 - skydiscover.evaluation.evaluator - INFO - Evaluated program e748d89d-6439-426d-8f32-fe440d5cc0ab in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:46:43,026 - skydiscover.search.adaevolve.controller - INFO - Iteration 77: Program e748d89d (parent: aeb51575) completed in 2.41s (llm: 2.40s, eval: 0.01s)
+2026-06-16 14:46:43,029 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:46:43,209 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (1/2): Apply KD-Tree Partitioning for Initial Guess Optimization
+2026-06-16 14:46:46,780 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:46:57,224 - skydiscover.evaluation.evaluator - INFO - Evaluated program 68c0e9ef-4e13-476c-bc00-95e448a40fca in 10.43s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:46:57,248 - skydiscover.search.adaevolve.controller - INFO - Iteration 78: Program 68c0e9ef (parent: aeb51575) completed in 14.01s (llm: 3.58s, eval: 10.43s)
+2026-06-16 14:46:57,257 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:46:57,458 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (2/2): Implement Space-Filling Curves for Data Layout Optimization
+2026-06-16 14:46:59,764 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:46:59,770 - skydiscover.evaluation.evaluator - INFO - Evaluated program 75d2e01c-5170-4c24-b04f-f85363ff7bb8 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:46:59,787 - skydiscover.search.adaevolve.controller - INFO - Iteration 79: Program 75d2e01c (parent: aeb51575) completed in 2.31s (llm: 2.31s, eval: 0.00s)
+2026-06-16 14:46:59,787 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:00,051 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (2/2): Utilize GPU Shared Memory for Repeated Data Access
+2026-06-16 14:47:04,138 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:47:04,145 - skydiscover.evaluation.evaluator - INFO - Evaluated program bf9d6f2a-a018-4965-8cea-02e6f156b481 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:04,167 - skydiscover.search.adaevolve.controller - INFO - Iteration 80: Program bf9d6f2a (parent: aeb51575) completed in 4.10s (llm: 4.09s, eval: 0.01s)
+2026-06-16 14:47:04,169 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:04,172 - skydiscover.search.adaevolve.controller - INFO - Checkpoint interval reached at iteration 80
+2026-06-16 14:47:04,174 - skydiscover.search.base_database - INFO - Database has 72 programs, best program score is combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:07,045 - skydiscover.search.utils.checkpoint_manager - INFO - [CHECKPOINT] Saved database with 60 programs to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_80
+2026-06-16 14:47:07,081 - skydiscover.search.adaevolve.database - INFO - Saved AdaEvolve state to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_80
+2026-06-16 14:47:07,136 - skydiscover.runner - INFO - Checkpoint 80: best=combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:07,144 - skydiscover.runner - INFO - Checkpoint saved to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_80
+2026-06-16 14:47:07,360 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (2/2): Apply KD-Tree Partitioning for Initial Guess Optimization
+2026-06-16 14:47:07,364 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:47:11,378 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:47:11,386 - skydiscover.evaluation.evaluator - INFO - Evaluated program 00c7b824-5960-4aca-b27b-823f493e5d2a in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:11,402 - skydiscover.search.adaevolve.controller - INFO - Iteration 81: Program 00c7b824 (parent: aeb51575) completed in 4.02s (llm: 4.02s, eval: 0.00s)
+2026-06-16 14:47:11,411 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:11,567 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:47:11,571 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:47:11,574 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:47:11,597 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:47:11,600 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:47:11,604 - skydiscover.search.adaevolve.controller - INFO - Global paradigm stagnation detected, generating breakthrough ideas...
+2026-06-16 14:47:18,146 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:47:18,152 - skydiscover.search.adaevolve.paradigm.generator - INFO - Generated 3 paradigms:
+2026-06-16 14:47:18,158 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [1] Implement a Hierarchical Grid Search (approach: algorithmic.hierarchical_grid)
+2026-06-16 14:47:18,163 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [2] Utilize a Distance Matrix Preprocessing Technique (approach: data_structure.distance_matrix)
+2026-06-16 14:47:18,166 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [3] Employ a Dynamic Radius Adjustment Based on Density Estimation (approach: algorithmic.dynamic_radius)
+2026-06-16 14:47:18,171 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Archived 3 paradigms (improvement: +0.000000):
+2026-06-16 14:47:18,176 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Implement Space-Filling Curves for Data Layout Optimization (uses: 2)
+2026-06-16 14:47:18,180 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Utilize GPU Shared Memory for Repeated Data Access (uses: 2)
+2026-06-16 14:47:18,184 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Apply KD-Tree Partitioning for Initial Guess Optimization (uses: 2)
+2026-06-16 14:47:18,187 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Set 3 new paradigms (best score: 1.000000)
+2026-06-16 14:47:18,190 - skydiscover.search.adaevolve.controller - INFO - Generated 3 breakthrough paradigms
+2026-06-16 14:47:18,198 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (1/2): Implement a Hierarchical Grid Search
+2026-06-16 14:47:21,285 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:47:21,291 - skydiscover.evaluation.evaluator - INFO - Evaluated program 0ff3a6c3-81fa-452d-9ae8-060a7d02a3aa in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:21,313 - skydiscover.search.adaevolve.controller - INFO - Iteration 82: Program 0ff3a6c3 (parent: aeb51575) completed in 3.10s (llm: 3.09s, eval: 0.01s)
+2026-06-16 14:47:21,319 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:21,528 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (1/2): Utilize a Distance Matrix Preprocessing Technique
+2026-06-16 14:47:24,373 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:47:24,379 - skydiscover.evaluation.evaluator - INFO - Evaluated program 72e24fc3-153f-48f9-b8a0-c7ee6b5af34b in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:24,395 - skydiscover.search.adaevolve.controller - INFO - Iteration 83: Program 72e24fc3 (parent: aeb51575) completed in 2.85s (llm: 2.84s, eval: 0.01s)
+2026-06-16 14:47:24,398 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:24,617 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (1/2): Employ a Dynamic Radius Adjustment Based on Density Estimation
+2026-06-16 14:47:27,677 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:47:27,680 - skydiscover.evaluation.evaluator - INFO - Evaluated program 9ad90deb-4608-4c00-9faf-6c75d22c4d0b in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:27,699 - skydiscover.search.adaevolve.controller - INFO - Iteration 84: Program 9ad90deb (parent: aeb51575) completed in 3.06s (llm: 3.06s, eval: 0.00s)
+2026-06-16 14:47:27,701 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:27,903 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (2/2): Implement a Hierarchical Grid Search
+2026-06-16 14:47:31,615 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:47:31,622 - skydiscover.evaluation.evaluator - INFO - Evaluated program 97c27c5c-ad4c-48e6-a712-e3fd9ad7cfdc in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:31,641 - skydiscover.search.adaevolve.controller - INFO - Iteration 85: Program 97c27c5c (parent: aeb51575) completed in 3.72s (llm: 3.71s, eval: 0.00s)
+2026-06-16 14:47:31,644 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:31,921 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (2/2): Utilize a Distance Matrix Preprocessing Technique
+2026-06-16 14:47:34,821 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:47:34,827 - skydiscover.evaluation.evaluator - INFO - Evaluated program 31298d7a-af21-4aea-847a-373053587aea in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:34,843 - skydiscover.search.adaevolve.controller - INFO - Iteration 86: Program 31298d7a (parent: aeb51575) completed in 2.91s (llm: 2.90s, eval: 0.01s)
+2026-06-16 14:47:34,849 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:35,043 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (2/2): Employ a Dynamic Radius Adjustment Based on Density Estimation
+2026-06-16 14:47:35,049 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:47:39,668 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:47:39,675 - skydiscover.evaluation.evaluator - INFO - Evaluated program d2a3d604-34ea-4e49-8f6d-6ec82e0bac84 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:39,695 - skydiscover.search.adaevolve.controller - INFO - Iteration 87: Program d2a3d604 (parent: aeb51575) completed in 4.63s (llm: 4.62s, eval: 0.01s)
+2026-06-16 14:47:39,700 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:39,861 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:47:39,868 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:47:39,874 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:47:39,937 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:47:39,943 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:47:39,947 - skydiscover.search.adaevolve.controller - INFO - Global paradigm stagnation detected, generating breakthrough ideas...
+2026-06-16 14:47:45,776 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:47:45,781 - skydiscover.search.adaevolve.paradigm.generator - INFO - Generated 3 paradigms:
+2026-06-16 14:47:45,788 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [1] Implement a Spatial Hashing Approach (approach: algorithmic.spatial_hashing)
+2026-06-16 14:47:45,793 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [2] Leverage GPU-based Radix Sort for Efficient Data Reordering (approach: gpu.radix_sort)
+2026-06-16 14:47:45,797 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [3] Apply Dimensionality Reduction Techniques (approach: dimensionality_reduction.pca)
+2026-06-16 14:47:45,801 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Archived 3 paradigms (improvement: +0.000000):
+2026-06-16 14:47:45,807 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Implement a Hierarchical Grid Search (uses: 2)
+2026-06-16 14:47:45,812 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Utilize a Distance Matrix Preprocessing Technique (uses: 2)
+2026-06-16 14:47:45,817 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Employ a Dynamic Radius Adjustment Based on Density Estimation (uses: 2)
+2026-06-16 14:47:45,823 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Set 3 new paradigms (best score: 1.000000)
+2026-06-16 14:47:45,827 - skydiscover.search.adaevolve.controller - INFO - Generated 3 breakthrough paradigms
+2026-06-16 14:47:45,837 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (1/2): Implement a Spatial Hashing Approach
+2026-06-16 14:47:51,540 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:47:51,548 - skydiscover.evaluation.evaluator - INFO - Evaluated program 45c4fc83-ce4a-4163-9638-d040f56a4225 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:51,583 - skydiscover.search.adaevolve.controller - INFO - Iteration 88: Program 45c4fc83 (parent: aeb51575) completed in 5.72s (llm: 5.71s, eval: 0.01s)
+2026-06-16 14:47:51,587 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:51,860 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (1/2): Leverage GPU-based Radix Sort for Efficient Data Reordering
+2026-06-16 14:47:55,977 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:47:55,981 - skydiscover.evaluation.evaluator - INFO - Evaluated program c37ae562-df77-43ce-be27-be25e222e5e3 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:56,013 - skydiscover.search.adaevolve.controller - INFO - Iteration 89: Program c37ae562 (parent: aeb51575) completed in 4.13s (llm: 4.12s, eval: 0.02s)
+2026-06-16 14:47:56,017 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:47:56,246 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (1/2): Apply Dimensionality Reduction Techniques
+2026-06-16 14:48:00,835 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:48:00,840 - skydiscover.evaluation.evaluator - INFO - Evaluated program a41214b0-5ef9-4c15-8a29-ceb075416fc2 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:48:00,860 - skydiscover.search.adaevolve.controller - INFO - Iteration 90: Program a41214b0 (parent: aeb51575) completed in 4.59s (llm: 4.59s, eval: 0.00s)
+2026-06-16 14:48:00,864 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:48:00,871 - skydiscover.search.adaevolve.controller - INFO - Checkpoint interval reached at iteration 90
+2026-06-16 14:48:00,876 - skydiscover.search.base_database - INFO - Database has 70 programs, best program score is combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:48:03,760 - skydiscover.search.utils.checkpoint_manager - INFO - [CHECKPOINT] Saved database with 60 programs to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_90
+2026-06-16 14:48:03,796 - skydiscover.search.adaevolve.database - INFO - Saved AdaEvolve state to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_90
+2026-06-16 14:48:03,887 - skydiscover.runner - INFO - Checkpoint 90: best=combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:48:03,891 - skydiscover.runner - INFO - Checkpoint saved to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_90
+2026-06-16 14:48:04,503 - skydiscover.search.adaevolve.database - INFO - Migration completed at iteration 90
+2026-06-16 14:48:04,679 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (2/2): Implement a Spatial Hashing Approach
+2026-06-16 14:48:09,491 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:48:09,494 - skydiscover.evaluation.evaluator - INFO - Evaluated program 89940b1d-a199-440d-8b76-74c45b42d5c6 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:48:09,511 - skydiscover.search.adaevolve.controller - INFO - Iteration 91: Program 89940b1d (parent: aeb51575) completed in 4.82s (llm: 4.81s, eval: 0.00s)
+2026-06-16 14:48:09,520 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:48:09,929 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (2/2): Leverage GPU-based Radix Sort for Efficient Data Reordering
+2026-06-16 14:48:11,697 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:48:11,702 - skydiscover.evaluation.evaluator - INFO - Evaluated program 518172ef-442a-49d0-a998-39110186008f in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:48:11,716 - skydiscover.search.adaevolve.controller - INFO - Iteration 92: Program 518172ef (parent: aeb51575) completed in 1.77s (llm: 1.77s, eval: 0.00s)
+2026-06-16 14:48:11,716 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:48:11,930 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (2/2): Apply Dimensionality Reduction Techniques
+2026-06-16 14:48:11,930 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:48:17,111 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:48:17,122 - skydiscover.evaluation.evaluator - INFO - Evaluated program b25ef7af-a98b-488b-be90-119332df7ba2 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:48:17,140 - skydiscover.search.adaevolve.controller - INFO - Iteration 93: Program b25ef7af (parent: aeb51575) completed in 5.19s (llm: 5.19s, eval: 0.00s)
+2026-06-16 14:48:17,142 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:48:17,305 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:48:17,305 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:48:17,306 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:48:17,354 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:48:17,359 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:48:17,363 - skydiscover.search.adaevolve.controller - INFO - Global paradigm stagnation detected, generating breakthrough ideas...
+2026-06-16 14:48:24,069 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:48:24,073 - skydiscover.search.adaevolve.paradigm.generator - INFO - Generated 3 paradigms:
+2026-06-16 14:48:24,078 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [1] Use a Custom Grid Partitioning Strategy (approach: custom.grid_partitioning)
+2026-06-16 14:48:24,083 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [2] Implement Preprocessing for Dimensionality Reduction (approach: sklearn.decomposition.PCA)
+2026-06-16 14:48:24,087 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [3] Leverage GPU Occupancy Tuning with Dynamic Block Sizes (approach: custom.gpu_occupancy_tuning)
+2026-06-16 14:48:24,091 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Archived 3 paradigms (improvement: +0.000000):
+2026-06-16 14:48:24,094 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Implement a Spatial Hashing Approach (uses: 2)
+2026-06-16 14:48:24,095 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Leverage GPU-based Radix Sort for Efficient Data Reordering (uses: 2)
+2026-06-16 14:48:24,098 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Apply Dimensionality Reduction Techniques (uses: 2)
+2026-06-16 14:48:24,100 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Set 3 new paradigms (best score: 1.000000)
+2026-06-16 14:48:24,109 - skydiscover.search.adaevolve.controller - INFO - Generated 3 breakthrough paradigms
+2026-06-16 14:48:24,120 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (1/2): Use a Custom Grid Partitioning Strategy
+2026-06-16 14:48:26,720 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:48:26,737 - skydiscover.evaluation.evaluator - INFO - Evaluated program ef4e19dd-16f7-40b1-98e2-1ee45e493522 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:48:26,772 - skydiscover.search.adaevolve.controller - INFO - Iteration 94: Program ef4e19dd (parent: aeb51575) completed in 2.63s (llm: 2.61s, eval: 0.02s)
+2026-06-16 14:48:26,792 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:48:27,038 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (1/2): Implement Preprocessing for Dimensionality Reduction
+2026-06-16 14:48:30,859 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:48:30,868 - skydiscover.evaluation.evaluator - INFO - Evaluated program 3a32488f-7740-4291-b98e-39e2784e600c in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:48:30,890 - skydiscover.search.adaevolve.controller - INFO - Iteration 95: Program 3a32488f (parent: aeb51575) completed in 3.83s (llm: 3.83s, eval: 0.01s)
+2026-06-16 14:48:30,897 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:48:31,128 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (1/2): Leverage GPU Occupancy Tuning with Dynamic Block Sizes
+2026-06-16 14:48:33,809 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:48:33,814 - skydiscover.evaluation.evaluator - INFO - Evaluated program bbed0a1d-894b-4c78-8225-eead7689aed1 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:48:33,837 - skydiscover.search.adaevolve.controller - INFO - Iteration 96: Program bbed0a1d (parent: aeb51575) completed in 2.69s (llm: 2.68s, eval: 0.01s)
+2026-06-16 14:48:33,840 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:48:34,078 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (2/2): Use a Custom Grid Partitioning Strategy
+2026-06-16 14:48:37,826 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:48:37,835 - skydiscover.evaluation.evaluator - INFO - Evaluated program 9c1c2589-f42d-45b2-834a-a708416e9a16 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:48:37,859 - skydiscover.search.adaevolve.controller - INFO - Iteration 97: Program 9c1c2589 (parent: aeb51575) completed in 3.76s (llm: 3.75s, eval: 0.01s)
+2026-06-16 14:48:37,860 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:48:38,086 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 2/3 (2/2): Implement Preprocessing for Dimensionality Reduction
+2026-06-16 14:48:42,028 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:49:00,497 - numexpr.utils - INFO - Note: detected 128 virtual cores but NumExpr set to maximum of 64, check "NUMEXPR_MAX_THREADS" environment variable.
+2026-06-16 14:49:00,498 - numexpr.utils - INFO - Note: NumExpr detected 128 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 16.
+2026-06-16 14:49:00,498 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2026-06-16 14:49:07,709 - skydiscover.evaluation.evaluator - INFO - Evaluated program ce01be19-535c-498d-994b-15fbe341bd58 in 25.68s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:49:07,734 - skydiscover.search.adaevolve.controller - INFO - Iteration 98: Program ce01be19 (parent: aeb51575) completed in 29.62s (llm: 3.93s, eval: 25.68s)
+2026-06-16 14:49:07,735 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:49:07,991 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 3/3 (2/2): Leverage GPU Occupancy Tuning with Dynamic Block Sizes
+2026-06-16 14:49:08,000 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:49:12,344 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:49:12,349 - skydiscover.evaluation.evaluator - INFO - Evaluated program 44cf73ac-923f-4aa2-b49d-9fe362ee3718 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:49:12,371 - skydiscover.search.adaevolve.controller - INFO - Iteration 99: Program 44cf73ac (parent: aeb51575) completed in 4.35s (llm: 4.35s, eval: 0.00s)
+2026-06-16 14:49:12,372 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:49:12,539 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:49:12,544 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:49:12,548 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:49:12,590 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:49:12,591 - skydiscover.search.adaevolve.paradigm.tracker - INFO - All paradigms exhausted, will archive on next check
+2026-06-16 14:49:12,591 - skydiscover.search.adaevolve.controller - INFO - Global paradigm stagnation detected, generating breakthrough ideas...
+2026-06-16 14:49:20,912 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:49:20,919 - skydiscover.search.adaevolve.paradigm.generator - INFO - Generated 3 paradigms:
+2026-06-16 14:49:20,924 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [1] Implement Batched Execution with Overlapping Streams (approach: CUDA.streams)
+2026-06-16 14:49:20,931 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [2] Use Adaptive Radius Tuning Based on Density Estimation (approach: algorithmic.adaptive_radius)
+2026-06-16 14:49:20,938 - skydiscover.search.adaevolve.paradigm.generator - INFO -   [3] Optimize Input Data Layout for Dimensional Coalescing (approach: algorithmic.data_layout)
+2026-06-16 14:49:20,943 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Archived 3 paradigms (improvement: +0.000000):
+2026-06-16 14:49:20,949 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Use a Custom Grid Partitioning Strategy (uses: 2)
+2026-06-16 14:49:20,955 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Implement Preprocessing for Dimensionality Reduction (uses: 2)
+2026-06-16 14:49:20,960 - skydiscover.search.adaevolve.paradigm.tracker - INFO -   [FAILED] Leverage GPU Occupancy Tuning with Dynamic Block Sizes (uses: 2)
+2026-06-16 14:49:20,966 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Set 3 new paradigms (best score: 1.000000)
+2026-06-16 14:49:20,972 - skydiscover.search.adaevolve.controller - INFO - Generated 3 breakthrough paradigms
+2026-06-16 14:49:20,981 - skydiscover.search.adaevolve.paradigm.tracker - INFO - Using paradigm 1/3 (1/2): Implement Batched Execution with Overlapping Streams
+2026-06-16 14:49:27,083 - httpx - INFO - HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 14:49:27,087 - skydiscover.evaluation.evaluator - INFO - Evaluated program 6e35e233-274b-4601-80c6-1a300f3fd02a in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:49:27,109 - skydiscover.search.adaevolve.controller - INFO - Iteration 100: Program 6e35e233 (parent: aeb51575) completed in 6.11s (llm: 6.10s, eval: 0.01s)
+2026-06-16 14:49:27,111 - skydiscover.search.adaevolve.controller - INFO - Metrics: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:49:27,116 - skydiscover.search.adaevolve.controller - INFO - Checkpoint interval reached at iteration 100
+2026-06-16 14:49:27,120 - skydiscover.search.base_database - INFO - Database has 74 programs, best program score is combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:49:30,238 - skydiscover.search.utils.checkpoint_manager - INFO - [CHECKPOINT] Saved database with 60 programs to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_100
+2026-06-16 14:49:30,269 - skydiscover.search.adaevolve.database - INFO - Saved AdaEvolve state to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_100
+2026-06-16 14:49:30,281 - skydiscover.runner - INFO - Checkpoint 100: best=combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:49:30,285 - skydiscover.runner - INFO - Checkpoint saved to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_100
+2026-06-16 14:49:30,460 - skydiscover.search.adaevolve.controller - INFO - AdaEvolve completed
+2026-06-16 14:49:30,463 - skydiscover.search.base_database - INFO - Database has 60 programs, best program score is combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:49:30,464 - skydiscover.search.adaevolve.controller - INFO - AdaEvolve iteration stats saved to: /global/u1/d/dratnam/FRNN-master/skydiscover_out/adaevolve_iteration_stats_20260616_143947.jsonl
+2026-06-16 14:49:32,915 - skydiscover.search.utils.checkpoint_manager - INFO - [CHECKPOINT] Saved database with 60 programs to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_100
+2026-06-16 14:49:32,949 - skydiscover.search.adaevolve.database - INFO - Saved AdaEvolve state to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_100
+2026-06-16 14:49:33,000 - skydiscover.runner - INFO - Checkpoint 100: best=combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:49:33,005 - skydiscover.runner - INFO - Checkpoint saved to /global/u1/d/dratnam/FRNN-master/skydiscover_out/checkpoints/checkpoint_100
+2026-06-16 14:49:33,012 - skydiscover.evaluation.evaluator - INFO - Evaluated program aeb51575-dde5-40b0-b74d-16f1d6c33047 in 0.00s: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:49:33,017 - skydiscover.runner - INFO - Test evaluation for best program: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:49:33,043 - skydiscover.runner - INFO - Best program saved to /global/u1/d/dratnam/FRNN-master/skydiscover_out/best
+2026-06-16 14:49:33,047 - skydiscover.runner - INFO - Discovery completed. Best: combined_score=1.0000, artifacts={'feedback': 'Execution succeeded without kernel panics.'}, test_combined_score=1.0000, test_artifacts={'feedback': 'Execution succeeded without kernel panics.'}
+2026-06-16 14:49:33,080 - skydiscover.runner - INFO - Best program saved to /global/u1/d/dratnam/FRNN-master/skydiscover_out/best

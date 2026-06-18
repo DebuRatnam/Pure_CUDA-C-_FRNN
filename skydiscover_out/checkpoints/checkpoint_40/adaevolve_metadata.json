@@ -1,0 +1,466 @@
+{
+  "num_islands": 2,
+  "current_island": 0,
+  "iteration_count": 39,
+  "global_best_score": 1.0,
+  "decay": 0.9,
+  "intensity_min": 0.15,
+  "intensity_max": 0.5,
+  "migration_interval": 15,
+  "diversity_strategy_type": "code",
+  "use_unified_archive": true,
+  "use_adaptive_search": true,
+  "use_ucb_selection": true,
+  "fixed_intensity": 0.4,
+  "adapter": {
+    "states": [
+      {
+        "accumulated_signal": 0.09999999999999998,
+        "best_score": 1.0,
+        "improvement_count": 1,
+        "total_evaluations": 23,
+        "decay": 0.9,
+        "epsilon": 1e-08,
+        "intensity_min": 0.15,
+        "intensity_max": 0.5
+      },
+      {
+        "accumulated_signal": 0.09999999999999998,
+        "best_score": 1.0,
+        "improvement_count": 0,
+        "total_evaluations": 22,
+        "decay": 0.9,
+        "epsilon": 1e-08,
+        "intensity_min": 0.15,
+        "intensity_max": 0.5
+      }
+    ],
+    "dimension_visits": [
+      23,
+      22
+    ],
+    "dimension_rewards": [
+      0.0984770902183612,
+      0.0
+    ],
+    "decayed_visits": [
+      9.113706188034751,
+      9.01522909781639
+    ],
+    "global_best_score": 1.0,
+    "ucb_exploration": 1.41,
+    "min_visits": 3,
+    "decay": 0.9,
+    "epsilon": 1e-08
+  },
+  "island_config_names": [
+    "balanced",
+    "balanced"
+  ],
+  "islands": [
+    [
+      "aeb51575-dde5-40b0-b74d-16f1d6c33047",
+      "ed4bb501-80bb-4433-a66f-72191c0f2f34",
+      "afa79990-4845-4937-9b02-f1734d88725b",
+      "f4f4d814-b546-4b80-8c8e-83944ac5d72a",
+      "3756e6da-0eb4-4f5b-af24-f5d1ed100874",
+      "8885d5d8-8fb7-4011-b3cd-2dd137d14a99",
+      "8610ee92-ce23-44ea-8d3e-172009d5bfda",
+      "a4e7e333-6525-4845-b024-f470589f79d2",
+      "420e65f3-98e3-41d5-a4ab-d1e3b0752ddd",
+      "1929095a-254a-453c-8d76-e0905dadc71d",
+      "85f3fe34-e2aa-4360-b7a6-8868843096a1",
+      "bb439b94-07ba-4acd-a502-bdd601a05a67",
+      "ff8e11f4-4d95-4f9d-81bc-bf97c2651962",
+      "ff4c3d50-f652-4e37-b747-db281d9c572e",
+      "f2c399a8-c6c6-4421-9de4-c772a58510a0",
+      "9f682220-6340-4810-86ce-b0b41dbd2cc7",
+      "35410908-2389-4384-8c21-5587effc1509",
+      "bc5069d4-c592-45ff-8b58-8e94c7d24680",
+      "760cbcb3-b6ea-4e3c-9841-2a9d952ddcd6",
+      "74f7fde2-b00e-4123-a45d-52f86804457f"
+    ],
+    [
+      "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55",
+      "dfe3cef8-2bd2-490b-b36a-b7324e6d2584",
+      "039c9020-a6e1-443e-9671-8b7df399d825",
+      "f4f7ce1b-52a1-4315-9e62-4b8df4053698",
+      "e2069256-14c8-4ee5-9730-3ebca58db952",
+      "4a78ad13-e033-490f-a728-a3bbff8bc3c9",
+      "01a5e055-bf78-48a2-a160-9031c41bd8d1",
+      "f7e47de9-ccab-4f61-ad30-78f3d6d08726",
+      "a66931c1-6d2d-43bd-80a1-83d49a5cc94b",
+      "a86f37bc-93c6-456d-8a86-db3a72c334ac",
+      "dc8cc438-72f0-4724-94d0-42cf31cd8746",
+      "8b8d62b8-7f1b-4ead-a98c-5dac536ca04d",
+      "f9f85daa-49e6-4694-b6ff-483f882712aa",
+      "a20ed9a4-9f65-481b-9dff-fda7a42faeb6",
+      "e1aa72ca-800b-4ca5-8786-4b2295f82c51",
+      "491a9b0f-db36-4a4f-83c7-f7f000981faa",
+      "08fd6ac5-f7d0-4753-9548-b044ef54df61",
+      "b4876d46-6c54-4591-8120-62ab2021eb8f",
+      "d4746720-f7ff-4f3d-b505-84e19252e7b0",
+      "5e4844d6-510c-4379-b174-12479d621b78"
+    ]
+  ],
+  "archive_genealogies": [
+    {
+      "parents": {
+        "aeb51575-dde5-40b0-b74d-16f1d6c33047": [],
+        "ed4bb501-80bb-4433-a66f-72191c0f2f34": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "afa79990-4845-4937-9b02-f1734d88725b": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "f4f4d814-b546-4b80-8c8e-83944ac5d72a": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "3756e6da-0eb4-4f5b-af24-f5d1ed100874": [
+          "f4f4d814-b546-4b80-8c8e-83944ac5d72a"
+        ],
+        "8885d5d8-8fb7-4011-b3cd-2dd137d14a99": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "8610ee92-ce23-44ea-8d3e-172009d5bfda": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "a4e7e333-6525-4845-b024-f470589f79d2": [
+          "dfe3cef8-2bd2-490b-b36a-b7324e6d2584"
+        ],
+        "420e65f3-98e3-41d5-a4ab-d1e3b0752ddd": [
+          "e2069256-14c8-4ee5-9730-3ebca58db952"
+        ],
+        "1929095a-254a-453c-8d76-e0905dadc71d": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "85f3fe34-e2aa-4360-b7a6-8868843096a1": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "bb439b94-07ba-4acd-a502-bdd601a05a67": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "ff8e11f4-4d95-4f9d-81bc-bf97c2651962": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "ff4c3d50-f652-4e37-b747-db281d9c572e": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "f2c399a8-c6c6-4421-9de4-c772a58510a0": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "9f682220-6340-4810-86ce-b0b41dbd2cc7": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "35410908-2389-4384-8c21-5587effc1509": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "bc5069d4-c592-45ff-8b58-8e94c7d24680": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "760cbcb3-b6ea-4e3c-9841-2a9d952ddcd6": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "74f7fde2-b00e-4123-a45d-52f86804457f": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ]
+      },
+      "children": {
+        "aeb51575-dde5-40b0-b74d-16f1d6c33047": [
+          "ed4bb501-80bb-4433-a66f-72191c0f2f34",
+          "afa79990-4845-4937-9b02-f1734d88725b",
+          "f4f4d814-b546-4b80-8c8e-83944ac5d72a",
+          "8885d5d8-8fb7-4011-b3cd-2dd137d14a99",
+          "8610ee92-ce23-44ea-8d3e-172009d5bfda",
+          "1929095a-254a-453c-8d76-e0905dadc71d",
+          "85f3fe34-e2aa-4360-b7a6-8868843096a1",
+          "bb439b94-07ba-4acd-a502-bdd601a05a67",
+          "ff8e11f4-4d95-4f9d-81bc-bf97c2651962",
+          "ff4c3d50-f652-4e37-b747-db281d9c572e",
+          "f2c399a8-c6c6-4421-9de4-c772a58510a0",
+          "9f682220-6340-4810-86ce-b0b41dbd2cc7",
+          "35410908-2389-4384-8c21-5587effc1509",
+          "bc5069d4-c592-45ff-8b58-8e94c7d24680",
+          "760cbcb3-b6ea-4e3c-9841-2a9d952ddcd6",
+          "74f7fde2-b00e-4123-a45d-52f86804457f"
+        ],
+        "f4f4d814-b546-4b80-8c8e-83944ac5d72a": [
+          "3756e6da-0eb4-4f5b-af24-f5d1ed100874"
+        ],
+        "dfe3cef8-2bd2-490b-b36a-b7324e6d2584": [
+          "a4e7e333-6525-4845-b024-f470589f79d2"
+        ],
+        "e2069256-14c8-4ee5-9730-3ebca58db952": [
+          "420e65f3-98e3-41d5-a4ab-d1e3b0752ddd"
+        ]
+      }
+    },
+    {
+      "parents": {
+        "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55": [],
+        "dfe3cef8-2bd2-490b-b36a-b7324e6d2584": [
+          "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55"
+        ],
+        "039c9020-a6e1-443e-9671-8b7df399d825": [
+          "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55"
+        ],
+        "f4f7ce1b-52a1-4315-9e62-4b8df4053698": [
+          "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55"
+        ],
+        "e2069256-14c8-4ee5-9730-3ebca58db952": [
+          "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55"
+        ],
+        "4a78ad13-e033-490f-a728-a3bbff8bc3c9": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "01a5e055-bf78-48a2-a160-9031c41bd8d1": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "f7e47de9-ccab-4f61-ad30-78f3d6d08726": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "a66931c1-6d2d-43bd-80a1-83d49a5cc94b": [
+          "ed4bb501-80bb-4433-a66f-72191c0f2f34"
+        ],
+        "a86f37bc-93c6-456d-8a86-db3a72c334ac": [
+          "f4f4d814-b546-4b80-8c8e-83944ac5d72a"
+        ],
+        "dc8cc438-72f0-4724-94d0-42cf31cd8746": [
+          "3756e6da-0eb4-4f5b-af24-f5d1ed100874"
+        ],
+        "8b8d62b8-7f1b-4ead-a98c-5dac536ca04d": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "f9f85daa-49e6-4694-b6ff-483f882712aa": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "a20ed9a4-9f65-481b-9dff-fda7a42faeb6": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "e1aa72ca-800b-4ca5-8786-4b2295f82c51": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "491a9b0f-db36-4a4f-83c7-f7f000981faa": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "08fd6ac5-f7d0-4753-9548-b044ef54df61": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "b4876d46-6c54-4591-8120-62ab2021eb8f": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "d4746720-f7ff-4f3d-b505-84e19252e7b0": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ],
+        "5e4844d6-510c-4379-b174-12479d621b78": [
+          "aeb51575-dde5-40b0-b74d-16f1d6c33047"
+        ]
+      },
+      "children": {
+        "f8ce5d1f-10e3-462a-9ae8-ba515ceffe55": [
+          "dfe3cef8-2bd2-490b-b36a-b7324e6d2584",
+          "039c9020-a6e1-443e-9671-8b7df399d825",
+          "f4f7ce1b-52a1-4315-9e62-4b8df4053698",
+          "e2069256-14c8-4ee5-9730-3ebca58db952"
+        ],
+        "aeb51575-dde5-40b0-b74d-16f1d6c33047": [
+          "4a78ad13-e033-490f-a728-a3bbff8bc3c9",
+          "01a5e055-bf78-48a2-a160-9031c41bd8d1",
+          "f7e47de9-ccab-4f61-ad30-78f3d6d08726",
+          "8b8d62b8-7f1b-4ead-a98c-5dac536ca04d",
+          "f9f85daa-49e6-4694-b6ff-483f882712aa",
+          "a20ed9a4-9f65-481b-9dff-fda7a42faeb6",
+          "e1aa72ca-800b-4ca5-8786-4b2295f82c51",
+          "491a9b0f-db36-4a4f-83c7-f7f000981faa",
+          "08fd6ac5-f7d0-4753-9548-b044ef54df61",
+          "b4876d46-6c54-4591-8120-62ab2021eb8f",
+          "d4746720-f7ff-4f3d-b505-84e19252e7b0",
+          "5e4844d6-510c-4379-b174-12479d621b78"
+        ],
+        "ed4bb501-80bb-4433-a66f-72191c0f2f34": [
+          "a66931c1-6d2d-43bd-80a1-83d49a5cc94b"
+        ],
+        "f4f4d814-b546-4b80-8c8e-83944ac5d72a": [
+          "a86f37bc-93c6-456d-8a86-db3a72c334ac"
+        ],
+        "3756e6da-0eb4-4f5b-af24-f5d1ed100874": [
+          "dc8cc438-72f0-4724-94d0-42cf31cd8746"
+        ]
+      }
+    }
+  ],
+  "use_dynamic_islands": true,
+  "max_islands": 5,
+  "last_spawn_iteration": -30,
+  "use_paradigm_breakthrough": true,
+  "paradigm_tracker": {
+    "window_size": 10,
+    "improvement_threshold": 0.12,
+    "max_paradigm_uses": 2,
+    "max_tried_paradigms": 10,
+    "num_paradigms_to_generate": 3,
+    "improvement_history": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "active_paradigms": [
+      {
+        "idea": "Implement Data-Driven Kernel Fusion",
+        "description": "Explore the potential of fusing multiple GPU kernel calls in the FRNNEngine process. This involves analyzing the data flow and dependencies between kernels and attempting to merge them into a single optimized kernel. The benefit of kernel fusion is reduced kernel launch overhead and better GPU resource utilization. This approach requires understanding the CUDA kernel operations within FRNNEngine and strategically combining them without altering the API. This can lead to improved performance, especially for high-dimensional data where kernel execution times are significant.",
+        "what_to_optimize": "GPU kernel launch overhead and execution time",
+        "cautions": "Ensure that kernel fusion does not violate data dependencies or introduce race conditions. Thoroughly test for correctness after fusion.",
+        "approach_type": "CUDA Kernel Fusion"
+      },
+      {
+        "idea": "Utilize Multi-GPU Parallelism",
+        "description": "Leverage multi-GPU setups to distribute the workload of the FRNN search. This can be done by partitioning the data into sub-batches and assigning each batch to a different GPU. The results from each GPU are then aggregated to form the final output. This approach can significantly reduce wall-clock time by parallelizing the computation across multiple GPUs, especially in environments where multiple GPUs are available.",
+        "what_to_optimize": "Overall wall-clock latency by parallel computation",
+        "cautions": "Handle data partitioning carefully to ensure load balancing across GPUs. Ensure correct aggregation of results from different GPUs to maintain accuracy.",
+        "approach_type": "Multi-GPU Parallelism"
+      },
+      {
+        "idea": "Adaptive Radius Adjustment Based on Density",
+        "description": "Implement an adaptive mechanism to adjust the search radius R based on local point density estimates. For regions with higher point density, a smaller radius can reduce computation, while a larger radius can be used in sparse regions. This requires a preliminary step to estimate local densities, which can be done using a simple grid or spatial partitioning scheme. The adaptive radius can help minimize unnecessary computations in dense areas, thus optimizing the search process.",
+        "what_to_optimize": "Search efficiency by reducing unnecessary computations",
+        "cautions": "Ensure the density estimation step is efficient and does not offset the gains from adaptive radius adjustment. Handle edge cases where density estimation might be inaccurate.",
+        "approach_type": "Density-Based Adaptive Radius"
+      }
+    ],
+    "paradigm_usage_counts": {
+      "0": 1
+    },
+    "current_paradigm_index": 1,
+    "tried_paradigms": [
+      {
+        "idea": "Space-filling Curve Reordering",
+        "description": "Reorder points using a space-filling curve, such as a Hilbert or Z-order curve, to improve memory access patterns and cache efficiency. By reordering the data, spatial proximity in high dimensions is better preserved, which can enhance the efficiency of the FRNN search. This reordering should be applied before passing the data to the FRNN engine, and the results should be mapped back to the original order after processing.",
+        "what_to_optimize": "Memory access patterns and cache efficiency",
+        "cautions": "Ensure that the reordering and reverse mapping processes do not introduce significant overhead. The chosen space-filling curve should effectively preserve locality in the given data dimensionality.",
+        "approach_type": "Data reordering using space-filling curves",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Implement a Custom Load Balancing Strategy for CUDA Kernels",
+        "description": "Develop a dynamic load balancing strategy for the CUDA kernel execution to optimize for varying input sizes and distributions. The idea is to monitor the workload distribution across threads and dynamically adjust the workload size per thread based on real-time feedback. This can be achieved by initially profiling the input data to determine density and variance, then adaptively assigning more resources to regions with higher complexity or density. The strategy would involve minimal overhead by utilizing shared memory for quick updates and decisions on workload redistribution.",
+        "what_to_optimize": "Wall-clock latency and load balancing across CUDA threads",
+        "cautions": "Ensure that the overhead from profiling and dynamic adjustment does not negate the performance gains. Consider edge cases where input data may lead to uneven distribution of workload adjustments.",
+        "approach_type": "Custom CUDA load balancing",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Integrate a Hierarchical Spatial Partitioning Scheme",
+        "description": "Implement a hierarchical spatial partitioning scheme, such as a KD-tree or Octree, to organize points in space before executing the nearest-neighbor search. This pre-processing step can reduce the search space dramatically by dividing the space into successively smaller regions. By doing so, the FRNNEngine can focus on fewer points, reducing redundant calculations and improving search efficiency, especially in high-dimensional spaces where traditional methods struggle.",
+        "what_to_optimize": "Search efficiency and computational complexity",
+        "cautions": "The construction of the spatial partitioning structure must be efficient, ensuring that the time spent building it does not outweigh the benefits during the search phase. Consider the trade-off between preprocessing time and search time.",
+        "approach_type": "Hierarchical spatial partitioning",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Develop a Hybrid CPU-GPU Execution Model",
+        "description": "Create a hybrid execution model that leverages both CPU and GPU resources. Use the CPU to perform initial filtering or coarse-grained searching to quickly eliminate points that are outside a certain range, thus reducing the workload on the GPU. The GPU can then perform the fine-grained search on a much-reduced dataset, making better use of its parallel processing capabilities. This model could be especially beneficial for cases with large datasets where the initial brute-force approach is less efficient.",
+        "what_to_optimize": "Overall latency by optimizing workload distribution between CPU and GPU",
+        "cautions": "Ensure efficient data transfer between CPU and GPU to avoid bottlenecks. The initial CPU filtering must be fast enough to justify its use before GPU processing.",
+        "approach_type": "Hybrid CPU-GPU model",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Implement a Preprocessing Step for Data Augmentation",
+        "description": "Introduce a preprocessing step that augments the input data by transforming the coordinates slightly. This can be achieved by adding small random perturbations to each point within the bounds of a small epsilon parameter. This augmentation can help in diversifying the input data space, potentially leading to better utilization of GPU resources and reducing overfitting to specific spatial patterns. It should be carefully tuned to ensure that the perturbations do not alter the inherent characteristics of the data.",
+        "what_to_optimize": "Diversity in data utilization and potential latency improvements through better GPU resource utilization",
+        "cautions": "Ensure perturbations remain small enough to not significantly change the spatial relationships or exceed domain-specific tolerances.",
+        "approach_type": "numpy.random",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Apply a Dimensionality Reduction Technique Before Search",
+        "description": "Before executing the FRNN search, apply a dimensionality reduction technique such as PCA (Principal Component Analysis) to reduce the dimensionality of the input data while preserving the most significant variance. This can help in reducing the computational load by decreasing the number of dimensions processed by the FRNN engine, especially beneficial when D is large. This should be done with care to ensure that no critical spatial information is lost during the reduction process.",
+        "what_to_optimize": "Computational efficiency by reducing dimensionality while maintaining spatial integrity",
+        "cautions": "Verify that the reduced dimensions sufficiently capture the variance and ensure minimal loss of critical spatial relations.",
+        "approach_type": "numpy.linalg.svd",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Experiment with Non-Uniform Radius Scaling Based on Density",
+        "description": "Implement a strategy that dynamically adjusts the search radius R based on local point density. The idea is to use a smaller radius in high-density areas and a slightly larger one in sparse regions, allowing for a more efficient search process. This non-uniform scaling can be adjusted by estimating local densities using a simple k-nearest neighbors approach on a sample of the data, and then scaling R accordingly before executing the FRNN search.",
+        "what_to_optimize": "Efficiency in search by adapting to local data density, reducing unnecessary computations",
+        "cautions": "Ensure that the method for estimating local density is efficient and does not introduce a significant overhead. The scaling function should be designed to prevent excessively large or small radii.",
+        "approach_type": "scipy.spatial.cKDTree",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Implement Coalesced Memory Access Patterns",
+        "description": "Reorganize the input data layout to optimize for coalesced memory access by using Structure of Arrays (SoA) instead of the default Array of Structures (AoS). This can be achieved by reshaping the points array into a transposed format that allows for more efficient memory access patterns, especially beneficial when the dimensionality D is high. This adjustment can reduce the latency of memory operations during kernel execution by aligning data access patterns with CUDA's optimal memory access strategies.",
+        "what_to_optimize": "Wall-clock latency by improving memory access efficiency",
+        "cautions": "Ensure that the FRNNEngine can handle transposed data or has an option to specify data layout. Test for different D values to confirm performance gains.",
+        "approach_type": "Data layout transformation",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Adaptive Radius Expansion with Heuristic Tuning",
+        "description": "Introduce a heuristic-based adaptive radius expansion technique. Instead of using a static radius, dynamically adjust the radius based on the density of the input data points. The idea is to start with a slightly larger radius than specified (e.g., R * 1.1) and dynamically shrink it based on the density feedback from initial searches. This can help in reducing the number of boundary re-checks, leading to faster convergence and reduced computation times.",
+        "what_to_optimize": "Boundary checking overhead and computational latency",
+        "cautions": "Ensure to balance between too large a radius which can increase computation and too small which might necessitate frequent checks. Requires calibration of the heuristic to different datasets.",
+        "approach_type": "Heuristic parameter tuning",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      },
+      {
+        "idea": "Utilize CUDA Shared Memory for Intermediate Storage",
+        "description": "Leverage CUDA's shared memory to store intermediate results during the search process. This can significantly reduce the latency associated with accessing global memory repeatedly during the search. By storing frequently accessed data chunks in shared memory per block, the search operations can be sped up through faster memory access times, reducing the overall runtime of the kernel execution.",
+        "what_to_optimize": "Reduce access times to frequently used data within CUDA kernels",
+        "cautions": "Shared memory is limited per block, so careful management of shared memory size is crucial. This approach requires a deep understanding of CUDA memory architecture to avoid bank conflicts and ensure efficient memory usage.",
+        "approach_type": "CUDA shared memory",
+        "uses": 2,
+        "starting_score": 1.0,
+        "ending_score": 1.0,
+        "score_improvement": 0.0,
+        "outcome": "FAILED"
+      }
+    ],
+    "best_score_at_paradigm_gen": 1.0,
+    "best_score_during_paradigm": 1.0
+  }
+}
