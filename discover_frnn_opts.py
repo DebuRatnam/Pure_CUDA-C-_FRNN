@@ -6,6 +6,7 @@ LOW-LEVEL CUDA optimization points in frnn/csrc/grid/find_nbrs.cu.
 
 import argparse
 import os
+import re
 import sys
 import subprocess
 from pathlib import Path
@@ -22,13 +23,17 @@ from skydiscover import run_discovery  # noqa: E402
 _SYSTEM_PROMPT = """\
 You are an expert in high-performance GPU computing, raw CUDA kernel writing, and A100 hardware architecture.
 
-The code to evolve is the low-level CUDA file `frnn/csrc/grid/find_nbrs.cu`. Your goal is to maximize A100 GPU occupancy and memory throughput by mutating the execution pathways inside the EVOLVE-BLOCK.
+You are optimizing frnn/csrc/grid/find_nbrs.cu — the fixed-radius nearest-neighbor search kernel for an N-dimensional point cloud engine running on NVIDIA A100 (sm_80). This is the hottest code path: for every query point it traverses neighboring grid cells and maintains a max-heap of the K closest points found so far.
 
-== Hardware Optimization Angles to Explore ==
-1. Warp Divergence & Branching: Eliminate conditional branching logic inside loops wherever possible to keep the 32-thread SIMT warps execution synchronized.
-2. Coalesced Memory Lanes: Group your global memory loads using Structure-of-Arrays layout rules so the hardware can fulfill memory requests in a single transaction.
-3. Shared Memory Cache: Copy neighbor indices into shared memory clusters to reduce global device latency, and verify that reads avoid shared memory bank conflicts.
-4. Loop Unrolling: Explicitly use `#pragma unroll` on static dimensions to decrease loop counter overhead and maximize active instruction pipeline slots.
+Focus your mutations on these high-impact areas:
+1. **Shared memory tiling**: load candidate points into shared memory per cell to reduce redundant global reads across threads searching the same cell.
+2. **__ldg() read-only cache**: ensure all read-only global loads (points array, cell offsets, cell counts) go through the read-only cache for warp broadcast.
+3. **Warp divergence**: the per-dimension neighbor cell loop and the heap insert_neighbor() call are divergence sources — restructure to minimize thread divergence within a warp.
+4. **Register pressure**: local_dists[K] and local_idxs[K] are sized to MAX_K_CAPACITY=128 even when K=16 — consider templating on K to let the compiler size them correctly.
+5. **Loop unrolling**: the innermost distance accumulation loop over dimensions (D=3 for the grid path) can be fully unrolled with #pragma unroll.
+6. **Memory coalescing**: the SoA layout p[d*P + i] is already coalesced — preserve it in all mutations.
+
+All code must be valid CUDA C++ compatible with sm_80. Do not introduce any Python, PyTorch, or high-level library dependencies. Mutations must preserve the exact function signatures and semantics of FindNbrsKernel and UnpermuteSortedOutput.
 
 Return ONLY the complete, compilable contents of find_nbrs.cu. Do not wrap code in markdown code blocks or backticks.
 """.strip()
@@ -55,24 +60,18 @@ def custom_cuda_evaluator(program_path: str) -> dict:
             return {"combined_score": 0.0, "artifacts": {"feedback": f"Compilation Failed:\n{res.stderr}"}}
 
         # 3. Run your official repository master benchmark profile
-        bench_cmd = "module load pytorch/2.8.0 && PYTHONPATH=. python3 Tests/benchmark_master.py"
+        bench_cmd = "module load pytorch/2.8.0 && D_SWEEP=3 PYTHONPATH=. python3 Tests/benchmark_master.py"
         res = subprocess.run(bench_cmd, shell=True, capture_output=True, text=True, cwd=str(_REPO))
         if res.returncode != 0:
             return {"combined_score": 0.0, "artifacts": {"feedback": f"Benchmark Run Crashed:\n{res.stderr}"}}
 
-        # 4. Extract raw wall-clock metrics from your benchmark output log
-        # (Assuming benchmark prints 'FRNN: XX.XX ms' or similar; adjust string parsing as needed)
-        latency = 100.0  # Fallback
-        for line in res.stdout.splitlines():
-            if "latency_ms" in line or "FRNN" in line:
-                try:
-                    # Quick numeric extraction logic example
-                    parts = [float(s) for s in line.replace(",", " ").split() if s.replace(".", "", 1).isdigit()]
-                    if parts:
-                        latency = parts[0]
-                        break
-                except ValueError:
-                    continue
+        # 4. Extract FRNN latencies from lines like:
+        #    FRNN=0.20ms  FAISS=1.6ms  PyG=2.4ms  xju2=0.9ms
+        frnn_times = re.findall(r'FRNN=([\d.]+)ms', res.stdout)
+        if frnn_times:
+            latency = sum(float(t) for t in frnn_times) / len(frnn_times)
+        else:
+            latency = 100.0  # Fallback
 
         # Score is inverted execution time: lower latency = higher score
         score = 1000.0 / (latency + 1e-6)
@@ -99,7 +98,7 @@ def main() -> None:
     cuda_target = _REPO / "frnn" / "csrc" / "grid" / "find_nbrs.cu"
     out_dir = _REPO / "skydiscover_out"
 
-    print(f"[discover] Kicking off Low-Level CUDA Sweep on finding optimization points...")
+    print(f"[discover] Kicking off Low-Level CUDA Sweep on find_nbrs optimization...")
     print(f"[discover] Target file: {cuda_target.relative_to(_REPO)}")
     print(f"[discover] Iterations : {args.iterations}\n")
 

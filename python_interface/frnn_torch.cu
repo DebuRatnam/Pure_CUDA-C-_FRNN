@@ -34,6 +34,17 @@ extern "C" void run_find_nbrs(float* d_points1, float* d_points2, int* d_pc2_gri
                               float* d_dists, int* d_idxs, GridParams params);
 extern "C" void run_bruteforce(const float* d_p1, const float* d_p2, int P1, int P2,
                                int K, int dim, float r, float* d_dists, int* d_idxs);
+// D=3 sorted-query / AoS grid fast path (insert_points.cu, find_nbrs.cu). Cell-ordered
+// queries keep a warp on the same candidate span (L2 broadcast); AoS candidates serve
+// all 3 coords from one cache line. Output is in sorted order, unpermuted by scatter.
+extern "C" void run_counting_sort_aos3(float* d_points, int* d_pc_grid_idx, int* d_grid_offsets,
+                                       int* d_sorted_idxs, float* d_points_sorted, int P);
+extern "C" void run_find_nbrs_aos3(float* d_points1_aos, float* d_points2_aos, int* d_pc2_grid_off,
+                                   int* d_sorted_idxs, int P1, int K, float radius,
+                                   float* d_dists, int* d_idxs, GridParams params);
+extern "C" void run_scatter_to_orig(const float* d_dists_in, const int* d_idxs_in,
+                                    const int* d_sorted_idxs, int P, int K,
+                                    float* d_dists_out, int* d_idxs_out);
 
 // Holds the reusable grid scratch buffers so repeated searches don't re-cudaMalloc.
 // Neighbor index/distance outputs are returned as torch tensors (torch's caching
@@ -121,12 +132,30 @@ public:
             // Counting sort: physically reorder coords into cell order so find_nbrs
             // streams contiguous candidates. The sorted buffer is a transient (dim, N)
             // tensor — torch's caching allocator makes this effectively free after warm-up.
-            auto pts_sorted = torch::empty({dim, N}, f32);
-            float* d_points_sorted = pts_sorted.data_ptr<float>();
-            run_counting_sort(d_points, d_grid_idx_, d_grid_offsets_, d_sorted_idxs_,
-                              d_points_sorted, N, dim);
-            run_find_nbrs(d_points, d_points_sorted, d_grid_offsets_, d_sorted_idxs_,
-                          N, K, dim, r, d_dists, d_idxs, params);
+            if (dim == 3) {
+                // D=3 fast path: cell-ordered (sorted) queries + AoS candidates so a warp
+                // scans each candidate span in lockstep from one cache line. find_nbrs_aos3
+                // writes coalesced in sorted order; scatter unpermutes into d_dists/d_idxs.
+                auto pts_sorted_aos = torch::empty({N, 3}, f32);   // AoS [pos*3 + d]
+                auto dist_sorted    = torch::empty({K, N}, f32);
+                auto idx_sorted     = torch::empty({K, N}, i32);
+                float* d_points_sorted_aos = pts_sorted_aos.data_ptr<float>();
+                float* d_dists_sorted      = dist_sorted.data_ptr<float>();
+                int*   d_idxs_sorted       = idx_sorted.data_ptr<int>();
+                run_counting_sort_aos3(d_points, d_grid_idx_, d_grid_offsets_, d_sorted_idxs_,
+                                       d_points_sorted_aos, N);
+                run_find_nbrs_aos3(d_points_sorted_aos, d_points_sorted_aos, d_grid_offsets_,
+                                   d_sorted_idxs_, N, K, r, d_dists_sorted, d_idxs_sorted, params);
+                run_scatter_to_orig(d_dists_sorted, d_idxs_sorted, d_sorted_idxs_,
+                                    N, K, d_dists, d_idxs);
+            } else {
+                auto pts_sorted = torch::empty({dim, N}, f32);
+                float* d_points_sorted = pts_sorted.data_ptr<float>();
+                run_counting_sort(d_points, d_grid_idx_, d_grid_offsets_, d_sorted_idxs_,
+                                  d_points_sorted, N, dim);
+                run_find_nbrs(d_points, d_points_sorted, d_grid_offsets_, d_sorted_idxs_,
+                              N, K, dim, r, d_dists, d_idxs, params);
+            }
         }
 
         // 5. SoA -> AoS on the GPU so callers get row-major (N, K). Device->device.

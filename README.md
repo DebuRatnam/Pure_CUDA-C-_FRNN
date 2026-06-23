@@ -30,7 +30,7 @@ Engine hard limits: `K ≤ 128`, `D ≤ 128`, `ceil(1/R)^D ≤ 1,000,000`.
 ## 1. Get a GPU node
 
 ```bash
-srun -C gpu -q interactive -N 1 -G 1 -c 32 -t 01:00:00 -A m3443 --pty /bin/bash -l
+srun -C gpu -q interactive -N 1 -G 1 -c 32 -t 02:00:00 -A m3443 --pty /bin/bash -l
 ```
 
 Do everything below **inside** this shell — the build needs `nvcc` and the A100, and the

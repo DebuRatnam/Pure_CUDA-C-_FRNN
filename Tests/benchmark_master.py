@@ -25,7 +25,7 @@ for _p in (os.path.join(_ROOT, "xju2_frnn", "FRNN"),
 # supports D in {2,3}, so it shows up on the D=3 panel only (skip-logged at D=16).
 # Dense N grid up to 200K for smooth scaling curves (D=16 high-N cells are slow: O(N^2)).
 N_SWEEP = [10_000, 25_000, 50_000, 75_000, 100_000, 150_000, 200_000]
-D_SWEEP = [3, 16]
+D_SWEEP = [int(d) for d in os.environ.get("D_SWEEP", "3,16").split(",")]
 K, SEED, WARMUP, TRIALS = 16, 1234, 20, 10
 
 
@@ -109,7 +109,7 @@ def run_baselines(pts_np, D, R):
 
     # xju2/FRNN — the lxxue grid kernel only supports D in {2, 3}; higher dims
     # are genuinely unsupported by the library, so they stay None (skip-logged).
-    if D in (2, 3):
+    if D in (3, 16):
         try:
             import frnn as xf
             # Resolve API — some pip builds nest the function differently

@@ -14,6 +14,10 @@ extern "C" void run_reorder_points(int* d_pc_grid_idx, int* d_grid_offsets, int*
 extern "C" void run_counting_sort(float* d_points, int* d_pc_grid_idx, int* d_grid_offsets, int* d_sorted_idxs, float* d_points_sorted, int P, int dim);
 extern "C" void run_find_nbrs(float* d_points1, float* d_points2, int* d_pc2_grid_off, int* d_sorted_idxs, int P1, int K, int dim, float radius, float* d_dists, int* d_idxs, GridParams params);
 extern "C" void run_bruteforce(const float* d_p1, const float* d_p2, int P1, int P2, int K, int dim, float r, float* d_dists, int* d_idxs);
+// D=3 sorted-query / AoS grid path (see find_nbrs.cu, insert_points.cu)
+extern "C" void run_counting_sort_aos3(float* d_points, int* d_pc_grid_idx, int* d_grid_offsets, int* d_sorted_idxs, float* d_points_sorted, int P);
+extern "C" void run_find_nbrs_aos3(float* d_points1_aos, float* d_points2_aos, int* d_pc2_grid_off, int* d_sorted_idxs, int P1, int K, float radius, float* d_dists, int* d_idxs, GridParams params);
+extern "C" void run_scatter_to_orig(const float* d_dists_in, const int* d_idxs_in, const int* d_sorted_idxs, int P, int K, float* d_dists_out, int* d_idxs_out);
 
 // Note: Constructor now takes max_points AND dim to allocate correctly
 FRNNEngine::FRNNEngine(int max_points) : max_p(max_points) {
@@ -22,10 +26,11 @@ FRNNEngine::FRNNEngine(int max_points) : max_p(max_points) {
     int default_dim = 32;
     cudaMalloc(&d_points, max_p * default_dim * sizeof(float));
     cudaMalloc(&d_points_sorted, max_p * default_dim * sizeof(float));
+    cudaMalloc(&d_points_sorted_aos, max_p * 3 * sizeof(float));  // D=3 AoS cell-order buffer
 
     cudaMalloc(&d_grid_idx, max_p * sizeof(int));
     cudaMalloc(&d_sorted_idxs, max_p * sizeof(int));
-    
+
     // Allocate for 1M cells (enough for 3D res=100 or 8D res=5)
     int max_cells = 1000000;
     cudaMalloc(&d_grid_cnt, max_cells * sizeof(int));
@@ -33,12 +38,17 @@ FRNNEngine::FRNNEngine(int max_points) : max_p(max_points) {
 
     cudaMalloc(&d_dists, max_p * 128 * sizeof(float));
     cudaMalloc(&d_idxs, max_p * 128 * sizeof(int));
+    // Sorted-query output, unpermuted by run_scatter_to_orig into d_dists/d_idxs.
+    cudaMalloc(&d_dists_sorted, max_p * 128 * sizeof(float));
+    cudaMalloc(&d_idxs_sorted, max_p * 128 * sizeof(int));
 }
 
 FRNNEngine::~FRNNEngine() {
-    cudaFree(d_points); cudaFree(d_points_sorted); cudaFree(d_grid_cnt); cudaFree(d_grid_offsets);
+    cudaFree(d_points); cudaFree(d_points_sorted); cudaFree(d_points_sorted_aos);
+    cudaFree(d_grid_cnt); cudaFree(d_grid_offsets);
     cudaFree(d_grid_idx); cudaFree(d_sorted_idxs);
     cudaFree(d_dists); cudaFree(d_idxs);
+    cudaFree(d_dists_sorted); cudaFree(d_idxs_sorted);
 }
 
 std::pair<std::vector<int>, std::vector<float>> FRNNEngine::search(std::vector<float> points_raw, int K, float radius) {
@@ -90,8 +100,17 @@ std::pair<std::vector<int>, std::vector<float>> FRNNEngine::search(std::vector<f
             thrust::device_ptr<int>(d_grid_cnt),
             thrust::device_ptr<int>(d_grid_cnt + params.total_cells),
             thrust::device_ptr<int>(d_grid_offsets));
-        run_counting_sort(d_points, d_grid_idx, d_grid_offsets, d_sorted_idxs, d_points_sorted, P, dim);
-        run_find_nbrs(d_points, d_points_sorted, d_grid_offsets, d_sorted_idxs, P, K, dim, radius, d_dists, d_idxs, params);
+        if (dim == 3) {
+            // D=3 large-N fast path: cell-ordered (sorted) queries + AoS candidates so a
+            // warp scans each candidate span in lockstep from one cache line. find_nbrs_aos3
+            // writes coalesced in sorted order; scatter unpermutes into d_dists/d_idxs.
+            run_counting_sort_aos3(d_points, d_grid_idx, d_grid_offsets, d_sorted_idxs, d_points_sorted_aos, P);
+            run_find_nbrs_aos3(d_points_sorted_aos, d_points_sorted_aos, d_grid_offsets, d_sorted_idxs, P, K, radius, d_dists_sorted, d_idxs_sorted, params);
+            run_scatter_to_orig(d_dists_sorted, d_idxs_sorted, d_sorted_idxs, P, K, d_dists, d_idxs);
+        } else {
+            run_counting_sort(d_points, d_grid_idx, d_grid_offsets, d_sorted_idxs, d_points_sorted, P, dim);
+            run_find_nbrs(d_points, d_points_sorted, d_grid_offsets, d_sorted_idxs, P, K, dim, radius, d_dists, d_idxs, params);
+        }
     }
 
     // 5. Device-to-Host Copy (GPU output is SoA: d_idxs[k*P+p], d_dists[k*P+p])
@@ -142,9 +161,15 @@ std::pair<uintptr_t, uintptr_t> FRNNEngine::search_gpu(
             thrust::device_ptr<int>(d_grid_cnt),
             thrust::device_ptr<int>(d_grid_cnt + params.total_cells),
             thrust::device_ptr<int>(d_grid_offsets));
-        run_counting_sort(d_input, d_grid_idx, d_grid_offsets, d_sorted_idxs, d_points_sorted, P, dim);
-        run_find_nbrs(d_input, d_points_sorted, d_grid_offsets, d_sorted_idxs,
-                      P, K, dim, radius, d_dists, d_idxs, params);
+        if (dim == 3) {
+            run_counting_sort_aos3(d_input, d_grid_idx, d_grid_offsets, d_sorted_idxs, d_points_sorted_aos, P);
+            run_find_nbrs_aos3(d_points_sorted_aos, d_points_sorted_aos, d_grid_offsets, d_sorted_idxs, P, K, radius, d_dists_sorted, d_idxs_sorted, params);
+            run_scatter_to_orig(d_dists_sorted, d_idxs_sorted, d_sorted_idxs, P, K, d_dists, d_idxs);
+        } else {
+            run_counting_sort(d_input, d_grid_idx, d_grid_offsets, d_sorted_idxs, d_points_sorted, P, dim);
+            run_find_nbrs(d_input, d_points_sorted, d_grid_offsets, d_sorted_idxs,
+                          P, K, dim, radius, d_dists, d_idxs, params);
+        }
     }
 
     return {reinterpret_cast<uintptr_t>(d_idxs),

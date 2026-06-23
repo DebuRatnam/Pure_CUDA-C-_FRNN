@@ -34,10 +34,14 @@ class FRNNEngine {
         // GPU Pointers
         // Changed d_points from float3* to float* to support N-dimensions
         float* d_points;
-        float* d_points_sorted;   // coordinates physically reordered into cell order (counting sort)
+        float* d_points_sorted;      // SoA coordinates in cell order (counting sort)
+        float* d_points_sorted_aos;  // AoS coordinates in cell order (D=3 grid path)
         int *d_grid_cnt, *d_grid_offsets, *d_grid_idx, *d_sorted_idxs;
-        float *d_dists; 
-        int *d_idxs;
+        float *d_dists;
+        int   *d_idxs;
+        // Intermediate sorted-query output; scatter_to_orig unpermutes these into d_dists/d_idxs.
+        float *d_dists_sorted;
+        int   *d_idxs_sorted;
 };
 
 #endif
