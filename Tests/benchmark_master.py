@@ -12,6 +12,13 @@ import frnn_torch
 import pynvml
 from math import pi, gamma, ceil
 
+# New algorithm: D->3 projection two-stage FRNN (auto-dispatched, exact). The FRNN
+# timed path below routes through this instead of FRNNTorch.search directly, so the
+# benchmark measures the projection method. On full-rank data it auto-falls-back to the
+# native path (no regression); it engages on low intrinsic-dim data (set LOWRANK below).
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from projection_frnn_torch import frnn_search_torch
+
 # Make `import frnn` resolve to the xju2/FRNN baseline package (and its prefix_sum
 # dependency) instead of this repo's local ./frnn source dir, which would otherwise
 # shadow it as an empty namespace package. Both must be built for the running Python.
@@ -35,6 +42,43 @@ def radius_for(D, N):
     if r < 1.0 and ceil(1.0 / r)**D > 900_000:
         r = 2.0
     return round(r, 5)
+
+
+# Data regime. Uniform (default) is full-rank, so the projection path auto-falls-back to
+# brute force -- the new algorithm engages only on low intrinsic-dim data. Set
+# LOWRANK=<intrinsic_dim> (e.g. LOWRANK=3) to generate points near a low-dim manifold in
+# D-space so the projection two-stage activates and its speedup is visible.
+LOWRANK    = int(os.environ.get("LOWRANK", "0"))     # 0 = uniform, >0 = intrinsic dim
+LOWRANK_NOISE = float(os.environ.get("LOWRANK_NOISE", "0.02"))
+
+
+def gen_points(N, D, seed):
+    rng = np.random.RandomState(seed)
+    if LOWRANK <= 0 or LOWRANK >= D:
+        return rng.rand(N, D).astype(np.float32)                 # uniform [0,1]^D
+    core  = rng.rand(N, LOWRANK)
+    embed = rng.standard_normal((LOWRANK, D))
+    Q, _  = np.linalg.qr(rng.standard_normal((D, D)))            # random rotation
+    pts   = (core @ embed) @ Q + LOWRANK_NOISE * rng.standard_normal((N, D))
+    mn, mx = pts.min(0, keepdims=True), pts.max(0, keepdims=True)
+    return ((pts - mn) / np.maximum(mx - mn, 1e-9)).astype(np.float32)
+
+
+def calibrate_radius(pts, target=K, sample=256, lo=1e-4, hi=2.0, iters=20):
+    """Bisect R so the mean neighbor count ~= target for THIS dataset. radius_for assumes
+    uniform; low-rank data needs a far smaller R to keep ~K neighbors (selective regime
+    where the projection filter wins). Used for the LOWRANK data option only."""
+    rng = np.random.RandomState(0)
+    qi = rng.choice(len(pts), size=min(sample, len(pts)), replace=False)
+    qs = pts[qi]
+    def avg_nbr(R):
+        r2 = R * R
+        return sum(int(((pts - qs[i]) ** 2).sum(1) <= r2).sum() for i in range(len(qi))) / len(qi)
+    for _ in range(iters):
+        mid = 0.5 * (lo + hi)
+        if avg_nbr(mid) < target: lo = mid
+        else:                     hi = mid
+    return round(0.5 * (lo + hi), 6)
 
 
 def warmup_gpu(seconds=3.0):
@@ -73,7 +117,8 @@ def run_frnn_torch(pts_t, N, D, R):
     # returns CUDA tensors; no H2D/D2H copies happen inside the timed loop.
     engine = frnn_torch.FRNNTorch(N)
     torch.cuda.reset_peak_memory_stats()
-    latency_ms = timed_gpu(lambda: engine.search(pts_t, K, R))
+    # New algorithm: projection two-stage, auto-dispatched (exact). See projection_frnn_torch.
+    latency_ms = timed_gpu(lambda: frnn_search_torch(engine, pts_t, K, R))
     peak_mb = torch.cuda.max_memory_allocated() / 1024 ** 2
     return {"latency_ms": latency_ms, "peak_mb": float(peak_mb)}
 
@@ -197,9 +242,10 @@ all_results = {}
 
 for D in D_SWEEP:
     for N in N_SWEEP:
-        R = radius_for(D, N)
-        np.random.seed(SEED)
-        pts_np   = np.random.rand(N, D).astype(np.float32)
+        pts_np   = gen_points(N, D, SEED)
+        # Low-rank data needs a calibrated (smaller) R to stay at ~K neighbors; uniform
+        # uses the analytic radius_for. Both methods/baselines run at the same R.
+        R = calibrate_radius(pts_np) if LOWRANK > 0 and LOWRANK < D else radius_for(D, N)
         key      = f"D{D}_N{N}"
         print(f"\n{'─'*56}\n  {key}  R={R:.5f}\n{'─'*56}")
 
