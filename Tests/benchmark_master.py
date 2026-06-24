@@ -73,7 +73,7 @@ def calibrate_radius(pts, target=K, sample=256, lo=1e-4, hi=2.0, iters=20):
     qs = pts[qi]
     def avg_nbr(R):
         r2 = R * R
-        return sum(int(((pts - qs[i]) ** 2).sum(1) <= r2).sum() for i in range(len(qi))) / len(qi)
+        return sum(int((((pts - qs[i]) ** 2).sum(1) <= r2).sum()) for i in range(len(qi))) / len(qi)
     for _ in range(iters):
         mid = 0.5 * (lo + hi)
         if avg_nbr(mid) < target: lo = mid
