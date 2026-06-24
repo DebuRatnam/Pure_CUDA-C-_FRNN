@@ -76,11 +76,13 @@ std::pair<std::vector<int>, std::vector<float>> FRNNEngine::search(std::vector<f
     params.cell_size = params.radius;   // legacy ratio=1 (cell = radius, 3^dim shell)
     params.cell_radius = 1;
     params.res = (int)std::ceil((params.max_val - params.min_val) / params.cell_size);
-    params.total_cells = std::pow(params.res, params.dim);
-
-    if(params.total_cells > 1000000) {
-        throw std::runtime_error("Grid resolution too high for N-dimensions. Increase radius.");
-    }
+    // Cell count in double to avoid long-long overflow when res^dim is huge (small
+    // radius at high D). If the grid is infeasible (>1M cells) fall back to brute
+    // force instead of failing: BF needs no grid and is correct for any radius. This
+    // matches the documented auto-dispatch ("BF engages automatically for high-D").
+    double total_cells_d = std::pow((double)params.res, params.dim);
+    bool grid_feasible = (total_cells_d <= 1000000.0);
+    params.total_cells = grid_feasible ? (long long)total_cells_d : 0;
 
     // 4. Execution Pipeline
     // The grid kernel checks 3^D neighboring cells per point.  When that shell
@@ -91,7 +93,7 @@ std::pair<std::vector<int>, std::vector<float>> FRNNEngine::search(std::vector<f
     long long neighbor_shell = 1;
     for (int d = 0; d < dim; d++) neighbor_shell *= 3;
 
-    if (params.res <= 1 || neighbor_shell >= (long long)params.total_cells) {
+    if (params.res <= 1 || !grid_feasible || neighbor_shell >= (long long)params.total_cells) {
         run_bruteforce(d_points, d_points, P, P, K, dim, radius, d_dists, d_idxs);
     } else {
         cudaMemset(d_grid_cnt, 0, params.total_cells * sizeof(int));
@@ -144,15 +146,16 @@ std::pair<uintptr_t, uintptr_t> FRNNEngine::search_gpu(
     params.cell_size   = params.radius;   // legacy ratio=1 (cell = radius, 3^dim shell)
     params.cell_radius = 1;
     params.res         = (int)std::ceil((params.max_val - params.min_val) / params.cell_size);
-    params.total_cells = std::pow(params.res, params.dim);
-
-    if (params.total_cells > 1000000)
-        throw std::runtime_error("Grid resolution too high for N-dimensions. Increase radius.");
+    // See search(): infeasible grid (>1M cells) falls back to brute force instead of
+    // throwing. double avoids long-long overflow of res^dim at small radius / high D.
+    double total_cells_d = std::pow((double)params.res, params.dim);
+    bool grid_feasible = (total_cells_d <= 1000000.0);
+    params.total_cells = grid_feasible ? (long long)total_cells_d : 0;
 
     long long neighbor_shell = 1;
     for (int d = 0; d < dim; d++) neighbor_shell *= 3;
 
-    if (params.res <= 1 || neighbor_shell >= (long long)params.total_cells) {
+    if (params.res <= 1 || !grid_feasible || neighbor_shell >= (long long)params.total_cells) {
         run_bruteforce(d_input, d_input, P, P, K, dim, radius, d_dists, d_idxs);
     } else {
         cudaMemset(d_grid_cnt, 0, params.total_cells * sizeof(int));
