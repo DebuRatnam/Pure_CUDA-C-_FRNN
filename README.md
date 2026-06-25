@@ -20,7 +20,7 @@ Engine hard limits: `K ≤ 128`, `D ≤ 128`, `ceil(1/R)^D ≤ 1,000,000`.
 |---|---|
 | Machine | Perlmutter (NERSC) |
 | GPU | NVIDIA A100 (`sm_80`) |
-| Module | `pytorch/2.8.0` → torch 2.8 (cu129), Python 3.12, plus `faiss`, `torch_cluster`, `pynvml` |
+| Module | `pytorch/2.8.0` → torch 2.8 (cu129), Python 3.12, plus `faiss`, `flashlib`, `pynvml` |
 
 > The compiled extensions are tied to the exact PyTorch version + Python version + GPU arch
 > they were built against. **Rebuild whenever you switch the `pytorch` module.**
@@ -91,21 +91,40 @@ benchmark still runs.
 
 `benchmark_master.py` times **FlashLib** (FlashML's fused brute-force exact top-K KNN,
 `flash_knn`) as a baseline. It lives in `flash_lib_knn/` and **must be installed before any
-benchmark run**. Clone + editable-install it (do this on the GPU node — it builds Triton /
-CuteDSL CUDA kernels):
+benchmark run**. Do this **on a login node** — compute nodes have no outbound internet, so
+the `git clone` / `pip` download must run where the network is reachable. The Triton /
+CuteDSL kernels compile JIT on first call at run time, so no GPU is needed to install.
+
+> ⚠️ **Do not let FlashLib upgrade torch.** FlashLib's only pin is `torch>=2.0`, so a plain
+> `pip install -e .` greedily pulls the **latest** torch (e.g. 2.12.x) into `~/.local`,
+> which shadows the `pytorch` module's torch 2.8.0. That instantly breaks `frnn_torch` and
+> the xju2 extensions — they are compiled against the 2.8.0 ABI and will crash on import
+> under any other torch. Always install FlashLib with **`--no-deps`** and keep the module's
+> torch 2.8.0 as the one and only torch.
 
 ```bash
-# Clone the source into the existing flash_lib_knn/ folder (must be empty):
+# 1. Clone the source into the existing flash_lib_knn/ folder (must be empty):
 git clone https://github.com/FlashML-org/flashlib.git flash_lib_knn
 
-# Build + install for THIS pytorch module:
-cd flash_lib_knn && pip install --user -e . && cd -
+# 2. Install FlashLib metadata ONLY — --no-deps stops it from upgrading torch:
+pip install --user --no-deps -e flash_lib_knn
+
+# 3. Install FlashLib's runtime deps WITHOUT torch (it stays at the module's 2.8.0):
+pip install --user "triton>=3.6" nvidia-cutlass-dsl
 ```
 
-Verify the import resolves:
+If you already ran a plain `pip install -e .` and it pulled torch 2.12.x, undo it:
 
 ```bash
-python3 -c "from flashlib import flash_knn; print('OK')"
+pip uninstall -y torch torchvision                      # removes only the ~/.local copies
+python3 -c "import torch; print(torch.__version__)"      # must print 2.8.0 (module copy)
+pip install --user --no-deps -e flash_lib_knn            # reinstall flashlib without torch
+```
+
+Verify both extensions import together under torch 2.8.0:
+
+```bash
+PYTHONPATH=. python3 -c "import torch, frnn_torch; from flashlib import flash_knn; print('OK', torch.__version__)"
 ```
 
 The benchmark calls `flash_knn(pts, pts, K)` (self-KNN, exact). If FlashLib is not installed
@@ -113,8 +132,10 @@ the `flash_ms` column is reported as `None` (skip-logged `[FlashLib] ...`) and t
 the benchmark still runs — but the FlashLib comparison is then missing, so install it
 whenever you want a full sweep.
 
-> FlashLib needs PyTorch + a CUDA GPU (Triton / CuteDSL). Rebuild it whenever you switch
-> the `pytorch` module, same as the FRNN and xju2 extensions.
+> Reinstall FlashLib (`--no-deps`) whenever you switch the `pytorch` module, same as the
+> FRNN and xju2 extensions. If `flash_knn` imports fine but crashes on the GPU node at JIT
+> time, FlashLib may need a newer torch than 2.8.0 at run time despite its loose pin — in
+> that case run it in a subprocess with its own torch (isolation pattern), not in-process.
 
 ## 5. Run the benchmark
 
