@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-# benchmark_master.py — FRNN vs FAISS vs PyG vs xju2/FRNN latency sweep.
+# benchmark_master.py — FRNN vs FAISS vs FlashLib vs xju2/FRNN latency sweep.
 # Every framework — FRNN included — is timed in-process on a GPU-resident tensor.
 # FRNN uses the zero-copy `frnn_torch` extension (see python_interface/frnn_torch.cu):
 # no host<->device copies occur inside the timed loop, so it is measured on the same
-# footing as PyG. (The old `_run_frnn_isolated.py` subprocess copied H2D/D2H every
+# footing as FlashLib. (The old `_run_frnn_isolated.py` subprocess copied H2D/D2H every
 # trial — kernel time was swamped by PCIe traffic, making the comparison unfair.)
+# FlashLib (https://github.com/FlashML-org/flashlib) is the FlashML brute-force exact
+# top-K KNN baseline — install it into ./flash_lib_knn (see README step 4b).
 import os, sys, json, time
 import numpy as np
 import torch
@@ -141,15 +143,17 @@ def run_baselines(pts_np, D, R):
         print(f"    [FAISS] {e}")
     torch.cuda.empty_cache()
 
-    # PyG — dimension-agnostic but kd-tree degrades 5-50x at D>=8
+    # FlashLib — FlashML fused brute-force EXACT top-K (Triton/CuteDSL). flash_knn(x, c, k)
+    # takes query (N,D) + corpus (M,D), returns (vals, idxs); self-KNN uses x=c=pts_t.
+    # Dimension-agnostic, all on the GPU-resident tensor (same footing as FRNN).
     try:
-        from torch_cluster import radius as pyg_radius
-        out["pyg_ms"] = timed_gpu(
-            lambda: pyg_radius(pts_t, pts_t, R, max_num_neighbors=K)
+        from flashlib import flash_knn
+        out["flash_ms"] = timed_gpu(
+            lambda: flash_knn(pts_t, pts_t, K)
         )
     except Exception as e:
-        out["pyg_ms"] = None
-        print(f"    [PyG] {e}")
+        out["flash_ms"] = None
+        print(f"    [FlashLib] {e}")
     torch.cuda.empty_cache()
 
     if D in (3, 16):
@@ -190,10 +194,10 @@ def plot_results(results, path="benchmark_comparison.png"):
         print(f"  [plot] matplotlib unavailable ({e}); skipping graph")
         return
 
-    methods = [("FRNN",  "latency_ms", "o", "-",  "#1f77b4"),
-               ("FAISS", "faiss_ms",   "s", "--", "#d62728"),
-               ("PyG",   "pyg_ms",     "^", "--", "#ff7f0e"),
-               ("xju2",  "xfrnn_ms",   "D", "-.", "#2ca02c")]
+    methods = [("FRNN",     "latency_ms", "o", "-",  "#1f77b4"),
+               ("FAISS",    "faiss_ms",   "s", "--", "#d62728"),
+               ("FlashLib", "flash_ms",   "^", "--", "#ff7f0e"),
+               ("xju2",     "xfrnn_ms",   "D", "-.", "#2ca02c")]
 
     by_d = {}
     for key, v in results.items():
@@ -263,12 +267,12 @@ for D in D_SWEEP:
 
         f_ms = frnn_res["latency_ms"]
         print(f"  FRNN={f_ms}ms  FAISS={base['faiss_ms']}ms"
-              f"  PyG={base['pyg_ms']}ms  xju2={base['xfrnn_ms']}ms")
+              f"  FlashLib={base['flash_ms']}ms  xju2={base['xfrnn_ms']}ms")
 
         if f_ms is not None:
-            for name, ms in [("FAISS", base["faiss_ms"]),
-                             ("PyG",   base["pyg_ms"]),
-                             ("xju2",  base["xfrnn_ms"])]:
+            for name, ms in [("FAISS",    base["faiss_ms"]),
+                             ("FlashLib", base["flash_ms"]),
+                             ("xju2",     base["xfrnn_ms"])]:
                 if ms is not None and f_ms > ms:
                     print(f"  !! REGRESSION: FRNN {f_ms:.2f}ms > {name} {ms:.2f}ms"
                           f" — see §4.3 diagnostics")

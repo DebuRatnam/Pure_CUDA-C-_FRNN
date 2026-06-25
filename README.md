@@ -1,7 +1,7 @@
 # FRNN-master
 
 A pure-CUDA **fixed-radius nearest-neighbor (FRNN)** engine for *N*-dimensional point
-clouds, built to beat **FAISS**, **PyTorch Geometric (PyG)**, and the original
+clouds, built to beat **FAISS**, **FlashLib (FlashML)**, and the original
 **xju2 / lxxue FRNN** in wall-clock latency across `D ∈ {2,3,4,8,16}` × `N ∈ {1K,10K,100K}`.
 
 The engine auto-dispatches between two GPU paths:
@@ -87,6 +87,35 @@ lxxue/FRNN only supports `D ∈ {2,3}`; higher dims are reported as `None` (skip
 If you skip this step, the `xju2` column is simply `None` everywhere — the rest of the
 benchmark still runs.
 
+## 4b. Set up FlashLib (`flash_lib_knn`)
+
+`benchmark_master.py` times **FlashLib** (FlashML's fused brute-force exact top-K KNN,
+`flash_knn`) as a baseline. It lives in `flash_lib_knn/` and **must be installed before any
+benchmark run**. Clone + editable-install it (do this on the GPU node — it builds Triton /
+CuteDSL CUDA kernels):
+
+```bash
+# Clone the source into the existing flash_lib_knn/ folder (must be empty):
+git clone https://github.com/FlashML-org/flashlib.git flash_lib_knn
+
+# Build + install for THIS pytorch module:
+cd flash_lib_knn && pip install --user -e . && cd -
+```
+
+Verify the import resolves:
+
+```bash
+python3 -c "from flashlib import flash_knn; print('OK')"
+```
+
+The benchmark calls `flash_knn(pts, pts, K)` (self-KNN, exact). If FlashLib is not installed
+the `flash_ms` column is reported as `None` (skip-logged `[FlashLib] ...`) and the rest of
+the benchmark still runs — but the FlashLib comparison is then missing, so install it
+whenever you want a full sweep.
+
+> FlashLib needs PyTorch + a CUDA GPU (Triton / CuteDSL). Rebuild it whenever you switch
+> the `pytorch` module, same as the FRNN and xju2 extensions.
+
 ## 5. Run the benchmark
 
 Run **from the repo root** (so `import frnn_torch` resolves) with `PYTHONPATH=.`:
@@ -97,7 +126,7 @@ grep REGRESSION benchmark_run.log          # any cell where FRNN lost a baseline
 ```
 
 Sweeps `D ∈ {3,16}` × `N ∈ {10K, 25K, 50K, 75K, 100K, 150K, 200K}` (14 cells), timing
-FRNN, FAISS, PyG, and xju2 in-process on GPU-resident tensors. A 3-second GPU warm-up runs
+FRNN, FAISS, FlashLib, and xju2 in-process on GPU-resident tensors. A 3-second GPU warm-up runs
 first so the first cell isn't measured at idle clocks. (Edit `D_SWEEP` / `N_SWEEP` at the
 top of the script to cover more of the engine's range — the engine itself handles `D` up
 to 128.)
@@ -141,7 +170,7 @@ OPENAI_API_KEY="sk-..." PYTHONPATH=. python3 discover_frnn_opts.py --iterations 
 
 | File | Contents |
 |---|---|
-| `benchmark_results.json` | per-cell `{R, latency_ms (FRNN), peak_mb, faiss_ms, pyg_ms, xfrnn_ms}` |
+| `benchmark_results.json` | per-cell `{R, latency_ms (FRNN), peak_mb, faiss_ms, flash_ms, xfrnn_ms}` |
 | `benchmark_run.log` | full console log; `!! REGRESSION` lines mark FRNN losses |
 
 ---
@@ -157,17 +186,18 @@ frnn/csrc/
   bruteforce/          # bruteforce.cu — float4-vectorized tiled brute-force (SoA)
 setup_frnn_torch.py    # builds frnn_torch
 Tests/
-  benchmark_master.py  # the sweep (FRNN vs FAISS vs PyG vs xju2)
+  benchmark_master.py  # the sweep (FRNN vs FAISS vs FlashLib vs xju2)
   test_frnn.cu         # C++ grid-vs-bruteforce correctness check (built via Makefile)
   benchmark_frnn.cu    # C++ grid timing benchmark
 xju2_frnn/             # original lxxue/FRNN baseline (FRNN/ + prefix_sum/)
+flash_lib_knn/         # FlashLib (FlashML) baseline — git clone + pip install -e (step 4b)
 ```
 
 ---
 
 ## Rebuild triggers
 
-Rebuild `frnn_torch` (step 3) **and** the xju2 extensions (step 4) when you:
+Rebuild `frnn_torch` (step 3), the xju2 extensions (step 4) **and** FlashLib (step 4b) when you:
 
 - switch the `pytorch` module (different torch/Python ABI), or
 - edit any `.cu` / `.h` under `python_interface/` or `frnn/csrc/`.

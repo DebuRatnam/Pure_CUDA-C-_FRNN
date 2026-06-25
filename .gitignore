@@ -30,3 +30,4 @@ dist/
 *.pcd
 slurm-*.out
 tests/output/
+flash_lib_knn/
