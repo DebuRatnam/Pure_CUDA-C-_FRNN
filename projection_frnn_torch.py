@@ -53,11 +53,12 @@ def _verify(pts, cand_idx, K, R, chunk=100_000):
         d2 = torch.where(valid & (d2 <= r2), d2, torch.full_like(d2, float("inf")))
 
         kk = min(K, O)
-        dk, pk = torch.topk(d2, kk, dim=1, largest=False)        # (M, kk)
+        dk, pk = torch.topk(d2, kk, dim=1, largest=False)        # (M, kk) SQUARED distances
         ids = torch.gather(cc, 1, pk).to(torch.int32)
         keep = torch.isfinite(dk)
         out_idx[c0:c1, :kk] = torch.where(keep, ids, torch.full_like(ids, -1))
-        out_dst[c0:c1, :kk] = torch.where(keep, dk.sqrt(), torch.full_like(dk, float("inf")))
+        # Return SQUARED distance to match the native engine convention (kernels store d^2).
+        out_dst[c0:c1, :kk] = torch.where(keep, dk, torch.full_like(dk, float("inf")))
     return out_idx, out_dst
 
 

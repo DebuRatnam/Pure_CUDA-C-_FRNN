@@ -140,7 +140,8 @@ def verify_exact(pts_gpu, cand, K, R, chunk=50_000):
         sel_ids = cp.where(keep, cp.take_along_axis(cc, sel, axis=0), -1)
 
         out_idx[c0:c1, :kk] = sel_ids.T
-        out_dst[c0:c1, :kk] = cp.where(keep, cp.sqrt(sel_d2), cp.inf).T
+        # SQUARED distance, matching the native engine convention (kernels store d^2).
+        out_dst[c0:c1, :kk] = cp.where(keep, sel_d2, cp.inf).T
         saturated[c0:c1] = cp.all(valid, axis=0)    # no empty slot -> potential miss
 
     return out_idx, out_dst, saturated
