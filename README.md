@@ -50,8 +50,8 @@ cd /global/u1/d/dratnam/FRNN-master
 
 ## 3. Build the FRNN engine (`frnn_torch`)
 
-This is the zero-copy PyTorch/CUDA extension that wraps the engine kernels. It replaces the
-old `make` build (the Makefile is stale — its `.cu` sources moved into `Tests/`).
+This is the zero-copy PyTorch/CUDA extension that wraps the engine kernels. It is the only
+build — there is no Makefile (correctness/latency are validated from Python; see steps 5–6).
 
 ```bash
 rm -rf build frnn_torch*.so                 # clean any stale build
@@ -205,11 +205,12 @@ python_interface/
 frnn/csrc/
   grid/                # insert_points.cu, find_nbrs.cu — uniform-grid kernels (SoA)
   bruteforce/          # bruteforce.cu — float4-vectorized tiled brute-force (SoA)
+  projection/          # project.cu (PCA->3D), verify.cu (fused full-D verify)
 setup_frnn_torch.py    # builds frnn_torch
+projection_frnn_torch.py  # projection two-stage dispatcher (prefers C++ search_projected)
 Tests/
-  benchmark_master.py  # the sweep (FRNN vs FAISS vs FlashLib vs xju2)
-  test_frnn.cu         # C++ grid-vs-bruteforce correctness check (built via Makefile)
-  benchmark_frnn.cu    # C++ grid timing benchmark
+  benchmark_master.py     # the sweep (FRNN vs FAISS vs FlashLib vs xju2)
+  validate_correctness.py # FRNN vs xju2 vs float64 brute-force oracle
 xju2_frnn/             # original lxxue/FRNN baseline (FRNN/ + prefix_sum/)
 flash_lib_knn/         # FlashLib (FlashML) baseline — git clone + pip install -e (step 4b)
 ```

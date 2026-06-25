@@ -8,7 +8,7 @@ tiled brute-force when `3^D ≥ total_cells` or `res ≤ 1`.
 Dimension auto-detected: `dim = points_raw.size() / max_p` — flat array must be exactly N×D.
 
 **Known bug:** `test_frnn_specific.py:79` has `import fais` — fix only if running that script.
-`frnn/csrc/backward/backward.cu` is dead legacy code (xju2, uses `at::Tensor`); not in Makefile.
+`frnn/csrc/backward/backward.cu` is dead legacy code (xju2, uses `at::Tensor`); not built.
 
 ---
 
@@ -111,8 +111,9 @@ pynvml.nvmlShutdown()
 ## 3. Surgical Changes
 
 **File rules:** Only `_run_frnn_isolated.py` and `benchmark_master.py` may be created/modified.
-Do not touch `frnn/csrc/`, `python_interface/`, `external/`, or `Makefile` unless a kernel-level
-regression fix is confirmed. Every kernel edit requires `make clean && make -j`.
+Do not touch `frnn/csrc/` or `python_interface/` unless a kernel-level
+regression fix is confirmed. Every kernel edit requires a rebuild:
+`python3 setup_frnn_torch.py build_ext --inplace`.
 
 ### 3.2 Terminal Commands
 
