@@ -50,6 +50,12 @@ extern "C" void run_scatter_to_orig(const float* d_dists_in, const int* d_idxs_i
 extern "C" void run_verify_candidates(const float* d_pts, const int* d_cand,
                                       int N, int D, int O, int K, float r,
                                       float* d_out_d, int* d_out_i);
+// Projection Stage-0: PCA project (N,D)->(N,k) in [0,1]^k (frnn/csrc/projection/project.cu).
+// Returns 0 on success (sets *s, *var_ratio), 1 if D too large for the shared-mem path.
+extern "C" int run_pca_project(const float* d_pts, int N, int D, int k, float* d_proj01,
+                               float* d_sumx, float* d_sumxx, float* d_mean,
+                               float* d_basis, float* d_minmax,
+                               float* out_s, float* out_var_ratio);
 
 // Holds the reusable grid scratch buffers so repeated searches don't re-cudaMalloc.
 // Neighbor index/distance outputs are returned as torch tensors (torch's caching
@@ -62,6 +68,12 @@ public:
         cudaMalloc(&d_grid_offsets_, (max_cells_ + 1) * sizeof(int));
         cudaMalloc(&d_grid_idx_,     max_p_ * sizeof(int));
         cudaMalloc(&d_sorted_idxs_,  max_p_ * sizeof(int));
+        // PCA scratch (projection Stage-0): sized to the engine max dim / a few proj axes.
+        cudaMalloc(&d_sumx_,   MAXD_ * sizeof(float));
+        cudaMalloc(&d_sumxx_,  (size_t)MAXD_ * MAXD_ * sizeof(float));
+        cudaMalloc(&d_mean_,   MAXD_ * sizeof(float));
+        cudaMalloc(&d_basis_,  (size_t)MAXD_ * MAXK_ * sizeof(float));
+        cudaMalloc(&d_minmax_, 2 * MAXK_ * sizeof(float));
     }
 
     ~FRNNTorch() {
@@ -69,6 +81,8 @@ public:
         cudaFree(d_grid_offsets_);
         cudaFree(d_grid_idx_);
         cudaFree(d_sorted_idxs_);
+        cudaFree(d_sumx_); cudaFree(d_sumxx_); cudaFree(d_mean_);
+        cudaFree(d_basis_); cudaFree(d_minmax_);
     }
 
     // points: CUDA float32 tensor, shape (N, D), row-major AoS [p*D + d].
@@ -197,13 +211,61 @@ public:
         return {out_i, out_d};
     }
 
+    // Full projection two-stage FRNN, end-to-end in C++/CUDA (PCA Stage-0 + grid Stage-1 +
+    // fused verify Stage-2). Auto-dispatched and EXACT:
+    //   D <= k_proj            -> plain search (projection pointless)
+    //   var_ratio  < var_thresh -> plain search (full-rank: projection has no selectivity)
+    //   var_ratio >= var_thresh -> project -> grid candidates (radius*s) -> full-D verify
+    // points: CUDA float32 (N, D) AoS. Returns (idx, dist) (N, K), squared distance.
+    std::pair<torch::Tensor, torch::Tensor>
+    search_projected(torch::Tensor points, int K, double radius,
+                     int oversample = 128, double var_thresh = 0.9) {
+        TORCH_CHECK(points.is_cuda(),                        "points must be a CUDA tensor");
+        TORCH_CHECK(points.scalar_type() == torch::kFloat32, "points must be float32");
+        TORCH_CHECK(points.dim() == 2,                       "points must be 2-D (N, D)");
+        const int N = (int)points.size(0);
+        const int D = (int)points.size(1);
+        const int k = 3;                                     // project to the fast 3-D grid path
+        if (D <= k) return search(points, K, radius);
+
+        auto pts = points.contiguous();
+        auto f32 = torch::TensorOptions().dtype(torch::kFloat32).device(points.device());
+        auto i32 = torch::TensorOptions().dtype(torch::kInt32).device(points.device());
+        auto proj = torch::empty({N, k}, f32);
+
+        float s = 1.0f, var_ratio = 1.0f;
+        int rc = run_pca_project(pts.data_ptr<float>(), N, D, k, proj.data_ptr<float>(),
+                                 d_sumx_, d_sumxx_, d_mean_, d_basis_, d_minmax_,
+                                 &s, &var_ratio);
+        if (rc != 0 || var_ratio < (float)var_thresh)
+            return search(points, K, radius);                // exact fallback (BF/grid)
+
+        int O = oversample > 128 ? 128 : oversample;         // engine heap cap
+        auto cand = search(proj, O, radius * s).first;        // (N, O) candidate ids
+        auto c = cand.contiguous();
+
+        auto out_i = torch::empty({N, K}, i32);
+        auto out_d = torch::empty({N, K}, f32);
+        run_verify_candidates(pts.data_ptr<float>(), c.data_ptr<int>(),
+                              N, D, O, K, (float)radius,
+                              out_d.data_ptr<float>(), out_i.data_ptr<int>());
+        return {out_i, out_d};
+    }
+
 private:
+    static constexpr int MAXD_ = 128;   // PCA scratch dim (matches engine D limit)
+    static constexpr int MAXK_ = 8;     // PCA scratch projection axes
     int max_p_;
     static constexpr long long max_cells_ = 1000000;  // matches FRNNEngine
     int* d_grid_cnt_     = nullptr;
     int* d_grid_offsets_ = nullptr;
     int* d_grid_idx_     = nullptr;
     int* d_sorted_idxs_  = nullptr;
+    float* d_sumx_   = nullptr;   // PCA scratch
+    float* d_sumxx_  = nullptr;
+    float* d_mean_   = nullptr;
+    float* d_basis_  = nullptr;
+    float* d_minmax_ = nullptr;
 };
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
@@ -221,5 +283,10 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
              py::arg("points"), py::arg("cand"), py::arg("K"), py::arg("radius"),
              "Projection Stage-2: fused full-D verify of per-query candidate ids "
              "(points (N,D) float32, cand (N,O) int32). Returns (idx, dist) (N,K): "
-             "ids and squared distance of the K nearest within radius.");
+             "ids and squared distance of the K nearest within radius.")
+        .def("search_projected", &FRNNTorch::search_projected,
+             py::arg("points"), py::arg("K"), py::arg("radius"),
+             py::arg("oversample") = 128, py::arg("var_thresh") = 0.9,
+             "Full projection two-stage FRNN in C++/CUDA (PCA + grid + fused verify), "
+             "auto-dispatched and exact. Returns (idx, dist) (N, K), squared distance.");
 }

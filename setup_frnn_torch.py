@@ -24,6 +24,7 @@ setup(
                 "frnn/csrc/grid/find_nbrs.cu",
                 "frnn/csrc/bruteforce/bruteforce.cu",
                 "frnn/csrc/projection/verify.cu",
+                "frnn/csrc/projection/project.cu",
             ],
             include_dirs=[
                 ROOT,

@@ -67,8 +67,14 @@ def frnn_search_torch(engine, pts, K, R, k_proj=3, oversample=128, var_thresh=0.
 
     engine : frnn_torch.FRNNTorch
     pts    : CUDA float32 (N, D) AoS tensor.  Returns (idx, dist) (N, K) tensors.
+
+    Prefers the pure C++/CUDA `search_projected` (PCA + grid + fused verify, all on device);
+    the torch implementation below is the fallback for older builds without that method.
     """
     N, D = pts.shape
+    if hasattr(engine, "search_projected"):
+        return engine.search_projected(pts.contiguous(), K, float(R),
+                                       min(oversample, 128), float(var_thresh))
     if D <= k_proj:
         return engine.search(pts, K, float(R))       # low D: native grid path
 
