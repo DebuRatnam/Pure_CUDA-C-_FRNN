@@ -23,7 +23,7 @@ per-invocation, not per-trial — the 20 warm-up + 10 timed trials run uncontami
 Use temp `.npy` files for data transfer (not JSON) to avoid float rounding at scale.
 
 **High-D dispatch rules:**
-- xju2/FRNN: 3D only. Guard every call with `if D == 3:`. Log `"D={D} unsupported, skipping"` for all others — never raise.
+- xju2/FRNN: works at arbitrary D. Call it for every D; wrap in `try/except` so a missing build logs and yields `None` (never raise).
 - PyG: dimension-agnostic but kd-tree degrades 5–50× at D ≥ 8. Wrap in `try/except`.
 - Our engine: BF path engages automatically for all high-D cases. No engine changes needed.
 

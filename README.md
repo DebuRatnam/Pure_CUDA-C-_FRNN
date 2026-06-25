@@ -82,7 +82,7 @@ cd xju2_frnn/FRNN       && python3 setup.py build_ext --inplace && cd -
 
 The benchmark adds `xju2_frnn/FRNN` and `xju2_frnn/prefix_sum` to `sys.path` ahead of cwd, so
 `import frnn` resolves to this package rather than the repo's local `./frnn/` source dir.
-lxxue/FRNN only supports `D ∈ {2,3}`; higher dims are reported as `None` (skip-logged).
+lxxue/FRNN runs at arbitrary `D`; if its build is missing the `xju2` column is `None`.
 
 If you skip this step, the `xju2` column is simply `None` everywhere — the rest of the
 benchmark still runs.

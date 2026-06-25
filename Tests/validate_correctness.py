@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # validate_correctness.py — is our FRNN returning the *right* neighbors?
 #
-# Runs our FRNN, xju2/lxxue FRNN, and an exact brute-force ground truth on identical
-# random clouds (D in {2,3}, xju2's supported dims) and cross-checks them.
+# Runs our FRNN (projection two-stage, auto-dispatched), xju2/lxxue FRNN, and an exact
+# brute-force ground truth on identical clouds at every swept D, and cross-checks them.
+# Set LOWRANK=k to validate on low intrinsic-dim data (the regime where projection engages).
 #
 # The crucial subtlety this validator gets right:
 #   Our FRNN returns the K *nearest* points within the radius (textbook fixed-radius KNN).
@@ -32,18 +33,26 @@ import frnn_torch
 from math import pi, gamma, ceil
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
 for _p in (os.path.join(_ROOT, "xju2_frnn", "FRNN"),
            os.path.join(_ROOT, "xju2_frnn", "prefix_sum")):
     if os.path.isdir(_p) and _p not in sys.path:
         sys.path.insert(0, _p)
 import frnn as xju2
+from projection_frnn_torch import frnn_search_torch   # validate the projection algorithm
 
 K, SEED = 16, 1234
-D_SWEEP = [3, 16]                   # D=3 grid path, D=16 brute-force path
+D_SWEEP = [3, 16]                   # D=3 grid path, D=16 brute-force / projection path
 N_SWEEP = [1_000, 10_000, 50_000, 100_000]
 N_SAMPLE = 2_000                    # query points spot-checked against exact truth per cell
 RTOL, ATOL = 1e-3, 1e-6
 TAU = 1e-4                          # radius boundary band (relative), float32-ambiguous zone
+
+# Match benchmark_master's data regime so the validator checks the SAME thing that gets
+# timed: uniform (default) -> projection auto-falls-back to BF; LOWRANK=k -> projection engages.
+LOWRANK       = int(os.environ.get("LOWRANK", "0"))
+LOWRANK_NOISE = float(os.environ.get("LOWRANK_NOISE", "0.02"))
 
 
 def radius_for(D, N):
@@ -54,8 +63,35 @@ def radius_for(D, N):
     return round(r, 5)
 
 
+def gen_points(N, D, seed):
+    rng = np.random.RandomState(seed)
+    if LOWRANK <= 0 or LOWRANK >= D:
+        return rng.rand(N, D).astype(np.float32)
+    core  = rng.rand(N, LOWRANK)
+    embed = rng.standard_normal((LOWRANK, D))
+    Q, _  = np.linalg.qr(rng.standard_normal((D, D)))
+    pts   = (core @ embed) @ Q + LOWRANK_NOISE * rng.standard_normal((N, D))
+    mn, mx = pts.min(0, keepdims=True), pts.max(0, keepdims=True)
+    return ((pts - mn) / np.maximum(mx - mn, 1e-9)).astype(np.float32)
+
+
+def calibrate_radius(pts, target=K, sample=256, lo=1e-4, hi=2.0, iters=20):
+    rng = np.random.RandomState(0)
+    qi = rng.choice(len(pts), size=min(sample, len(pts)), replace=False)
+    qs = pts[qi]
+    def avg_nbr(R):
+        r2 = R * R
+        return sum(int((((pts - qs[i]) ** 2).sum(1) <= r2).sum()) for i in range(len(qi))) / len(qi)
+    for _ in range(iters):
+        mid = 0.5 * (lo + hi)
+        if avg_nbr(mid) < target: lo = mid
+        else:                     hi = mid
+    return round(0.5 * (lo + hi), 6)
+
+
 def ours(pts, R):
-    idx, dist = frnn_torch.FRNNTorch(pts.shape[0]).search(pts, K, R)
+    # The actual algorithm the benchmark times: projection two-stage, auto-dispatched.
+    idx, dist = frnn_search_torch(frnn_torch.FRNNTorch(pts.shape[0]), pts, K, R)
     torch.cuda.synchronize()
     return idx.cpu().numpy(), dist.cpu().numpy()
 
@@ -93,15 +129,17 @@ print(f"Validating FRNN correctness  (K={K}, sample={N_SAMPLE} queries/cell)\n")
 all_pass = True
 for D in D_SWEEP:
     for N in N_SWEEP:
-        R = radius_for(D, N)
-        np.random.seed(SEED)
-        pts_np = np.random.rand(N, D).astype(np.float32)
+        pts_np = gen_points(N, D, SEED)
+        R = calibrate_radius(pts_np) if LOWRANK > 0 and LOWRANK < D else radius_for(D, N)
         pts = torch.tensor(pts_np, device="cuda")
 
         o_idx, o_dist = ours(pts, R)
-        has_xju2 = D in (2, 3)                  # xju2 reference only exists for 2-D/3-D
-        if has_xju2:
+        try:                                    # xju2 works at any D; guard a missing build
             x_idx, x_dist = xju2_search(pts, R)
+            has_xju2 = True
+        except Exception as e:
+            has_xju2 = False
+            print(f"    [xju2] unavailable: {e}")
 
         # Exact truth (float64) for a sample of queries: distances to ALL N points.
         rng = np.random.default_rng(SEED)
@@ -135,7 +173,7 @@ for D in D_SWEEP:
                     sparse_ok += (core <= o_set <= inrad) and (core <= x_set <= inrad)
 
         # Correctness gate: ours always checked vs the brute-force truth; the xju2 cross-check
-        # only applies where xju2 exists (2-D/3-D).
+        # applies whenever the xju2 build is present (it runs at any D).
         cell_ok = (ours_truth == S and ours_invalid == 0
                    and (not has_xju2 or (sparse_ok == sparse and xju2_invalid == 0)))
         all_pass &= cell_ok
@@ -149,7 +187,7 @@ for D in D_SWEEP:
                   f"xju2=any-K — by design)")
             print(f"    out-of-radius neighbors:  ours={ours_invalid}  xju2={xju2_invalid}")
         else:
-            print(f"    xju2: N/A at D={D} (2-D/3-D only) — validated against brute-force truth")
+            print(f"    xju2: unavailable — ours validated against brute-force truth")
             print(f"    out-of-radius neighbors:  ours={ours_invalid}")
         print(f"    => {'PASS' if cell_ok else 'FAIL'}\n")
 

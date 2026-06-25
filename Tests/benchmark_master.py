@@ -30,10 +30,9 @@ for _p in (os.path.join(_ROOT, "xju2_frnn", "FRNN"),
     if os.path.isdir(_p) and _p not in sys.path:
         sys.path.insert(0, _p)
 
-# D=3 exercises the grid path; D=16 exercises the high-D brute-force path. xju2 only
-# supports D in {2,3}, so it shows up on the D=3 panel only (skip-logged at D=16).
-# Dense N grid up to 200K for smooth scaling curves (D=16 high-N cells are slow: O(N^2)).
-N_SWEEP = [100_000, 150_000, 200_000, 500_000]
+# D=3 exercises the grid path; D=16 exercises the high-D brute-force / projection path.
+# xju2 runs at all swept dims. Dense N grid for smooth scaling curves.
+N_SWEEP = [100_000, 200_000, 300_000, 400_000, 500_000]
 D_SWEEP = [int(d) for d in os.environ.get("D_SWEEP", "3,16").split(",")]
 K, SEED, WARMUP, TRIALS = 16, 1234, 20, 10
 
@@ -156,27 +155,24 @@ def run_baselines(pts_np, D, R):
         print(f"    [FlashLib] {e}")
     torch.cuda.empty_cache()
 
-    if D in (3, 16):
-        try:
-            import frnn as xf
-            # Resolve API — some pip builds nest the function differently
-            if hasattr(xf, 'frnn_grid_points'):
-                _xfn = xf.frnn_grid_points
-            elif hasattr(xf, 'frnn') and hasattr(xf.frnn, 'frnn_grid_points'):
-                _xfn = xf.frnn.frnn_grid_points
-            else:
-                raise AttributeError(
-                    f"frnn_grid_points not found. Available: {[x for x in dir(xf) if not x.startswith('_')]}"
-                )
-            L = torch.tensor([len(pts_np)]).cuda()
-            p = pts_t.unsqueeze(0)
-            out["xfrnn_ms"] = timed_gpu(lambda: _xfn(p, p, L, L, K, R))
-        except Exception as e:
-            out["xfrnn_ms"] = None
-            print(f"    [xju2] {e}")
-    else:
+    # xju2/lxxue FRNN — works for arbitrary D (try/except still guards a missing build).
+    try:
+        import frnn as xf
+        # Resolve API — some pip builds nest the function differently
+        if hasattr(xf, 'frnn_grid_points'):
+            _xfn = xf.frnn_grid_points
+        elif hasattr(xf, 'frnn') and hasattr(xf.frnn, 'frnn_grid_points'):
+            _xfn = xf.frnn.frnn_grid_points
+        else:
+            raise AttributeError(
+                f"frnn_grid_points not found. Available: {[x for x in dir(xf) if not x.startswith('_')]}"
+            )
+        L = torch.tensor([len(pts_np)]).cuda()
+        p = pts_t.unsqueeze(0)
+        out["xfrnn_ms"] = timed_gpu(lambda: _xfn(p, p, L, L, K, R))
+    except Exception as e:
         out["xfrnn_ms"] = None
-        print(f"    [xju2] D={D} unsupported (lxxue FRNN is 2D/3D only), skipping")
+        print(f"    [xju2] {e}")
 
     del pts_t
     torch.cuda.empty_cache()
