@@ -23,6 +23,7 @@ setup(
                 "frnn/csrc/grid/insert_points.cu",
                 "frnn/csrc/grid/find_nbrs.cu",
                 "frnn/csrc/bruteforce/bruteforce.cu",
+                "frnn/csrc/projection/verify.cu",
             ],
             include_dirs=[
                 ROOT,

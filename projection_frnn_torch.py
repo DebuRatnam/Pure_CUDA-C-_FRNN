@@ -88,5 +88,8 @@ def frnn_search_torch(engine, pts, K, R, k_proj=3, oversample=128, var_thresh=0.
     osamp = min(oversample, 128)                     # engine heap cap (MAX_K_CAPACITY)
     cand_idx, _ = engine.search(proj01, osamp, float(R * s))      # (N, osamp) ids / -1
 
-    # Stage 2: exact full-D verify.
+    # Stage 2: exact full-D verify. Prefer the fused CUDA kernel (one launch, no
+    # (N,O,D) temp); fall back to the torch implementation on older builds.
+    if hasattr(engine, "verify_candidates"):
+        return engine.verify_candidates(pts.contiguous(), cand_idx.contiguous().int(), K, float(R))
     return _verify(pts, cand_idx, K, R)

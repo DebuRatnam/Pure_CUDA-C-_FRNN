@@ -45,6 +45,11 @@ extern "C" void run_find_nbrs_aos3(float* d_points1_aos, float* d_points2_aos, i
 extern "C" void run_scatter_to_orig(const float* d_dists_in, const int* d_idxs_in,
                                     const int* d_sorted_idxs, int P, int K,
                                     float* d_dists_out, int* d_idxs_out);
+// Projection Stage-2: fused candidate verify (frnn/csrc/projection/verify.cu). Recomputes
+// true full-D squared distance to each query's candidate ids, keeps the K nearest <= r.
+extern "C" void run_verify_candidates(const float* d_pts, const int* d_cand,
+                                      int N, int D, int O, int K, float r,
+                                      float* d_out_d, int* d_out_i);
 
 // Holds the reusable grid scratch buffers so repeated searches don't re-cudaMalloc.
 // Neighbor index/distance outputs are returned as torch tensors (torch's caching
@@ -162,6 +167,36 @@ public:
         return {idx_soa.t().contiguous(), dist_soa.t().contiguous()};
     }
 
+    // Projection Stage-2: fused candidate verify. Given each query's candidate ids
+    // (cand, (N, O) int32 — the oversample-nearest in the projection), recompute the
+    // true full-D distance on the GPU and return the K nearest within radius.
+    //   points: CUDA float32 (N, D) AoS.  cand: CUDA int32 (N, O) AoS, ids or -1.
+    //   Returns (idx, dist) (N, K): ids and SQUARED distance, heap order.
+    std::pair<torch::Tensor, torch::Tensor>
+    verify_candidates(torch::Tensor points, torch::Tensor cand, int K, double radius) {
+        TORCH_CHECK(points.is_cuda() && cand.is_cuda(), "points and cand must be CUDA tensors");
+        TORCH_CHECK(points.scalar_type() == torch::kFloat32, "points must be float32");
+        TORCH_CHECK(cand.scalar_type() == torch::kInt32,     "cand must be int32");
+        TORCH_CHECK(points.dim() == 2 && cand.dim() == 2,    "points (N,D) and cand (N,O) must be 2-D");
+        TORCH_CHECK(points.size(0) == cand.size(0),          "points and cand must share N");
+
+        const int N = (int)points.size(0);
+        const int D = (int)points.size(1);
+        const int O = (int)cand.size(1);
+        auto pts = points.contiguous();
+        auto c   = cand.contiguous();
+
+        auto i32 = torch::TensorOptions().dtype(torch::kInt32).device(points.device());
+        auto f32 = torch::TensorOptions().dtype(torch::kFloat32).device(points.device());
+        auto out_i = torch::empty({N, K}, i32);
+        auto out_d = torch::empty({N, K}, f32);
+
+        run_verify_candidates(pts.data_ptr<float>(), c.data_ptr<int>(),
+                              N, D, O, K, (float)radius,
+                              out_d.data_ptr<float>(), out_i.data_ptr<int>());
+        return {out_i, out_d};
+    }
+
 private:
     int max_p_;
     static constexpr long long max_cells_ = 1000000;  // matches FRNNEngine
@@ -181,5 +216,10 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
              "FRNN search on a GPU-resident (N, D) float32 tensor. radius_cell_ratio "
              "sets grid cell size = radius/ratio (default 1.0 = 3^D shell, fastest here; "
              ">1 uses finer cells but is slower on this kernel). Returns (idx, dist) "
-             "CUDA tensors of shape (N, K).");
+             "CUDA tensors of shape (N, K).")
+        .def("verify_candidates", &FRNNTorch::verify_candidates,
+             py::arg("points"), py::arg("cand"), py::arg("K"), py::arg("radius"),
+             "Projection Stage-2: fused full-D verify of per-query candidate ids "
+             "(points (N,D) float32, cand (N,O) int32). Returns (idx, dist) (N,K): "
+             "ids and squared distance of the K nearest within radius.");
 }
