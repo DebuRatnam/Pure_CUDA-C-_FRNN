@@ -78,24 +78,28 @@ __global__ void sqnorms_kernel(const float* __restrict__ p, int P, int dim,
     out[i] = s;
 }
 
-// GEMM-blocked: each block owns TILE_M = WARPS*16 consecutive query rows; one
-// warp per 16-row M-subtile. ALL warps stream the SAME ref tile from SMEM, so a
-// 16-ref window is loaded from global once per block and reused WARPS times --
-// global ref traffic drops from N^2 (one-warp-per-16-queries) to N^2/WARPS, the
-// dominant cost at large N. Within each warp lanes 0..15 own one query + its
-// top-K heap; all 32 lanes cooperate on the tensor-core GEMM and tile staging.
+// GEMM-blocked, FlashAttention-style. Each block owns TILE_M = WARPS*QPW query
+// rows; each warp owns QPW=32 of them as two stacked WMMA M-subtiles, so all 32
+// lanes own a query + heap (no idle lanes in the scalar fuse/rerank phases).
 //
-// Query fragments are loaded + TF32-converted ONCE before the ref loop and held
-// in registers (queries are fixed for the block), so only the ref fragments are
-// (re)loaded/converted per 16-ref window.
+// A WIDE ref window (NT=128 rows) is staged to SMEM per __syncthreads, then the
+// GEMM + radius-fuse run in NSUB=16-ref subtiles WITHOUT materializing the full
+// G: each warp computes its 32x16 G subtile into a tiny private scratch, fuses it
+// into the heaps, and reuses the scratch for the next subtile. Result: only
+// P2/128 block syncs (vs P2/16 before) yet G never spills past 32x16 in SMEM.
 //
-// WMMA shape 16x16x8 (TF32 on sm_80). D=16 -> the K-axis (=dim) is two 8-wide
-// mma steps. To get G = Q . T^T with Q,T stored row-major [point][dim] in SMEM,
-// load Q as row_major matrix_a and T as col_major matrix_b at the SAME pointer:
-// a row-major [N][K] buffer read col_major [K][N] is exactly its transpose.
+// sQ and sT are TF32-ROUNDED at stage time (once each), so the per-fragment
+// __float_to_tf32 conversion is gone from the inner GEMM loop -- the fragment
+// elements loaded from SMEM are already tf32-valued. Query fragments (2 M-subtiles
+// x 2 k-steps = 4) are loaded once and held in registers across the whole ref loop.
 //
-// GCAP = gen-heap capacity (compile-time, ~2K) -> slack so TF32 reshuffling near
-// the radius boundary cannot evict the true top-K before the exact rerank.
+// WMMA shape 16x16x8 (TF32 on sm_80). D=16 -> K-axis is two 8-wide mma steps. For
+// G = Q . T^T with Q,T row-major [point][dim] in SMEM, load Q as row_major
+// matrix_a and T as col_major matrix_b at the same pointer (row-major [N][K] read
+// col_major [K][N] = transpose).
+//
+// GCAP = gen-heap capacity -> slack so TF32 reshuffling near the radius boundary
+// cannot evict the true top-K before the exact rerank.
 template<int GCAP>
 __global__ void wmma_frnn16_kernel(
     const float* __restrict__ p1, const float* __restrict__ p2,
@@ -103,13 +107,15 @@ __global__ void wmma_frnn16_kernel(
     int P1, int P2, int K, float r2,
     float* __restrict__ dists, int* __restrict__ idxs)
 {
-    constexpr int DIM = 16, M = 16, NT = 16, WARPS = 8, TILE_M = WARPS * M; // 128
-    __shared__ float sQ[TILE_M * DIM];   // query tile, row-major [m][d]   (8 KB)
-    __shared__ float sT[NT * DIM];       // ref   tile, row-major [n][d]   (1 KB)
-    __shared__ float sG[TILE_M * NT];    // Gram tiles G[m][n] = q_m . t_n (8 KB)
+    constexpr int DIM = 16, NSUB = 16, WARPS = 4, QPW = 32;     // 2 M-subtiles/warp
+    constexpr int TILE_M = WARPS * QPW;                         // 128 queries/block
+    constexpr int NT = 128, NSUBS = NT / NSUB;                  // wide ref window, 8 subtiles
+    __shared__ float sQ[TILE_M * DIM];          // query tile, row-major, tf32  ( 8 KB)
+    __shared__ float sT[NT * DIM];              // ref   tile, row-major, tf32  ( 8 KB)
+    __shared__ float sG[WARPS * QPW * NSUB];    // per-warp 32x16 G scratch     ( 8 KB)
 
-    const int tid  = threadIdx.x;          // 0..255
-    const int warp = tid >> 5;             // 0..7  -> M-subtile
+    const int tid  = threadIdx.x;          // 0..127
+    const int warp = tid >> 5;             // 0..3
     const int lane = tid & 31;             // 0..31
     const int m0   = blockIdx.x * TILE_M;  // first query row of this block
 
@@ -118,69 +124,74 @@ __global__ void wmma_frnn16_kernel(
     // dwarfs the ~4e-3 TF32 d2 error; the exact rerank below re-imposes r2.
     const float RR2 = r2 * 1.05f + 1e-3f;
 
-    // Stage the whole query tile once (queries are fixed for the block).
+    // Stage + TF32-round the whole query tile once (queries fixed for the block).
     for (int e = tid; e < TILE_M * DIM; e += blockDim.x) {
         int r = e / DIM, d = e % DIM, gi = m0 + r;
-        sQ[e] = (gi < P1) ? p1[d * P1 + gi] : 0.0f;   // SoA global -> row-major smem
+        sQ[e] = (gi < P1) ? wmma::__float_to_tf32(p1[d * P1 + gi]) : 0.0f;
     }
     __syncthreads();
 
-    // Persistent query fragments for this warp's 16 rows: load + TF32 once, reuse
-    // across the entire ref loop (only the ref fragments change per window).
-    wmma::fragment<wmma::matrix_a, 16, 16, 8, wmma::precision::tf32, wmma::row_major> qa[2];
+    // Persistent query fragments: 2 M-subtiles x 2 k-steps, loaded once. Already
+    // tf32-rounded in SMEM -> no per-fragment convert.
+    wmma::fragment<wmma::matrix_a, 16, 16, 8, wmma::precision::tf32, wmma::row_major> qa[2][2];
     #pragma unroll
-    for (int s = 0; s < 2; s++) {
-        wmma::load_matrix_sync(qa[s], sQ + warp * M * DIM + s * 8, DIM);
+    for (int ms = 0; ms < 2; ms++)
         #pragma unroll
-        for (int t = 0; t < qa[s].num_elements; t++) qa[s].x[t] = wmma::__float_to_tf32(qa[s].x[t]);
-    }
+        for (int ks = 0; ks < 2; ks++)
+            wmma::load_matrix_sync(qa[ms][ks], sQ + (warp * QPW + ms * 16) * DIM + ks * 8, DIM);
 
-    // Per-lane oversized gen heap (lanes 0..15 of each warp active). RR2 / -1 pad.
-    const int  qrow   = warp * M + lane;                 // local query row 0..127
+    // Each of the 32 lanes owns one query row + its oversized gen heap.
+    const int  qrow   = warp * QPW + lane;               // local query row 0..127
     const int  qi     = m0 + qrow;                       // global query
-    const bool active = (lane < M) && (qi < P1);
+    const bool active = (qi < P1);
     float ld[GCAP];
     int   li[GCAP];
-    if (lane < M) { for (int g = 0; g < GCAP; g++) { ld[g] = RR2; li[g] = -1; } }
+    for (int g = 0; g < GCAP; g++) { ld[g] = RR2; li[g] = -1; }
     const float qn = active ? sqn1[qi] : 0.0f;
 
-    // Slide the reference window over all P2 points, 16 refs at a time.
+    float* mysG = sG + warp * (QPW * NSUB);    // this warp's 32x16 G scratch
+
+    // Slide the wide reference window over all P2 points.
     for (int n0 = 0; n0 < P2; n0 += NT) {
         for (int e = tid; e < NT * DIM; e += blockDim.x) {
             int r = e / DIM, d = e % DIM, gj = n0 + r;
-            sT[e] = (gj < P2) ? p2[d * P2 + gj] : 0.0f;
+            sT[e] = (gj < P2) ? wmma::__float_to_tf32(p2[d * P2 + gj]) : 0.0f;
         }
         __syncthreads();
 
-        // Tensor-core GEMM: this warp's G(16x16) = Q_warp(16x16) . T(16x16)^T.
-        wmma::fragment<wmma::accumulator, 16, 16, 8, float> acc;
-        wmma::fill_fragment(acc, 0.0f);
+        // Inner: NSUBS subtiles of 16 refs; GEMM + fuse each without a block sync.
         #pragma unroll
-        for (int s = 0; s < 2; s++) {
-            wmma::fragment<wmma::matrix_b, 16, 16, 8, wmma::precision::tf32, wmma::col_major> b;
-            wmma::load_matrix_sync(b, sT + s * 8, DIM);   // col-major read of row-major T = T^T
+        for (int ns = 0; ns < NSUBS; ns++) {
+            const float* sTsub = sT + ns * NSUB * DIM;        // [16 refs][16]
             #pragma unroll
-            for (int t = 0; t < b.num_elements; t++) b.x[t] = wmma::__float_to_tf32(b.x[t]);
-            wmma::mma_sync(acc, qa[s], b, acc);
-        }
-        wmma::store_matrix_sync(sG + warp * M * NT, acc, NT, wmma::mem_row_major);
-        __syncthreads();
-
-        // Fuse: norms + relaxed-radius into the oversized gen heap. Lane owns query
-        // row qrow; scan the 16 refs. Ordering uses the TF32 d2 (approximate),
-        // hence the GCAP slack + relaxed RR2 so no true top-K member is evicted.
-        if (active) {
-            #pragma unroll
-            for (int jj = 0; jj < NT; jj++) {
-                int gj = n0 + jj;
-                if (gj >= P2) continue;
-                // d2 = ||q||^2 + ||t||^2 - 2 q.t  (TF32 q.t; exact rerank below).
-                float d2 = qn + sqn2[gj] - 2.0f * sG[qrow * NT + jj];
-                if (d2 < 0.0f) d2 = 0.0f;
-                if (d2 < RR2) insert_neighbor(ld, li, GCAP, d2, gj);
+            for (int ms = 0; ms < 2; ms++) {
+                wmma::fragment<wmma::accumulator, 16, 16, 8, float> acc;
+                wmma::fill_fragment(acc, 0.0f);
+                #pragma unroll
+                for (int ks = 0; ks < 2; ks++) {
+                    wmma::fragment<wmma::matrix_b, 16, 16, 8, wmma::precision::tf32, wmma::col_major> b;
+                    wmma::load_matrix_sync(b, sTsub + ks * 8, DIM);   // col-major = T^T
+                    wmma::mma_sync(acc, qa[ms][ks], b, acc);
+                }
+                wmma::store_matrix_sync(mysG + ms * 16 * NSUB, acc, NSUB, wmma::mem_row_major);
             }
+            __syncwarp();   // both M-subtiles stored before any lane reads mysG
+
+            // Fuse this 16-ref subtile. Lane owns row 'lane' of the warp's 32x16 G.
+            if (active) {
+                #pragma unroll
+                for (int jj = 0; jj < NSUB; jj++) {
+                    int gj = n0 + ns * NSUB + jj;
+                    if (gj >= P2) continue;
+                    // d2 = ||q||^2 + ||t||^2 - 2 q.t  (TF32 q.t; exact rerank below).
+                    float d2 = qn + sqn2[gj] - 2.0f * mysG[lane * NSUB + jj];
+                    if (d2 < 0.0f) d2 = 0.0f;
+                    if (d2 < RR2) insert_neighbor(ld, li, GCAP, d2, gj);
+                }
+            }
+            __syncwarp();   // all lanes done reading mysG before next subtile overwrites
         }
-        __syncthreads();
+        __syncthreads();    // window consumed before sT reload
     }
 
     // Exact rerank. Recompute every GCAP candidate with the direct sum_(q-t)^2
@@ -226,7 +237,7 @@ __global__ void wmma_frnn16_kernel(
 }
 
 // Host launcher: precompute norms, dispatch the smallest heap capacity holding K.
-// SMEM is static (sQ 8 KB + sT 1 KB + sG 8 KB = 17 KB), under 48 KB -> no opt-in.
+// SMEM is static (sQ 8 KB + sT 8 KB + sG 8 KB = 24 KB), under 48 KB -> no opt-in.
 inline void run_bruteforce16_wmma(
     const float* d_p1, const float* d_p2,
     int P1, int P2, int K, float r2,
@@ -240,12 +251,12 @@ inline void run_bruteforce16_wmma(
     sqnorms_kernel<<<(P1 + tb - 1) / tb, tb>>>(d_p1, P1, 16, d_sqn1);
     sqnorms_kernel<<<(P2 + tb - 1) / tb, tb>>>(d_p2, P2, 16, d_sqn2);
 
-    const int blocks = (P1 + 127) / 128;   // TILE_M = 128 queries per block (8 warps)
+    const int blocks = (P1 + 127) / 128;   // TILE_M = 128 queries per block (4 warps)
     // GCAP = gen-heap capacity ~2K (slack so TF32 reshuffling can't evict the true
     // top-K), capped at 128 = engine K limit. K<=64 still gets 2x slack; K<=128 has
     // none (the boundary is then far inside r2, so approx ordering is reliable).
     #define LAUNCH_W(GCAP) \
-        wmma_frnn16_kernel<GCAP><<<blocks, 256>>>( \
+        wmma_frnn16_kernel<GCAP><<<blocks, 128>>>( \
             d_p1, d_p2, d_sqn1, d_sqn2, P1, P2, K, r2, d_dists, d_idxs)
     if      (K <= 16) LAUNCH_W(32);
     else if (K <= 32) LAUNCH_W(64);
