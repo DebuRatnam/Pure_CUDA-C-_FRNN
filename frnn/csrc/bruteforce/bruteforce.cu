@@ -1,5 +1,6 @@
 #include "bruteforce.h"
 #include "bruteforce16_blocked.cuh"   // RM register-blocked D=16 kernel (opt-in)
+#include "bruteforce16_wmma.cuh"      // tensor-core (WMMA TF32) D=16 kernel (opt-in)
 #include <device_launch_parameters.h>
 #include <float.h>
 #include <cstdlib>
@@ -232,6 +233,19 @@ extern "C" void run_bruteforce(
     int    blocks = (P1 + threads - 1) / threads;
     float  r2     = r * r;
     size_t smem   = (size_t)threads * dim * sizeof(float);
+
+    // Opt-in tensor-core D=16 path: FRNN_BF16_WMMA=1 routes dim==16 to the WMMA
+    // (TF32) Gram kernel -- d2 = ||q||^2 + ||t||^2 - 2 q.t, with q.t on tensor
+    // cores and exact recompute of kept neighbors. Default (unset) keeps the
+    // direct CUDA-core kernels below.
+    if (dim == 16) {
+        const char* wmma_e = std::getenv("FRNN_BF16_WMMA");
+        if (wmma_e && std::atoi(wmma_e) != 0) {
+            frnn_bf16_wmma::run_bruteforce16_wmma(
+                d_p1, d_p2, P1, P2, K, r2, d_dists, d_idxs);
+            return;
+        }
+    }
 
     // Opt-in RM register-blocked D=16 path: FRNN_BF16_BLOCKED=1 routes dim==16 to
     // TiledBruteforce16BlockedKernel (each thread owns RM queries, ref tile reused
