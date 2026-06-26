@@ -16,21 +16,31 @@
 // precomputed norms, radius-filters, and feeds survivors straight into the
 // per-query max-heap top-K -- the G tile lives in SMEM/registers and dies there.
 //
-// Precision: TF32 keeps only a 10-bit mantissa, so the GEMM dot product carries
-// ~1.5e-2 absolute error for unit-cube coords at D=16. That is fine for *finding*
-// candidates, but the in/out radius decision and the reported distances must be
-// exact. So every kept neighbor's distance is RECOMPUTED with the exact CUDA-core
-// sum_(q-t)^2 from global memory (only K per query -> cheap), and any candidate
-// whose exact distance lands >= r^2 is dropped. Output distances are therefore
-// bitwise the same exact fp32 the direct kernel produces; only the in/out call at
-// the radius boundary (|d2 - r2| < tf32 eps) can differ -- the band the validator
-// already treats as ambiguous.
+// Precision: TF32 keeps only a 10-bit mantissa, so the TF32 dot product carries
+// ~4e-3 absolute error on d2 for unit-cube coords at D=16. That is fine for
+// *finding* candidates but NOT for ranking them: a K-capacity heap ordered by the
+// approximate d2 can evict the true K-th nearest in favour of a slightly-farther
+// point whenever the TF32 error exceeds the gap between the K-th and (K+1)-th true
+// distances -- which is tiny at a dense radius boundary (the exact failure mode of
+// the first version). Recomputing only the survivors cannot recover a true
+// neighbor that was already dropped.
+//
+// Fix (candidate over-generation + exact rerank): gen into an OVERSIZED heap of
+// capacity GCAP = ~2K at a RELAXED radius RR2 = r2*(1+slack), so every true top-K
+// neighbor survives the approximate reshuffling (the count actually within r2 is
+// ~K by radius construction, so GCAP=2K covers it). Then RECOMPUTE all GCAP
+// candidates with the exact CUDA-core sum_(q-t)^2 from global memory, keep those
+// with exact d2 < r2, and select the true K nearest by exact distance. Output
+// distances are therefore the same exact fp32 the direct kernel produces, and the
+// neighbor *set* matches except at the literal radius boundary (the band the
+// validator treats as ambiguous).
 //
 // Opt-in via FRNN_BF16_WMMA=1 in run_bruteforce(); default path untouched.
 
 #include <mma.h>
 #include <cuda_runtime.h>
 #include <cstdio>
+#include <cfloat>
 
 namespace frnn_bf16_wmma {
 
@@ -76,7 +86,10 @@ __global__ void sqnorms_kernel(const float* __restrict__ p, int P, int dim,
 // mma steps. To get G = Q . T^T with Q,T stored row-major [point][dim] in SMEM,
 // load Q as row_major matrix_a and T as col_major matrix_b at the SAME pointer:
 // a row-major [N][K] buffer read col_major [K][N] is exactly its transpose.
-template<int CAP>
+//
+// GCAP = gen-heap capacity (compile-time, ~2K) -> slack so TF32 reshuffling near
+// the radius boundary cannot evict the true top-K before the exact rerank.
+template<int GCAP>
 __global__ void wmma_frnn16_kernel(
     const float* __restrict__ p1, const float* __restrict__ p2,
     const float* __restrict__ sqn1, const float* __restrict__ sqn2,
@@ -91,17 +104,22 @@ __global__ void wmma_frnn16_kernel(
     const int lane = threadIdx.x;          // 0..31
     const int m0   = blockIdx.x * M;        // first query row of this block
 
+    // Relaxed gen radius: keep approximate candidates a bit past r2 so a true
+    // in-radius neighbor whose TF32 d2 overshoots is still captured. 5% + 1e-3
+    // dwarfs the ~4e-3 TF32 d2 error; the exact rerank below re-imposes r2.
+    const float RR2 = r2 * 1.05f + 1e-3f;
+
     // Stage the query tile once (queries are fixed for the whole block).
     for (int e = lane; e < M * DIM; e += 32) {
         int r = e / DIM, d = e % DIM, gi = m0 + r;
         sQ[e] = (gi < P1) ? p1[d * P1 + gi] : 0.0f;   // SoA global -> row-major smem
     }
 
-    // Per-lane query heap (lanes 0..15 active). Pad with r2 / -1 like the direct kernel.
-    float ld[CAP];
-    int   li[CAP];
+    // Per-lane oversized gen heap (lanes 0..15 active). Padded with RR2 / -1.
+    float ld[GCAP];
+    int   li[GCAP];
     const bool active = (lane < M) && (m0 + lane < P1);
-    if (lane < M) { for (int k = 0; k < K; k++) { ld[k] = r2; li[k] = -1; } }
+    if (lane < M) { for (int g = 0; g < GCAP; g++) { ld[g] = RR2; li[g] = -1; } }
     const float qn = active ? sqn1[m0 + lane] : 0.0f;
     __syncthreads();
 
@@ -131,28 +149,33 @@ __global__ void wmma_frnn16_kernel(
         wmma::store_matrix_sync(sG, acc, NT, wmma::mem_row_major);   // sG[m*NT + n]
         __syncthreads();
 
-        // Fuse: norms + radius + top-K. Lane m owns query row m; scan the 16 refs.
+        // Fuse: norms + relaxed-radius into the oversized gen heap. Lane m owns
+        // query row m; scan the 16 refs. Ordering uses the TF32 d2 (approximate),
+        // hence the GCAP slack + relaxed RR2 so no true top-K member is evicted.
         if (active) {
             #pragma unroll
             for (int jj = 0; jj < NT; jj++) {
                 int gj = n0 + jj;
                 if (gj >= P2) continue;
-                // d2 = ||q||^2 + ||t||^2 - 2 q.t  (TF32 q.t; exact recompute below).
+                // d2 = ||q||^2 + ||t||^2 - 2 q.t  (TF32 q.t; exact rerank below).
                 float d2 = qn + sqn2[gj] - 2.0f * sG[lane * NT + jj];
                 if (d2 < 0.0f) d2 = 0.0f;
-                if (d2 < r2) insert_neighbor(ld, li, K, d2, gj);
+                if (d2 < RR2) insert_neighbor(ld, li, GCAP, d2, gj);
             }
         }
         __syncthreads();
     }
 
-    // Exact recompute of every kept neighbor (direct sum_(q-t)^2 from global, the
-    // same expression the default kernel uses) -> exact output distances. Drop any
-    // candidate whose exact distance is actually >= r^2 (TF32 false positive).
+    // Exact rerank. Recompute every GCAP candidate with the direct sum_(q-t)^2
+    // (the exact expression the default kernel uses); keep exact d2 < r2, mark the
+    // rest dead (+inf). Then selection-sort the K nearest by EXACT distance into
+    // the output -- this is what recovers the true top-K from the over-generated,
+    // approximately-ordered candidate pool.
     if (active) {
         const int qi = m0 + lane;
-        for (int k = 0; k < K; k++) {
-            int j = li[k];
+        #pragma unroll
+        for (int g = 0; g < GCAP; g++) {
+            int j = li[g];
             if (j >= 0) {
                 float s = 0.0f;
                 #pragma unroll
@@ -160,11 +183,28 @@ __global__ void wmma_frnn16_kernel(
                     float diff = p1[d * P1 + qi] - p2[d * P2 + j];
                     s += diff * diff;
                 }
-                if (s < r2) { ld[k] = s; }
-                else        { ld[k] = r2; li[k] = -1; }   // drop false positive
+                ld[g] = (s < r2) ? s : FLT_MAX;   // exact; drop if outside r2
+                if (s >= r2) li[g] = -1;
+            } else {
+                ld[g] = FLT_MAX;                  // empty slot
             }
-            dists[k * P1 + qi] = ld[k];
-            idxs[k * P1 + qi]  = li[k];
+        }
+        // Pull the K smallest exact distances in ascending order. Padding when the
+        // query has < K in-radius neighbors is (r2, -1), matching the direct kernel.
+        for (int k = 0; k < K; k++) {
+            float best = FLT_MAX;
+            int   bg   = -1;
+            for (int g = 0; g < GCAP; g++) {
+                if (ld[g] < best) { best = ld[g]; bg = g; }
+            }
+            if (bg >= 0 && best < r2) {
+                dists[k * P1 + qi] = best;
+                idxs[k * P1 + qi]  = li[bg];
+                ld[bg] = FLT_MAX;                 // consume
+            } else {
+                dists[k * P1 + qi] = r2;
+                idxs[k * P1 + qi]  = -1;
+            }
         }
     }
 }
@@ -185,12 +225,14 @@ inline void run_bruteforce16_wmma(
     sqnorms_kernel<<<(P2 + tb - 1) / tb, tb>>>(d_p2, P2, 16, d_sqn2);
 
     const int blocks = (P1 + 15) / 16;     // 16 queries per block
-    #define LAUNCH_W(CAP) \
-        wmma_frnn16_kernel<CAP><<<blocks, 32>>>( \
+    // GCAP = gen-heap capacity ~2K (slack so TF32 reshuffling can't evict the true
+    // top-K), capped at 128 = engine K limit. K<=64 still gets 2x slack; K<=128 has
+    // none (the boundary is then far inside r2, so approx ordering is reliable).
+    #define LAUNCH_W(GCAP) \
+        wmma_frnn16_kernel<GCAP><<<blocks, 32>>>( \
             d_p1, d_p2, d_sqn1, d_sqn2, P1, P2, K, r2, d_dists, d_idxs)
-    if      (K <= 16) LAUNCH_W(16);
-    else if (K <= 32) LAUNCH_W(32);
-    else if (K <= 64) LAUNCH_W(64);
+    if      (K <= 16) LAUNCH_W(32);
+    else if (K <= 32) LAUNCH_W(64);
     else              LAUNCH_W(128);
     #undef LAUNCH_W
 
