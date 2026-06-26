@@ -1,6 +1,4 @@
 #include "bruteforce.h"
-#include "bruteforce16_blocked.cuh"   // RM register-blocked D=16 kernel (opt-in)
-#include "bruteforce16_wmma.cuh"      // tensor-core (WMMA TF32) D=16 kernel (opt-in)
 #include <device_launch_parameters.h>
 #include <float.h>
 #include <cstdlib>
@@ -233,60 +231,6 @@ extern "C" void run_bruteforce(
     int    blocks = (P1 + threads - 1) / threads;
     float  r2     = r * r;
     size_t smem   = (size_t)threads * dim * sizeof(float);
-
-    // Opt-in tensor-core D=16 path: FRNN_BF16_WMMA=1 routes dim==16 to the WMMA
-    // (TF32) Gram kernel -- d2 = ||q||^2 + ||t||^2 - 2 q.t, with q.t on tensor
-    // cores and exact recompute of kept neighbors. Default (unset) keeps the
-    // direct CUDA-core kernels below.
-    if (dim == 16) {
-        const char* wmma_e = std::getenv("FRNN_BF16_WMMA");
-        if (wmma_e && std::atoi(wmma_e) != 0) {
-            frnn_bf16_wmma::run_bruteforce16_wmma(
-                d_p1, d_p2, P1, P2, K, r2, d_dists, d_idxs);
-            return;
-        }
-    }
-
-    // Opt-in RM register-blocked D=16 path: FRNN_BF16_BLOCKED=1 routes dim==16 to
-    // TiledBruteforce16BlockedKernel (each thread owns RM queries, ref tile reused
-    // across them -> per-query smem ref traffic cut by RM). RM defaults to 2;
-    // FRNN_BF16_RM=4 for K<=8. Default (unset) keeps the original kernels below.
-    const char* bf16b = std::getenv("FRNN_BF16_BLOCKED");
-    bool use_blocked = (dim == 16) && bf16b && std::atoi(bf16b) != 0;
-    if (use_blocked) {
-        int rm = 2;
-        if (const char* re = std::getenv("FRNN_BF16_RM")) {
-            int v = std::atoi(re);
-            if (v == 2 || v == 4) rm = v;
-        }
-        // Each thread covers RM queries, so the grid shrinks by RM. Tile/smem unchanged.
-        #define LAUNCH_BFB(RM, CAP) do {                                              \
-            int blocks_b = (P1 + threads * (RM) - 1) / (threads * (RM));              \
-            if (smem > 48u * 1024u)                                                   \
-                cudaFuncSetAttribute(                                                 \
-                    frnn_bf16_blocked::TiledBruteforce16BlockedKernel<RM, CAP>,       \
-                    cudaFuncAttributeMaxDynamicSharedMemorySize, (int)smem);          \
-            frnn_bf16_blocked::TiledBruteforce16BlockedKernel<RM, CAP>                \
-                <<<blocks_b, threads, smem>>>(                                        \
-                    d_p1, d_p2, P1, P2, K, dim, r2, d_dists, d_idxs);                 \
-        } while (0)
-        #define DISPATCH_BFB(CAP) do {                                                \
-            if (rm == 4) LAUNCH_BFB(4, CAP); else LAUNCH_BFB(2, CAP);                 \
-        } while (0)
-        if      (K <= 16) DISPATCH_BFB(16);
-        else if (K <= 32) DISPATCH_BFB(32);
-        else if (K <= 64) DISPATCH_BFB(64);
-        else              DISPATCH_BFB(128);
-        #undef DISPATCH_BFB
-        #undef LAUNCH_BFB
-
-        cudaError_t errb = cudaGetLastError();
-        if (errb != cudaSuccess)
-            std::fprintf(stderr, "[run_bruteforce/blocked] launch failed (threads=%d, rm=%d, smem=%zu): %s\n",
-                         threads, rm, smem, cudaGetErrorString(errb));
-        cudaDeviceSynchronize();
-        return;
-    }
 
     // Dispatch on two compile-time axes: the kernel (D=16 specialization vs generic
     // runtime-dim) and the smallest heap capacity that holds K. For tiles over 48 KB, opt
