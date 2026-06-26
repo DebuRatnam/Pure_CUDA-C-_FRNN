@@ -117,24 +117,30 @@ regression fix is confirmed. Every kernel edit requires a rebuild:
 
 ### 3.2 Terminal Commands
 
+There is **no Makefile** — the legacy `make` / `./frnn_test` / `./frnn_bench` C++ harness
+was removed (commit `52410b5`). The only build is the PyTorch/CUDA extension
+(`setup_frnn_torch.py`); correctness and latency are validated from Python under `Tests/`.
+See `README.md` for the authoritative build/run flow.
+
 ```bash
 # New interactive session (every login):
 srun -C gpu -q interactive -N 1 -G 1 -c 32 -t 01:00:00 -A m3443 --pty /bin/bash -l
-module load python && module load pytorch
+module load pytorch/2.8.0          # exact version — extension is ABI-pinned to torch 2.8.0
 
 # Install missing packages (once):
 pip install --user faiss-gpu pynvml frnn torch-cluster
 
-# Build / rebuild after any source change:
-make clean && make -j
-PYTHONPATH=. python3 -c "import frnn_cuda; frnn_cuda.FRNNEngine(1000); print('OK')"
+# Build / rebuild after any .cu/.h change under python_interface/ or frnn/csrc/:
+rm -rf build frnn_torch*.so
+python3 setup_frnn_torch.py build_ext --inplace
+export LD_LIBRARY_PATH=$(python3 -c "import torch, os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))"):$LD_LIBRARY_PATH
+python3 -c "import torch, frnn_torch; print('OK', hasattr(frnn_torch,'FRNNTorch'))"
 
-# Validate C++ correctness before Python benchmarks:
-./frnn_test    # grid vs BF agreement: 3D+8D, P=1000, K=4, R=0.15
-./frnn_bench   # grid timing: 3D+8D, P=10K–1M, K=16, R=0.02
+# Validate correctness before benchmarks (replaces ./frnn_test):
+PYTHONPATH=. python3 Tests/validate_correctness.py    # exit 0 = matches float64 oracle + xju2
 
-# Run primary benchmark:
-PYTHONPATH=. python3 benchmark_master.py 2>&1 | tee benchmark_run.log
+# Run primary benchmark (replaces ./frnn_bench):
+PYTHONPATH=. python3 Tests/benchmark_master.py 2>&1 | tee benchmark_run.log
 grep "REGRESSION" benchmark_run.log
 ```
 
@@ -153,16 +159,17 @@ FRNN subprocess exits after each (N,D) run; `~FRNNEngine()` calls `cudaFree` aut
 
 | Phase | Command | Check |
 |---|---|---|
-| 0 — env | `python3 -c "import frnn_cuda, faiss, torch_cluster, frnn, pynvml; print('OK')"` | No ImportError |
-| 1 — build | `make clean && make -j && ls frnn_cuda*.so` | `.so` non-zero |
-| 2 — subprocess | Run `_run_frnn_isolated.py` with N=1K D=4 via JSON stdin | `rc: 0`, valid JSON out |
+| 0 — env | `python3 -c "import torch, frnn_torch, faiss, pynvml; print('OK')"` | No ImportError |
+| 1 — build | `python3 setup_frnn_torch.py build_ext --inplace && ls frnn_torch*.so` | `.so` non-zero |
+| 2 — correctness | `PYTHONPATH=. python3 Tests/validate_correctness.py` | exit 0 (matches oracle) |
 | 3 — xju2 skip | Call `run_baselines(pts_np, D=8, R=2.0)` | `xfrnn_ms=None`, no exception |
 | 4 — single trial | D=3, N=10K full run | `latency_ms` finite, no REGRESSION |
-| 5 — full sweep | `benchmark_master.py` | 25 rows, 0 REGRESSION for N≥10K |
+| 5 — full sweep | `Tests/benchmark_master.py` | all cells, 0 REGRESSION for N≥10K |
 
 ### 4.3 Regression Diagnostic (in priority order)
 
-If `!! REGRESSION` appears for N ≥ 10K, diagnose in this order. Each fix needs `make clean && make -j`.
+If `!! REGRESSION` appears for N ≥ 10K, diagnose in this order. Each fix needs a rebuild:
+`python3 setup_frnn_torch.py build_ext --inplace`.
 
 **A — Non-coalesced global memory (highest impact, especially D≥8)**
 - Both kernels use AoS layout: `p1[i*dim + d]`. For a 32-thread warp, accesses are strided by `dim` floats → `dim` cache-line fetches per warp per dimension (16× overhead at D=16).
