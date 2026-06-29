@@ -178,14 +178,14 @@ If `!! REGRESSION` appears for N ≥ 10K, diagnose in this order. Each fix needs
 
 **B — Low SM occupancy (bruteforce kernel)**
 - `TiledBruteforceNDKernel`: 128 threads/block × D × 4 bytes smem. At D=16: 8 KB/block → max 6 blocks/SM → 37.5% A100 occupancy.
-- Fix option 1: reduce threads 128→64 in `bruteforce.cu` launch config (halves smem/block).
+- Fix option 1: reduce threads 128→64 in `no_grid_frnn.cu` launch config (halves smem/block).
 - Fix option 2: `cudaFuncSetAttribute(..., cudaFuncAttributePreferredSharedMemoryCarveout, 75)`.
 - Measure with `ncu` metric `sm__warps_active.avg.pct_of_peak_sustained_active`.
 
 **C — Register pressure (both kernels)**
 - `local_dists[128]` and `local_idxs[128]` are always sized to `MAX_K_CAPACITY=128` even for K=16, wasting 224 slots/thread.
 - Fix: template kernels on `K_STATIC`; instantiate for K ∈ {16,32,64}; dispatch via switch in `run_bruteforce()`.
-- Measure: `nvcc --ptxas-info -c bruteforce.cu | grep registers`; target < 64/thread.
+- Measure: `nvcc --ptxas-info -c no_grid_frnn.cu | grep registers`; target < 64/thread.
 
 **D — Shared memory bank conflicts (bruteforce tile loader)**
 - `tile[threadIdx.x * dim + d]` with power-of-2 dim causes 2-way bank conflicts for threads 0,2,4,...

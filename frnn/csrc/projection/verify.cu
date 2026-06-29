@@ -14,7 +14,7 @@
 
 constexpr int VERIFY_MAX_DIM = 128;   // matches engine MAX_DIM_SUPPORTED
 
-// Max-heap replace-root + sift-down (same scheme as bruteforce.cu). Keeps the K
+// Max-heap replace-root + sift-down (same scheme as no_grid_frnn.cu). Keeps the K
 // smallest d^2 seen. CAP is compile-time so the sift depth is a constant.
 template<int CAP>
 __device__ __forceinline__ void verify_insert(float* d, int* ix, int K, float d2, int j) {

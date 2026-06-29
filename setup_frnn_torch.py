@@ -22,14 +22,14 @@ setup(
                 "python_interface/frnn_torch.cu",
                 "frnn/csrc/grid/insert_points.cu",
                 "frnn/csrc/grid/find_nbrs.cu",
-                "frnn/csrc/bruteforce/bruteforce.cu",
+                "frnn/csrc/no_grid_frnn/no_grid_frnn.cu",
                 "frnn/csrc/projection/verify.cu",
                 "frnn/csrc/projection/project.cu",
             ],
             include_dirs=[
                 ROOT,
                 os.path.join(ROOT, "frnn/csrc/grid"),
-                os.path.join(ROOT, "frnn/csrc/bruteforce"),
+                os.path.join(ROOT, "frnn/csrc/no_grid_frnn"),
                 os.path.join(ROOT, "frnn/csrc/utils"),
             ],
             extra_compile_args={

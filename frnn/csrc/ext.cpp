@@ -1,7 +1,7 @@
 #include <torch/extension.h>
 
 #include "backward/backward.h"
-#include "bruteforce/bruteforce.h"
+#include "no_grid_frnn/no_grid_frnn.h"
 #include "grid/counting_sort.h"
 #include "grid/find_nbrs.h"
 #include "grid/grid.h"

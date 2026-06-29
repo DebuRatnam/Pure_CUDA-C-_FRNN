@@ -204,7 +204,7 @@ python_interface/
   frnn_engine.cu/.h    # original pybind engine (CPU + raw-device-ptr search paths)
 frnn/csrc/
   grid/                # insert_points.cu, find_nbrs.cu — uniform-grid kernels (SoA)
-  bruteforce/          # bruteforce.cu — float4-vectorized tiled brute-force (SoA)
+  no_grid_frnn/        # no_grid_frnn.cu — float4-vectorized tiled brute-force (SoA)
   projection/          # project.cu (PCA->3D), verify.cu (fused full-D verify)
 setup_frnn_torch.py    # builds frnn_torch
 projection_frnn_torch.py  # projection two-stage dispatcher (prefers C++ search_projected)

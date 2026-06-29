@@ -1,4 +1,4 @@
-#include "bruteforce.h"
+#include "no_grid_frnn.h"
 #include <device_launch_parameters.h>
 #include <float.h>
 #include <cstdlib>

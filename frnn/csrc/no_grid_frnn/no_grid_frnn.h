@@ -1,5 +1,5 @@
-#ifndef BRUTEFORCE_H
-#define BRUTEFORCE_H
+#ifndef NO_GRID_FRNN_H
+#define NO_GRID_FRNN_H
 
 #include <cuda_runtime.h>
 
