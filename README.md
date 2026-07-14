@@ -20,10 +20,12 @@ Engine hard limits: `K ≤ 128`, `D ≤ 128`, `ceil(1/R)^D ≤ 1,000,000`.
 |---|---|
 | Machine | Perlmutter (NERSC) |
 | GPU | NVIDIA A100 (`sm_80`) |
-| Module | `pytorch/2.8.0` → torch 2.8 (cu129), Python 3.12, plus `faiss`, `flashlib`, `pynvml` |
+| Module | `pytorch/2.8.0` → Python 3.12, CUDA 12.9 (torch used only at build time and for xju2 baseline) |
+| Runtime | `cupy-cuda12x`, `faiss-gpu`, `pynvml` — **no PyTorch required at runtime** |
 
-> The compiled extensions are tied to the exact PyTorch version + Python version + GPU arch
-> they were built against. **Rebuild whenever you switch the `pytorch` module.**
+> The `frnn_cuda` extension (pure pybind11, no torch) is the primary engine interface.
+> `frnn_torch` (torch extension) is only needed for the optional xju2 baseline.
+> **Rebuild `frnn_torch` whenever you switch the `pytorch` module.**
 
 ---
 
@@ -33,8 +35,8 @@ Engine hard limits: `K ≤ 128`, `D ≤ 128`, `ceil(1/R)^D ≤ 1,000,000`.
 srun -C gpu -q interactive -N 1 -G 1 -c 32 -t 02:00:00 -A m3443 --pty /bin/bash -l
 ```
 
-Do everything below **inside** this shell — the build needs `nvcc` and the A100, and the
-benchmark needs the GPU. (Change `-A m3443` to your own allocation if different.)
+Do everything below **inside** this shell — `nvcc` and the A100 are required for builds and
+benchmarks. (Change `-A m3443` to your own allocation if different.)
 
 > ⚠️ The GPU may be shared if you are not in an exclusive allocation. Check with
 > `nvidia-smi`; if another process is at high utilization, your latency numbers will be
@@ -48,21 +50,31 @@ module load pytorch/2.8.0
 cd /global/u1/d/dratnam/FRNN-master
 ```
 
-## 3. Build the FRNN engine (`frnn_torch`)
-
-This is the zero-copy PyTorch/CUDA extension that wraps the engine kernels. It is the only
-build — there is no Makefile (correctness/latency are validated from Python; see steps 5–6).
+Install runtime packages once (login node has outbound network; compute node does not):
 
 ```bash
-rm -rf build frnn_torch*.so                 # clean any stale build
-python3 setup_frnn_torch.py build_ext --inplace
-export LD_LIBRARY_PATH=$(python3 -c "import torch; import os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))"):$LD_LIBRARY_PATH
+pip install --user cupy-cuda12x faiss-gpu pynvml
 ```
 
-Produces `frnn_torch.cpython-312-*.so` in the repo root. Verify:
+## 3. Build the FRNN PyTorch wrapper (`frnn_torch`)
+
+`frnn_cuda` (the primary engine) is already compiled and present in the repo root as
+`frnn_cuda.cpython-312-*.so`. It is a pure pybind11 extension with no PyTorch dependency —
+**no rebuild needed unless `python_interface/frnn_engine.cu` or `frnn_engine.h` changes.**
+
+`frnn_torch` is a secondary PyTorch-based wrapper used only by the xju2 baseline. Build it
+when you first set up or after switching the `pytorch` module:
 
 ```bash
-python3 -c "import torch, frnn_torch; print('OK', hasattr(frnn_torch,'FRNNTorch'))"
+rm -rf build frnn_torch*.so
+python3 setup_frnn_torch.py build_ext --inplace
+export LD_LIBRARY_PATH=$(python3 -c "import torch, os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))"):$LD_LIBRARY_PATH
+```
+
+Verify both extensions load:
+
+```bash
+python3 -c "import frnn_cuda; from frnn_cupy import FRNNCuPy; import cupy as cp; print('OK')"
 ```
 
 ## 4. (Optional) Build the xju2 baseline
@@ -82,75 +94,78 @@ cd xju2_frnn/FRNN       && python3 setup.py build_ext --inplace && cd -
 
 The benchmark adds `xju2_frnn/FRNN` and `xju2_frnn/prefix_sum` to `sys.path` ahead of cwd, so
 `import frnn` resolves to this package rather than the repo's local `./frnn/` source dir.
-lxxue/FRNN runs at arbitrary `D`; if its build is missing the `xju2` column is `None`.
+xju2 requires PyTorch tensors internally; if torch is absent the `xju2` column is `None`.
 
-If you skip this step, the `xju2` column is simply `None` everywhere — the rest of the
+If you skip this step, the `xfrnn_ms` column is simply `None` everywhere — the rest of the
 benchmark still runs.
 
 ## 4b. Set up FlashLib (`flash_lib_knn`)
 
 `benchmark_master.py` times **FlashLib** (FlashML's fused brute-force exact top-K KNN,
-`flash_knn`) as a baseline. It lives in `flash_lib_knn/` and **must be installed before any
-benchmark run**. Do this **on a login node** — compute nodes have no outbound internet, so
-the `git clone` / `pip` download must run where the network is reachable. The Triton /
-CuteDSL kernels compile JIT on first call at run time, so no GPU is needed to install.
-
-> ⚠️ **Do not let FlashLib upgrade torch.** FlashLib's only pin is `torch>=2.0`, so a plain
-> `pip install -e .` greedily pulls the **latest** torch (e.g. 2.12.x) into `~/.local`,
-> which shadows the `pytorch` module's torch 2.8.0. That instantly breaks `frnn_torch` and
-> the xju2 extensions — they are compiled against the 2.8.0 ABI and will crash on import
-> under any other torch. Always install FlashLib with **`--no-deps`** and keep the module's
-> torch 2.8.0 as the one and only torch.
+`flash_knn`) as a baseline. It lives in `flash_lib_knn/` and the benchmark passes it a CuPy
+array via DLPack interop. Install on a **login node** (compute nodes have no outbound
+internet); the Triton / CuteDSL kernels compile JIT on first GPU call:
 
 ```bash
 # 1. Clone the source into the existing flash_lib_knn/ folder (must be empty):
 git clone https://github.com/FlashML-org/flashlib.git flash_lib_knn
 
-# 2. Install FlashLib metadata ONLY — --no-deps stops it from upgrading torch:
+# 2. Install FlashLib and its runtime deps:
 pip install --user --no-deps -e flash_lib_knn
-
-# 3. Install FlashLib's runtime deps WITHOUT torch (it stays at the module's 2.8.0):
 pip install --user "triton>=3.6" nvidia-cutlass-dsl
 ```
 
-If you already ran a plain `pip install -e .` and it pulled torch 2.12.x, undo it:
-
-```bash
-pip uninstall -y torch torchvision                      # removes only the ~/.local copies
-python3 -c "import torch; print(torch.__version__)"      # must print 2.8.0 (module copy)
-pip install --user --no-deps -e flash_lib_knn            # reinstall flashlib without torch
-```
-
-Verify both extensions import together under torch 2.8.0:
-
-```bash
-PYTHONPATH=. python3 -c "import torch, frnn_torch; from flashlib import flash_knn; print('OK', torch.__version__)"
-```
-
-The benchmark calls `flash_knn(pts, pts, K)` (self-KNN, exact). If FlashLib is not installed
-the `flash_ms` column is reported as `None` (skip-logged `[FlashLib] ...`) and the rest of
-the benchmark still runs — but the FlashLib comparison is then missing, so install it
-whenever you want a full sweep.
-
-> Reinstall FlashLib (`--no-deps`) whenever you switch the `pytorch` module, same as the
-> FRNN and xju2 extensions. If `flash_knn` imports fine but crashes on the GPU node at JIT
-> time, FlashLib may need a newer torch than 2.8.0 at run time despite its loose pin — in
-> that case run it in a subprocess with its own torch (isolation pattern), not in-process.
+If FlashLib is not installed the `flash_ms` column is reported as `None` (skip-logged
+`[FlashLib] ...`) and the rest of the benchmark still runs.
 
 ## 5. Run the benchmark
 
-Run **from the repo root** (so `import frnn_torch` resolves) with `PYTHONPATH=.`:
+Run **from the repo root** with `PYTHONPATH=.`:
 
 ```bash
 PYTHONPATH=. python3 Tests/benchmark_master.py 2>&1 | tee benchmark_run.log
 grep REGRESSION benchmark_run.log          # any cell where FRNN lost a baseline
 ```
 
-Sweeps `D ∈ {3,16}` × `N ∈ {10K, 25K, 50K, 75K, 100K, 150K, 200K}` (14 cells), timing
-FRNN, FAISS, FlashLib, and xju2 in-process on GPU-resident tensors. A 3-second GPU warm-up runs
-first so the first cell isn't measured at idle clocks. (Edit `D_SWEEP` / `N_SWEEP` at the
-top of the script to cover more of the engine's range — the engine itself handles `D` up
-to 128.)
+Sweeps `D ∈ {3,16}` × `N ∈ {100K,200K,300K,400K,500K}` (10 cells by default), timing
+FRNN, FAISS, FlashLib, and xju2 in-process on GPU-resident CuPy arrays. A 3-second GPU
+warm-up runs first. Override the sweep at runtime:
+
+```bash
+D_SWEEP=3,4,8,16 PYTHONPATH=. python3 Tests/benchmark_master.py
+```
+
+FRNN uses `frnn_cupy.FRNNCuPy.search_projected()`: a CuPy wrapper around `frnn_cuda` with
+zero host↔device copies. AoS→SoA transpose is done on the GPU; results are returned as
+`(N, K)` CuPy arrays. The projection two-stage path (PCA→3D candidate search→full-D verify)
+engages automatically when the top-3 principal components capture ≥ 90% of variance.
+
+## 5b. Run the benchmark on low-rank data (projection path)
+
+Set `LOWRANK=<intrinsic_dim>` to generate points near a low-dimensional manifold embedded in
+the ambient D-space. The projection two-stage path (PCA→3D candidate search→full-D verify)
+engages automatically when the top-3 principal components capture ≥ 90% of variance — exactly
+the condition that holds for low-rank data. Baselines (FAISS, FlashLib, xju2) still run on
+the original D-dimensional points; only FRNN uses projection.
+
+```bash
+LOWRANK=3 PYTHONPATH=. python3 Tests/benchmark_master.py 2>&1 | tee benchmark_run_lowrank.log
+grep REGRESSION benchmark_run_lowrank.log
+```
+
+This overwrites `benchmark_results.json` and `benchmark_comparison.png` with the low-rank
+results. On low-rank data the projection two-stage delivers a **4.7–7.1× speedup** over the
+plain brute-force path at D=16 with exact recall (see `projection_comparison.json`).
+
+To compare projection vs no-projection directly (rather than vs other libraries), run the
+dedicated head-to-head script:
+
+```bash
+PYTHONPATH=. python3 compare_projection.py 2>&1 | tee projection_run.log
+```
+
+This writes `projection_comparison.json` with per-stage breakdowns (`project_ms`,
+`stage1_ms`, `verify_ms`), recall, and speedup for both uniform and low-rank regimes.
 
 ## 6. Validate correctness
 
@@ -165,7 +180,6 @@ Confirms FRNN returns the exact **K-nearest** points within the radius (matches 
 brute-force oracle, and matches xju2 wherever the answer is unambiguous). On dense queries
 (>K points in radius) FRNN returns the nearest K while xju2 returns any K — a semantic
 difference the check accounts for, not a bug.
-
 
 ## 7. Hyperparameter & Kernel Optimization via SkyDiscover (AdaEvolve)
 
@@ -184,6 +198,7 @@ pip install --user -e skydiscover/skydiscover
 export LD_LIBRARY_PATH=$(python3 -c "import torch; import os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))"):$LD_LIBRARY_PATH
 
 OPENAI_API_KEY="sk-..." PYTHONPATH=. python3 discover_frnn_opts.py --iterations 50
+```
 
 ---
 
@@ -193,6 +208,7 @@ OPENAI_API_KEY="sk-..." PYTHONPATH=. python3 discover_frnn_opts.py --iterations 
 |---|---|
 | `benchmark_results.json` | per-cell `{R, latency_ms (FRNN), peak_mb, faiss_ms, flash_ms, xfrnn_ms}` |
 | `benchmark_run.log` | full console log; `!! REGRESSION` lines mark FRNN losses |
+| `benchmark_comparison.png` | latency-vs-N plot per D dimension (log scale) |
 
 ---
 
@@ -200,14 +216,15 @@ OPENAI_API_KEY="sk-..." PYTHONPATH=. python3 discover_frnn_opts.py --iterations 
 
 ```
 python_interface/
-  frnn_torch.cu        # PyTorch/CUDA extension: torch.Tensor in/out, zero host copies
-  frnn_engine.cu/.h    # original pybind engine (CPU + raw-device-ptr search paths)
+  frnn_engine.cu/.h    # pure pybind11 engine (CPU + raw-device-ptr GPU search paths)
+  frnn_torch.cu        # PyTorch/CUDA wrapper (xju2 baseline only; not the primary interface)
 frnn/csrc/
   grid/                # insert_points.cu, find_nbrs.cu — uniform-grid kernels (SoA)
   no_grid_frnn/        # no_grid_frnn.cu — float4-vectorized tiled brute-force (SoA)
   projection/          # project.cu (PCA->3D), verify.cu (fused full-D verify)
-setup_frnn_torch.py    # builds frnn_torch
-projection_frnn_torch.py  # projection two-stage dispatcher (prefers C++ search_projected)
+frnn_cupy.py              # CuPy interface to frnn_cuda: zero-copy search() + search_projected()
+projection_frnn.py        # two-stage projection dispatcher (pure CuPy, no torch)
+setup_frnn_torch.py       # builds frnn_torch (PyTorch wrapper, xju2 baseline only)
 Tests/
   benchmark_master.py     # the sweep (FRNN vs FAISS vs FlashLib vs xju2)
   validate_correctness.py # FRNN vs xju2 vs float64 brute-force oracle
@@ -219,9 +236,14 @@ flash_lib_knn/         # FlashLib (FlashML) baseline — git clone + pip install
 
 ## Rebuild triggers
 
-Rebuild `frnn_torch` (step 3), the xju2 extensions (step 4) **and** FlashLib (step 4b) when you:
+Rebuild `frnn_torch` (step 3) and the xju2 extensions (step 4) when you:
 
 - switch the `pytorch` module (different torch/Python ABI), or
-- edit any `.cu` / `.h` under `python_interface/` or `frnn/csrc/`.
+- edit `.cu` / `.h` files under `frnn_torch.cu` that affect the PyTorch wrapper.
 
-For repeated runs in the same module with no source changes, only step 5 is needed.
+Rebuild `frnn_cuda` (the primary engine) when you edit:
+
+- `python_interface/frnn_engine.cu` or `python_interface/frnn_engine.h`, or
+- any `.cu` / `.h` under `frnn/csrc/`.
+
+`frnn_cupy.py` and `projection_frnn.py` are pure Python — no rebuild needed after edits.

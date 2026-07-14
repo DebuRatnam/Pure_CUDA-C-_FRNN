@@ -22,14 +22,10 @@
 #   * Points within float32 epsilon of the radius are genuinely ambiguous (in or out), so a
 #     small boundary band (TAU) is treated as don't-care.
 #
-#   Truth is computed on a SAMPLE of query points (distances to all N points), so the check
-#   scales to any N without an N x N matrix.
-#
 #   Run from the repo root:  PYTHONPATH=. python3 Tests/validate_correctness.py
 import os, sys
 import numpy as np
-import torch
-import frnn_torch
+import cupy as cp
 from math import pi, gamma, ceil
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -39,18 +35,16 @@ for _p in (os.path.join(_ROOT, "xju2_frnn", "FRNN"),
            os.path.join(_ROOT, "xju2_frnn", "prefix_sum")):
     if os.path.isdir(_p) and _p not in sys.path:
         sys.path.insert(0, _p)
-import frnn as xju2
-from projection_frnn_torch import frnn_search_torch   # validate the projection algorithm
+
+from frnn_cupy import FRNNCuPy
 
 K, SEED = 16, 1234
-D_SWEEP = [3, 16]                   # D=3 grid path, D=16 brute-force / projection path
+D_SWEEP = [3, 16]
 N_SWEEP = [1_000, 10_000, 50_000, 100_000]
-N_SAMPLE = 2_000                    # query points spot-checked against exact truth per cell
+N_SAMPLE = 2_000
 RTOL, ATOL = 1e-3, 1e-6
-TAU = 1e-4                          # radius boundary band (relative), float32-ambiguous zone
+TAU = 1e-4
 
-# Match benchmark_master's data regime so the validator checks the SAME thing that gets
-# timed: uniform (default) -> projection auto-falls-back to BF; LOWRANK=k -> projection engages.
 LOWRANK       = int(os.environ.get("LOWRANK", "0"))
 LOWRANK_NOISE = float(os.environ.get("LOWRANK_NOISE", "0.02"))
 
@@ -89,17 +83,30 @@ def calibrate_radius(pts, target=K, sample=256, lo=1e-4, hi=2.0, iters=20):
     return round(0.5 * (lo + hi), 6)
 
 
-def ours(pts, R):
-    # The actual algorithm the benchmark times: projection two-stage, auto-dispatched.
-    idx, dist = frnn_search_torch(frnn_torch.FRNNTorch(pts.shape[0]), pts, K, R)
-    torch.cuda.synchronize()
-    return idx.cpu().numpy(), dist.cpu().numpy()
+def ours(pts_cp, R):
+    engine = FRNNCuPy(int(pts_cp.shape[0]))
+    idx, dist = engine.search_projected(pts_cp, K, R)
+    cp.cuda.Device().synchronize()
+    return idx.get(), dist.get()
 
 
-def xju2_search(pts, R):
-    N = pts.shape[0]
+def xju2_search(pts_cp, R):
+    # xju2 requires PyTorch tensors; import torch here so the rest of the
+    # file stays torch-free. Raises if torch is unavailable.
+    import torch
+    import frnn as xf
+    if hasattr(xf, 'frnn_grid_points'):
+        _xfn = xf.frnn_grid_points
+    elif hasattr(xf, 'frnn') and hasattr(xf.frnn, 'frnn_grid_points'):
+        _xfn = xf.frnn.frnn_grid_points
+    else:
+        raise AttributeError("frnn_grid_points not found in xju2 package")
+    pts_np = cp.asnumpy(pts_cp)
+    pts_t = torch.tensor(pts_np).cuda()
+    N = pts_t.shape[0]
     L = torch.tensor([N], device="cuda")
-    d, i, _, _ = xju2.frnn_grid_points(pts.unsqueeze(0), pts.unsqueeze(0), L, L, K, R)
+    p = pts_t.unsqueeze(0)
+    d, i, _, _ = _xfn(p, p, L, L, K, R)
     torch.cuda.synchronize()
     return i[0].cpu().numpy(), d[0].cpu().numpy()
 
@@ -114,9 +121,6 @@ def valid_sorted_dists(idx_row, dist_row, N):
 
 
 def knn_match(a, b, r2_lo):
-    # a (ours), b (truth): sorted ascending squared distances of the K-nearest in radius.
-    # Mismatches are allowed only among boundary entries (>= r2_lo), where in/out is
-    # float32-ambiguous; any disagreement on a clearly-inside distance is a real failure.
     n = min(len(a), len(b))
     if n:
         bad = ~np.isclose(a[:n], b[:n], rtol=RTOL, atol=ATOL)
@@ -131,49 +135,47 @@ for D in D_SWEEP:
     for N in N_SWEEP:
         pts_np = gen_points(N, D, SEED)
         R = calibrate_radius(pts_np) if LOWRANK > 0 and LOWRANK < D else radius_for(D, N)
-        pts = torch.tensor(pts_np, device="cuda")
+        pts_cp = cp.asarray(pts_np)
 
-        o_idx, o_dist = ours(pts, R)
-        try:                                    # xju2 works at any D; guard a missing build
-            x_idx, x_dist = xju2_search(pts, R)
+        o_idx, o_dist = ours(pts_cp, R)
+        try:
+            x_idx, x_dist = xju2_search(pts_cp, R)
             has_xju2 = True
         except Exception as e:
             has_xju2 = False
             print(f"    [xju2] unavailable: {e}")
 
-        # Exact truth (float64) for a sample of queries: distances to ALL N points.
+        # Exact truth (float64) for a sample of queries.
         rng = np.random.default_rng(SEED)
         S = min(N_SAMPLE, N)
         qs = rng.choice(N, S, replace=False)
-        Pd = pts.double()
+        Pd = pts_cp.astype(cp.float64)
         Qd = Pd[qs]
         sqd = (Pd * Pd).sum(1)
-        d2 = (Qd * Qd).sum(1)[:, None] + sqd[None, :] - 2.0 * (Qd @ Pd.T)
-        d2 = d2.clamp_(min=0).cpu().numpy()
+        d2  = (Qd * Qd).sum(1)[:, None] + sqd[None, :] - 2.0 * (Qd @ Pd.T)
+        d2  = cp.maximum(d2, 0.0).get()   # float64 numpy, shape (S, N)
 
         r2_lo, r2_hi = R * R * (1 - TAU), R * R * (1 + TAU)
         ours_truth = sparse = dense = sparse_ok = 0
         ours_invalid = xju2_invalid = 0
         for r, q in enumerate(qs):
             row = d2[r]
-            core = set(np.where(row <= r2_lo)[0].tolist())                 # definitely in
-            inrad = core | set(np.where(row <= r2_hi)[0].tolist())         # in + boundary
+            core  = set(np.where(row <= r2_lo)[0].tolist())
+            inrad = core | set(np.where(row <= r2_hi)[0].tolist())
             true_knn = np.sort(row[row <= r2_hi])[:K]
 
             o_set = valid_set(o_idx[q], N)
-            o_d = valid_sorted_dists(o_idx[q], o_dist[q], N)
-            ours_truth += knn_match(o_d, true_knn, r2_lo)
+            o_d   = valid_sorted_dists(o_idx[q], o_dist[q], N)
+            ours_truth   += knn_match(o_d, true_knn, r2_lo)
             ours_invalid += not o_set.issubset(inrad)
             sparse += (len(inrad) <= K)
-            dense += (len(inrad) > K)
-            if has_xju2:               # unambiguous queries: ours and xju2 must agree (== truth)
+            dense  += (len(inrad) > K)
+            if has_xju2:
                 x_set = valid_set(x_idx[q], N)
                 xju2_invalid += not x_set.issubset(inrad)
                 if len(inrad) <= K:
                     sparse_ok += (core <= o_set <= inrad) and (core <= x_set <= inrad)
 
-        # Correctness gate: ours always checked vs the brute-force truth; the xju2 cross-check
-        # applies whenever the xju2 build is present (it runs at any D).
         cell_ok = (ours_truth == S and ours_invalid == 0
                    and (not has_xju2 or (sparse_ok == sparse and xju2_invalid == 0)))
         all_pass &= cell_ok
@@ -191,8 +193,8 @@ for D in D_SWEEP:
             print(f"    out-of-radius neighbors:  ours={ours_invalid}")
         print(f"    => {'PASS' if cell_ok else 'FAIL'}\n")
 
-        del pts
-        torch.cuda.empty_cache()
+        del pts_cp, Pd, Qd, sqd, d2
+        cp.get_default_memory_pool().free_all_blocks()
 
 print("=" * 70)
 if all_pass:

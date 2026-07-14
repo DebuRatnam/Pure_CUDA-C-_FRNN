@@ -1,37 +1,25 @@
 #!/usr/bin/env python3
 # benchmark_master.py — FRNN vs FAISS vs FlashLib vs xju2/FRNN latency sweep.
-# Every framework — FRNN included — is timed in-process on a GPU-resident tensor.
-# FRNN uses the zero-copy `frnn_torch` extension (see python_interface/frnn_torch.cu):
-# no host<->device copies occur inside the timed loop, so it is measured on the same
-# footing as FlashLib. (The old `_run_frnn_isolated.py` subprocess copied H2D/D2H every
-# trial — kernel time was swamped by PCIe traffic, making the comparison unfair.)
-# FlashLib (https://github.com/FlashML-org/flashlib) is the FlashML brute-force exact
-# top-K KNN baseline — install it into ./flash_lib_knn (see README step 4b).
+# Every framework — FRNN included — is timed in-process on a GPU-resident array.
+# FRNN uses the zero-copy `frnn_cupy` wrapper (frnn_cupy.py): AoS->SoA transpose
+# is done on the GPU via CuPy, so no host<->device copies occur inside the timed
+# loop. FRNN is measured on the same footing as FAISS.
 import os, sys, json, time
 import numpy as np
-import torch
-import frnn_torch
+import cupy as cp
 import pynvml
 from math import pi, gamma, ceil
 
-# New algorithm: D->3 projection two-stage FRNN (auto-dispatched, exact). The FRNN
-# timed path below routes through this instead of FRNNTorch.search directly, so the
-# benchmark measures the projection method. On full-rank data it auto-falls-back to the
-# native path (no regression); it engages on low intrinsic-dim data (set LOWRANK below).
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from projection_frnn_torch import frnn_search_torch
+from frnn_cupy import FRNNCuPy
 
-# Make `import frnn` resolve to the xju2/FRNN baseline package (and its prefix_sum
-# dependency) instead of this repo's local ./frnn source dir, which would otherwise
-# shadow it as an empty namespace package. Both must be built for the running Python.
+# xju2/FRNN baseline path setup (used in run_baselines, guarded with try/except).
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 for _p in (os.path.join(_ROOT, "xju2_frnn", "FRNN"),
            os.path.join(_ROOT, "xju2_frnn", "prefix_sum")):
     if os.path.isdir(_p) and _p not in sys.path:
         sys.path.insert(0, _p)
 
-# D=3 exercises the grid path; D=16 exercises the high-D brute-force / projection path.
-# xju2 runs at all swept dims. Dense N grid for smooth scaling curves.
 N_SWEEP = [100_000, 200_000, 300_000, 400_000, 500_000]
 D_SWEEP = [int(d) for d in os.environ.get("D_SWEEP", "3,16").split(",")]
 K, SEED, WARMUP, TRIALS = 16, 1234, 20, 10
@@ -45,30 +33,23 @@ def radius_for(D, N):
     return round(r, 5)
 
 
-# Data regime. Uniform (default) is full-rank, so the projection path auto-falls-back to
-# brute force -- the new algorithm engages only on low intrinsic-dim data. Set
-# LOWRANK=<intrinsic_dim> (e.g. LOWRANK=3) to generate points near a low-dim manifold in
-# D-space so the projection two-stage activates and its speedup is visible.
-LOWRANK    = int(os.environ.get("LOWRANK", "0"))     # 0 = uniform, >0 = intrinsic dim
+LOWRANK       = int(os.environ.get("LOWRANK", "0"))
 LOWRANK_NOISE = float(os.environ.get("LOWRANK_NOISE", "0.02"))
 
 
 def gen_points(N, D, seed):
     rng = np.random.RandomState(seed)
     if LOWRANK <= 0 or LOWRANK >= D:
-        return rng.rand(N, D).astype(np.float32)                 # uniform [0,1]^D
+        return rng.rand(N, D).astype(np.float32)
     core  = rng.rand(N, LOWRANK)
     embed = rng.standard_normal((LOWRANK, D))
-    Q, _  = np.linalg.qr(rng.standard_normal((D, D)))            # random rotation
+    Q, _  = np.linalg.qr(rng.standard_normal((D, D)))
     pts   = (core @ embed) @ Q + LOWRANK_NOISE * rng.standard_normal((N, D))
     mn, mx = pts.min(0, keepdims=True), pts.max(0, keepdims=True)
     return ((pts - mn) / np.maximum(mx - mn, 1e-9)).astype(np.float32)
 
 
 def calibrate_radius(pts, target=K, sample=256, lo=1e-4, hi=2.0, iters=20):
-    """Bisect R so the mean neighbor count ~= target for THIS dataset. radius_for assumes
-    uniform; low-rank data needs a far smaller R to keep ~K neighbors (selective regime
-    where the projection filter wins). Used for the LOWRANK data option only."""
     rng = np.random.RandomState(0)
     qi = rng.choice(len(pts), size=min(sample, len(pts)), replace=False)
     qs = pts[qi]
@@ -83,53 +64,47 @@ def calibrate_radius(pts, target=K, sample=256, lo=1e-4, hi=2.0, iters=20):
 
 
 def warmup_gpu(seconds=3.0):
-    # Spin the GPU under sustained load so its clocks reach boost before any cell is
-    # timed. The per-cell WARMUP loop runs only at N=1000 first, which is too small/
-    # brief to ramp clocks — so without this the first row (D2_N1000) is measured at
-    # idle clocks and comes out ~10x inflated across every framework. tanh keeps the
-    # repeated matmul bounded (no inf/nan).
-    a = torch.randn(2048, 2048, device="cuda")
+    # Spin the GPU under load so clocks reach boost before any cell is timed.
+    a = cp.random.standard_normal((2048, 2048)).astype(cp.float32)
     t0 = time.perf_counter()
     while time.perf_counter() - t0 < seconds:
-        a = torch.tanh(a @ a)
-    torch.cuda.synchronize()
+        a = cp.tanh(a @ a)
+    cp.cuda.Device().synchronize()
     del a
-    torch.cuda.empty_cache()
+    cp.get_default_memory_pool().free_all_blocks()
 
 
 def timed_gpu(fn):
     for _ in range(WARMUP):
         fn()
-    torch.cuda.synchronize()
+    cp.cuda.Device().synchronize()
     times = []
     for _ in range(TRIALS):
         t0 = time.perf_counter()
-        torch.cuda.synchronize()
+        cp.cuda.Device().synchronize()
         fn()
-        torch.cuda.synchronize()
+        cp.cuda.Device().synchronize()
         times.append(time.perf_counter() - t0)
     return float(np.median(times)) * 1000.0
 
 
-def run_frnn_torch(pts_t, N, D, R):
-    # Zero-copy, in-process FRNN. pts_t is already a GPU-resident (N, D) float32
-    # tensor — the same one PyG receives. The frnn_torch extension transposes
-    # AoS->SoA on the GPU, runs the kernels on the tensor's device pointer, and
-    # returns CUDA tensors; no H2D/D2H copies happen inside the timed loop.
-    engine = frnn_torch.FRNNTorch(N)
-    torch.cuda.reset_peak_memory_stats()
-    # New algorithm: projection two-stage, auto-dispatched (exact). See projection_frnn_torch.
-    latency_ms = timed_gpu(lambda: frnn_search_torch(engine, pts_t, K, R))
-    peak_mb = torch.cuda.max_memory_allocated() / 1024 ** 2
+def run_frnn_cupy(pts_cp, N, D, R):
+    # Zero-copy, in-process FRNN. pts_cp is a GPU-resident (N, D) CuPy float32
+    # array. FRNNCuPy transposes AoS->SoA on the GPU, runs the kernels, and
+    # returns CuPy arrays — no H2D/D2H copies in the timed loop.
+    engine = FRNNCuPy(N)
+    cp.get_default_memory_pool().free_all_blocks()
+    handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+    mem_before = pynvml.nvmlDeviceGetMemoryInfo(handle).used
+    latency_ms = timed_gpu(lambda: engine.search_projected(pts_cp, K, R))
+    peak_mb = max(0, pynvml.nvmlDeviceGetMemoryInfo(handle).used - mem_before) / 1024**2
     return {"latency_ms": latency_ms, "peak_mb": float(peak_mb)}
 
 
 def run_baselines(pts_np, D, R):
     out = {}
-    pts_t = torch.tensor(pts_np).cuda()
 
-    # FAISS GPU knn search — GpuIndexFlatL2 does not implement range_search;
-    # use search(K) instead (returns K nearest; radius filtering is done at result-read time)
+    # FAISS GPU — uses numpy directly for add/search; no PyTorch needed.
     try:
         import faiss
         cpu_idx = faiss.IndexFlatL2(D)
@@ -140,25 +115,23 @@ def run_baselines(pts_np, D, R):
     except Exception as e:
         out["faiss_ms"] = None
         print(f"    [FAISS] {e}")
-    torch.cuda.empty_cache()
+    cp.get_default_memory_pool().free_all_blocks()
 
-    # FlashLib — FlashML fused brute-force EXACT top-K (Triton/CuteDSL). flash_knn(x, c, k)
-    # takes query (N,D) + corpus (M,D), returns (vals, idxs); self-KNN uses x=c=pts_t.
-    # Dimension-agnostic, all on the GPU-resident tensor (same footing as FRNN).
+    # FlashLib — attempt with CuPy array (DLPack interop). Falls back to None
+    # if FlashLib requires PyTorch tensors.
     try:
         from flashlib import flash_knn
-        out["flash_ms"] = timed_gpu(
-            lambda: flash_knn(pts_t, pts_t, K)
-        )
+        pts_cp = cp.asarray(pts_np)
+        out["flash_ms"] = timed_gpu(lambda: flash_knn(pts_cp, pts_cp, K))
+        del pts_cp
     except Exception as e:
         out["flash_ms"] = None
         print(f"    [FlashLib] {e}")
-    torch.cuda.empty_cache()
+    cp.get_default_memory_pool().free_all_blocks()
 
-    # xju2/lxxue FRNN — works for arbitrary D (try/except still guards a missing build).
+    # xju2/lxxue FRNN — requires PyTorch tensors internally; will fail gracefully.
     try:
         import frnn as xf
-        # Resolve API — some pip builds nest the function differently
         if hasattr(xf, 'frnn_grid_points'):
             _xfn = xf.frnn_grid_points
         elif hasattr(xf, 'frnn') and hasattr(xf.frnn, 'frnn_grid_points'):
@@ -167,21 +140,21 @@ def run_baselines(pts_np, D, R):
             raise AttributeError(
                 f"frnn_grid_points not found. Available: {[x for x in dir(xf) if not x.startswith('_')]}"
             )
+        import torch
+        pts_t = torch.tensor(pts_np).cuda()
         L = torch.tensor([len(pts_np)]).cuda()
         p = pts_t.unsqueeze(0)
         out["xfrnn_ms"] = timed_gpu(lambda: _xfn(p, p, L, L, K, R))
+        del pts_t
     except Exception as e:
         out["xfrnn_ms"] = None
         print(f"    [xju2] {e}")
 
-    del pts_t
-    torch.cuda.empty_cache()
+    cp.get_default_memory_pool().free_all_blocks()
     return out
 
 
 def plot_results(results, path="benchmark_comparison.png"):
-    # Latency vs N, one panel per D, four methods. The y-axis is LOG so FRNN's
-    # sub-millisecond line stays readable while FAISS/PyG climb ~300x at high N.
     try:
         import matplotlib
         matplotlib.use("Agg")
@@ -214,7 +187,7 @@ def plot_results(results, path="benchmark_comparison.png"):
             ys = [v[field] for n, v in cells if v.get(field) is not None]
             if ys:
                 ax.plot(xs, ys, marker=mk, ls=ls, color=col, lw=1.8, ms=6, label=name)
-        ax.set_yscale("log")                       # span the ~300x dynamic range
+        ax.set_yscale("log")
         ax.set_title(f"D = {D}")
         ax.set_xlabel("N (points)")
         ax.grid(True, which="both", ls=":", alpha=0.4)
@@ -224,36 +197,34 @@ def plot_results(results, path="benchmark_comparison.png"):
     axes[0][0].set_ylabel("Latency (ms) — log scale")
     axes[0][0].legend(loc="upper left", frameon=True, framealpha=0.9, fontsize=9)
     fig.suptitle("Fixed-radius KNN latency vs N (lower is better)", fontsize=13)
-    fig.tight_layout(rect=(0, 0, 1, 0.96))      # reserve top strip for the suptitle
+    fig.tight_layout(rect=(0, 0, 1, 0.96))
     fig.savefig(path, dpi=130, bbox_inches="tight")
     plt.close(fig)
     print(f"  → {path}")
 
 
-if "--plot-only" in sys.argv:        # regenerate the graph from existing results
+if "--plot-only" in sys.argv:
     with open("benchmark_results.json") as f:
         plot_results(json.load(f))
     sys.exit(0)
 
 
 pynvml.nvmlInit()
-warmup_gpu()          # boost GPU clocks so the first timed cell isn't throttled
+warmup_gpu()
 all_results = {}
 
 for D in D_SWEEP:
     for N in N_SWEEP:
-        pts_np   = gen_points(N, D, SEED)
-        # Low-rank data needs a calibrated (smaller) R to stay at ~K neighbors; uniform
-        # uses the analytic radius_for. Both methods/baselines run at the same R.
+        pts_np = gen_points(N, D, SEED)
         R = calibrate_radius(pts_np) if LOWRANK > 0 and LOWRANK < D else radius_for(D, N)
-        key      = f"D{D}_N{N}"
+        key = f"D{D}_N{N}"
         print(f"\n{'─'*56}\n  {key}  R={R:.5f}\n{'─'*56}")
 
         try:
-            pts_t    = torch.tensor(pts_np).cuda()   # GPU-resident, same as PyG
-            frnn_res = run_frnn_torch(pts_t, N, D, R)
-            del pts_t
-            torch.cuda.empty_cache()
+            pts_cp   = cp.asarray(pts_np)
+            frnn_res = run_frnn_cupy(pts_cp, N, D, R)
+            del pts_cp
+            cp.get_default_memory_pool().free_all_blocks()
         except Exception as e:
             print(f"  [FRNN ERROR] {e}")
             frnn_res = {"latency_ms": None, "peak_mb": None}
