@@ -20,12 +20,11 @@ Engine hard limits: `K ≤ 128`, `D ≤ 128`, `ceil(1/R)^D ≤ 1,000,000`.
 |---|---|
 | Machine | Perlmutter (NERSC) |
 | GPU | NVIDIA A100 (`sm_80`) |
-| Module | `pytorch/2.8.0` → Python 3.12, CUDA 12.9 (torch used only at build time and for xju2 baseline) |
-| Runtime | `cupy-cuda12x`, `faiss-gpu`, `pynvml` — **no PyTorch required at runtime** |
+| Module | `pytorch/2.8.0` → Python 3.12, CUDA 12.9 (torch used only for FAISS and xju2 baselines) |
+| Runtime | `cupy-cuda12x`, `faiss-gpu`, `nvidia-ml-py` — **no PyTorch required for the FRNN engine** |
 
 > The `frnn_cuda` extension (pure pybind11, no torch) is the primary engine interface.
-> `frnn_torch` (torch extension) is only needed for the optional xju2 baseline.
-> **Rebuild `frnn_torch` whenever you switch the `pytorch` module.**
+> PyTorch is only needed at runtime for the FAISS and xju2 baseline blocks in `benchmark_master.py`.
 
 ---
 
@@ -48,30 +47,20 @@ benchmarks. (Change `-A m3443` to your own allocation if different.)
 ```bash
 module load pytorch/2.8.0
 cd /global/u1/d/dratnam/FRNN-master
+export LD_LIBRARY_PATH=$(python3 -c "import torch, os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))"):$LD_LIBRARY_PATH
 ```
 
 Install runtime packages once (login node has outbound network; compute node does not):
 
 ```bash
-pip install --user cupy-cuda12x faiss-gpu pynvml
+pip install --user cupy-cuda12x faiss-gpu nvidia-ml-py
 ```
 
-## 3. Build the FRNN PyTorch wrapper (`frnn_torch`)
+## 3. Verify the engine loads
 
 `frnn_cuda` (the primary engine) is already compiled and present in the repo root as
 `frnn_cuda.cpython-312-*.so`. It is a pure pybind11 extension with no PyTorch dependency —
 **no rebuild needed unless `python_interface/frnn_engine.cu` or `frnn_engine.h` changes.**
-
-`frnn_torch` is a secondary PyTorch-based wrapper used only by the xju2 baseline. Build it
-when you first set up or after switching the `pytorch` module:
-
-```bash
-rm -rf build frnn_torch*.so
-python3 setup_frnn_torch.py build_ext --inplace
-export LD_LIBRARY_PATH=$(python3 -c "import torch, os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))"):$LD_LIBRARY_PATH
-```
-
-Verify both extensions load:
 
 ```bash
 python3 -c "import frnn_cuda; from frnn_cupy import FRNNCuPy; import cupy as cp; print('OK')"
@@ -140,6 +129,9 @@ zero host↔device copies. AoS→SoA transpose is done on the GPU; results are r
 `(N, K)` CuPy arrays. The projection two-stage path (PCA→3D candidate search→full-D verify)
 engages automatically when the top-3 principal components capture ≥ 90% of variance.
 
+All baselines are timed on GPU-resident data (no H2D copies in the timed loop): FRNN and
+FlashLib use CuPy arrays; FAISS and xju2 use pre-transferred CUDA tensors.
+
 ## 5b. Run the benchmark on low-rank data (projection path)
 
 Set `LOWRANK=<intrinsic_dim>` to generate points near a low-dimensional manifold embedded in
@@ -181,25 +173,6 @@ brute-force oracle, and matches xju2 wherever the answer is unambiguous). On den
 (>K points in radius) FRNN returns the nearest K while xju2 returns any K — a semantic
 difference the check accounts for, not a bug.
 
-## 7. Hyperparameter & Kernel Optimization via SkyDiscover (AdaEvolve)
-
-This repository includes a machine-learning-driven optimization pipeline utilizing SkyDiscover's **AdaEvolve (Adaptive Evolution)** algorithm. It uses a Large Language Model (LLM) feedback loop to automatically mutate, compile, and benchmark low-level CUDA code inside `frnn/csrc/grid/find_nbrs.cu` to maximize A100 GPU occupancy, fix warp divergence, and optimize memory coalescing.
-
-### Prerequisites
-
-The optimization driver requires `openai`, `pyyaml`, `tqdm`, and `python-dotenv`. Install them along with the SkyDiscover submodule directly on a login node:
-
-```bash
-# From Perlmutter login node:
-module load pytorch/2.8.0
-pip install --user openai python-dotenv pyyaml tqdm
-pip install --user -e skydiscover/skydiscover
-
-export LD_LIBRARY_PATH=$(python3 -c "import torch; import os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))"):$LD_LIBRARY_PATH
-
-OPENAI_API_KEY="sk-..." PYTHONPATH=. python3 discover_frnn_opts.py --iterations 50
-```
-
 ---
 
 ## Outputs
@@ -217,14 +190,12 @@ OPENAI_API_KEY="sk-..." PYTHONPATH=. python3 discover_frnn_opts.py --iterations 
 ```
 python_interface/
   frnn_engine.cu/.h    # pure pybind11 engine (CPU + raw-device-ptr GPU search paths)
-  frnn_torch.cu        # PyTorch/CUDA wrapper (xju2 baseline only; not the primary interface)
 frnn/csrc/
   grid/                # insert_points.cu, find_nbrs.cu — uniform-grid kernels (SoA)
   no_grid_frnn/        # no_grid_frnn.cu — float4-vectorized tiled brute-force (SoA)
   projection/          # project.cu (PCA->3D), verify.cu (fused full-D verify)
 frnn_cupy.py              # CuPy interface to frnn_cuda: zero-copy search() + search_projected()
 projection_frnn.py        # two-stage projection dispatcher (pure CuPy, no torch)
-setup_frnn_torch.py       # builds frnn_torch (PyTorch wrapper, xju2 baseline only)
 Tests/
   benchmark_master.py     # the sweep (FRNN vs FAISS vs FlashLib vs xju2)
   validate_correctness.py # FRNN vs xju2 vs float64 brute-force oracle
@@ -236,10 +207,7 @@ flash_lib_knn/         # FlashLib (FlashML) baseline — git clone + pip install
 
 ## Rebuild triggers
 
-Rebuild `frnn_torch` (step 3) and the xju2 extensions (step 4) when you:
-
-- switch the `pytorch` module (different torch/Python ABI), or
-- edit `.cu` / `.h` files under `frnn_torch.cu` that affect the PyTorch wrapper.
+Rebuild the xju2 extensions (step 4) when you switch the `pytorch` module (different torch/Python ABI).
 
 Rebuild `frnn_cuda` (the primary engine) when you edit:
 

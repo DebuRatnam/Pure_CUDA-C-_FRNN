@@ -1,65 +1,62 @@
+/global/u1/d/dratnam/FRNN-master/Tests/benchmark_master.py:10: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml
 
 ────────────────────────────────────────────────────────
   D3_N100000  R=0.03368
 ────────────────────────────────────────────────────────
-    [FlashLib] 'ndarray' object has no attribute 'dim'
-  FRNN=0.5528824694920331ms  FAISS=92.96447952510789ms  FlashLib=Nonems  xju2=1.1548350157681853ms
+  FRNN=0.5429644952528179ms  FAISS=90.19907299079932ms  FlashLib=38.73970700078644ms  xju2=1.1336909956298769ms
 
 ────────────────────────────────────────────────────────
   D3_N200000  R=0.02673
 ────────────────────────────────────────────────────────
-    [FlashLib] 'ndarray' object has no attribute 'dim'
-  FRNN=1.0238225222565234ms  FAISS=362.6576574752107ms  FlashLib=Nonems  xju2=1.4847125275991857ms
+  FRNN=1.0375555139034986ms  FAISS=355.86668649921194ms  FlashLib=129.42088299314491ms  xju2=1.4723099884577096ms
 
 ────────────────────────────────────────────────────────
   D3_N300000  R=0.02335
 ────────────────────────────────────────────────────────
-    [FlashLib] 'ndarray' object has no attribute 'dim'
-  FRNN=1.7191549995914102ms  FAISS=835.6913390161935ms  FlashLib=Nonems  xju2=1.7802480142563581ms
+  FRNN=1.747266505844891ms  FAISS=806.072787498124ms  FlashLib=273.1081754900515ms  xju2=1.7760620103217661ms
 
 ────────────────────────────────────────────────────────
   D3_N400000  R=0.02122
 ────────────────────────────────────────────────────────
-    [FlashLib] 'ndarray' object has no attribute 'dim'
-  FRNN=2.6233355165459216ms  FAISS=1475.0492930179462ms  FlashLib=Nonems  xju2=2.1052210067864507ms
-  !! REGRESSION: FRNN 2.62ms > xju2 2.11ms — see §4.3 diagnostics
+  FRNN=2.6296669675502926ms  FAISS=1435.2200260036625ms  FlashLib=456.4129509963095ms  xju2=2.1284779941197485ms
+  !! REGRESSION: FRNN 2.63ms > xju2 2.13ms — see §4.3 diagnostics
 
 ────────────────────────────────────────────────────────
   D3_N500000  R=0.01969
 ────────────────────────────────────────────────────────
-    [FlashLib] 'ndarray' object has no attribute 'dim'
-  FRNN=3.5096575156785548ms  FAISS=2272.9802354588173ms  FlashLib=Nonems  xju2=2.4329184961970896ms
-  !! REGRESSION: FRNN 3.51ms > xju2 2.43ms — see §4.3 diagnostics
+  FRNN=3.522076003719121ms  FAISS=2226.806856022449ms  FlashLib=697.2531495266594ms  xju2=2.4246959947049618ms
+  !! REGRESSION: FRNN 3.52ms > xju2 2.42ms — see §4.3 diagnostics
 
 ────────────────────────────────────────────────────────
   D16_N100000  R=0.63391
 ────────────────────────────────────────────────────────
-    [FlashLib] 'ndarray' object has no attribute 'dim'
-  FRNN=48.894805018790066ms  FAISS=93.8041695044376ms  FlashLib=Nonems  xju2=94.47831549914554ms
+  FRNN=48.89596800785512ms  FAISS=90.46974551165476ms  FlashLib=38.72201099875383ms  xju2=94.60870400653221ms
+  !! REGRESSION: FRNN 48.90ms > FlashLib 38.72ms — see §4.3 diagnostics
 
 ────────────────────────────────────────────────────────
   D16_N200000  R=0.60703
 ────────────────────────────────────────────────────────
-    [FlashLib] 'ndarray' object has no attribute 'dim'
-  FRNN=187.2903335315641ms  FAISS=364.1210985078942ms  FlashLib=Nonems  xju2=313.22058601654135ms
+  FRNN=187.32287248712964ms  FAISS=356.67986297630705ms  FlashLib=129.36986848944798ms  xju2=313.3955904922914ms
+  !! REGRESSION: FRNN 187.32ms > FlashLib 129.37ms — see §4.3 diagnostics
 
 ────────────────────────────────────────────────────────
   D16_N300000  R=0.59184
 ────────────────────────────────────────────────────────
-    [FlashLib] 'ndarray' object has no attribute 'dim'
-  FRNN=414.5118629967328ms  FAISS=840.4999530175701ms  FlashLib=Nonems  xju2=652.7948150178418ms
+  FRNN=414.74591550650075ms  FAISS=808.9570769807324ms  FlashLib=273.22221151553094ms  xju2=654.1037184942979ms
+  !! REGRESSION: FRNN 414.75ms > FlashLib 273.22ms — see §4.3 diagnostics
 
 ────────────────────────────────────────────────────────
   D16_N400000  R=0.58130
 ────────────────────────────────────────────────────────
-    [FlashLib] 'ndarray' object has no attribute 'dim'
-  FRNN=729.873229021905ms  FAISS=1482.0967385021504ms  FlashLib=Nonems  xju2=1294.0405934932642ms
+  FRNN=730.0098330015317ms  FAISS=1440.6927744857967ms  FlashLib=456.4351290173363ms  xju2=1295.6433244980872ms
+  !! REGRESSION: FRNN 730.01ms > FlashLib 456.44ms — see §4.3 diagnostics
 
 ────────────────────────────────────────────────────────
   D16_N500000  R=0.57325
 ────────────────────────────────────────────────────────
-    [FlashLib] 'ndarray' object has no attribute 'dim'
-  FRNN=1133.900569519028ms  FAISS=2282.754948013462ms  FlashLib=Nonems  xju2=2001.9536254985724ms
+  FRNN=1133.9962880010717ms  FAISS=2237.282934511313ms  FlashLib=697.2887390002143ms  xju2=2018.4534899890423ms
+  !! REGRESSION: FRNN 1134.00ms > FlashLib 697.29ms — see §4.3 diagnostics
 
 → benchmark_results.json
   → benchmark_comparison.png

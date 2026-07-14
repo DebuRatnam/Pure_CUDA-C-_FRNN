@@ -104,26 +104,32 @@ def run_frnn_cupy(pts_cp, N, D, R):
 def run_baselines(pts_np, D, R):
     out = {}
 
-    # FAISS GPU — uses numpy directly for add/search; no PyTorch needed.
+    # FAISS GPU — queries pre-transferred to GPU so H2D copy is outside the
+    # timed loop, matching the same footing as FRNN/FlashLib/xju2.
     try:
         import faiss
+        import faiss.contrib.torch_utils
+        import torch
         cpu_idx = faiss.IndexFlatL2(D)
         gpu_res = faiss.StandardGpuResources()
         idx = faiss.index_cpu_to_gpu(gpu_res, 0, cpu_idx)
         idx.add(pts_np)
-        out["faiss_ms"] = timed_gpu(lambda: idx.search(pts_np, K))
+        pts_t = torch.tensor(pts_np).cuda()
+        out["faiss_ms"] = timed_gpu(lambda: idx.search(pts_t, K))
+        del pts_t
     except Exception as e:
         out["faiss_ms"] = None
         print(f"    [FAISS] {e}")
     cp.get_default_memory_pool().free_all_blocks()
 
-    # FlashLib — attempt with CuPy array (DLPack interop). Falls back to None
-    # if FlashLib requires PyTorch tensors.
+    # FlashLib — requires PyTorch tensors internally; pre-transfer to GPU so
+    # H2D copy is outside the timed loop, matching FRNN/FAISS footing.
     try:
         from flashlib import flash_knn
-        pts_cp = cp.asarray(pts_np)
-        out["flash_ms"] = timed_gpu(lambda: flash_knn(pts_cp, pts_cp, K))
-        del pts_cp
+        import torch
+        pts_t = torch.tensor(pts_np).cuda()
+        out["flash_ms"] = timed_gpu(lambda: flash_knn(pts_t, pts_t, K))
+        del pts_t
     except Exception as e:
         out["flash_ms"] = None
         print(f"    [FlashLib] {e}")
