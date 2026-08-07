@@ -1,82 +1,123 @@
 {
   "D3_N100000": {
-    "R": 0.03368,
-    "latency_ms": 0.5429644952528179,
-    "peak_mb": 34.0,
-    "faiss_ms": 90.19907299079932,
-    "flash_ms": 38.73970700078644,
-    "xfrnn_ms": 1.1336909956298769
+    "R": 0.033159,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 0.46843149175401777,
+    "peak_mb": 0.0,
+    "frnn_proj_ms": null,
+    "faiss_ms": 89.96664900041651,
+    "flash_ms": 38.72174900607206,
+    "xfrnn_ms": 1.1304184881737456
   },
   "D3_N200000": {
-    "R": 0.02673,
-    "latency_ms": 1.0375555139034986,
-    "peak_mb": 60.0,
-    "faiss_ms": 355.86668649921194,
-    "flash_ms": 129.42088299314491,
-    "xfrnn_ms": 1.4723099884577096
+    "R": 0.026286,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 0.8730304980417714,
+    "peak_mb": 0.0,
+    "frnn_proj_ms": null,
+    "faiss_ms": 357.3739050043514,
+    "flash_ms": 129.48065999080427,
+    "xfrnn_ms": 1.4923045091563836
   },
   "D3_N300000": {
-    "R": 0.02335,
-    "latency_ms": 1.747266505844891,
-    "peak_mb": 84.0,
-    "faiss_ms": 806.072787498124,
-    "flash_ms": 273.1081754900515,
-    "xfrnn_ms": 1.7760620103217661
+    "R": 0.023022,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 1.5305884880945086,
+    "peak_mb": 0.0,
+    "frnn_proj_ms": null,
+    "faiss_ms": 811.3887165091,
+    "flash_ms": 273.0848520004656,
+    "xfrnn_ms": 1.7914684867719188
   },
   "D3_N400000": {
-    "R": 0.02122,
-    "latency_ms": 2.6296669675502926,
-    "peak_mb": 110.0,
-    "faiss_ms": 1435.2200260036625,
-    "flash_ms": 456.4129509963095,
-    "xfrnn_ms": 2.1284779941197485
+    "R": 0.020736,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 2.3426659899996594,
+    "peak_mb": 0.0,
+    "frnn_proj_ms": null,
+    "faiss_ms": 1445.013412492699,
+    "flash_ms": 456.1463500140235,
+    "xfrnn_ms": 2.1510244987439364
   },
   "D3_N500000": {
-    "R": 0.01969,
-    "latency_ms": 3.522076003719121,
-    "peak_mb": 134.0,
-    "faiss_ms": 2226.806856022449,
-    "flash_ms": 697.2531495266594,
-    "xfrnn_ms": 2.4246959947049618
+    "R": 0.019336,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 3.1806074985070154,
+    "peak_mb": 0.0,
+    "frnn_proj_ms": null,
+    "faiss_ms": 2244.4358585053124,
+    "flash_ms": 696.7569599946728,
+    "xfrnn_ms": 2.460784511640668
   },
   "D16_N100000": {
-    "R": 0.63391,
-    "latency_ms": 48.89596800785512,
-    "peak_mb": 84.0,
-    "faiss_ms": 90.46974551165476,
-    "flash_ms": 38.72201099875383,
-    "xfrnn_ms": 94.60870400653221
+    "R": 0.076263,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 5.54694450693205,
+    "peak_mb": 0.0,
+    "frnn_proj_ms": 475.4316460021073,
+    "faiss_ms": 90.28831499745138,
+    "flash_ms": 38.679332996252924,
+    "xfrnn_ms": 5.71957349893637
   },
   "D16_N200000": {
-    "R": 0.60703,
-    "latency_ms": 187.32287248712964,
-    "peak_mb": 84.0,
-    "faiss_ms": 356.67986297630705,
-    "flash_ms": 129.36986848944798,
-    "xfrnn_ms": 313.3955904922914
+    "R": 0.075802,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 17.94585601601284,
+    "peak_mb": 0.0,
+    "frnn_proj_ms": 1080.8115290128626,
+    "faiss_ms": 358.60157052229624,
+    "flash_ms": 129.2661865008995,
+    "xfrnn_ms": 30.288973488495685
   },
   "D16_N300000": {
-    "R": 0.59184,
-    "latency_ms": 414.74591550650075,
-    "peak_mb": 120.0,
-    "faiss_ms": 808.9570769807324,
-    "flash_ms": 273.22221151553094,
-    "xfrnn_ms": 654.1037184942979
+    "R": 0.057284,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 24.314907001098618,
+    "peak_mb": 0.0,
+    "frnn_proj_ms": 1403.3373139973264,
+    "faiss_ms": 816.821082495153,
+    "flash_ms": 273.0482165061403,
+    "xfrnn_ms": 31.47160800290294
   },
   "D16_N400000": {
-    "R": 0.5813,
-    "latency_ms": 730.0098330015317,
-    "peak_mb": 156.0,
-    "faiss_ms": 1440.6927744857967,
-    "flash_ms": 456.4351290173363,
-    "xfrnn_ms": 1295.6433244980872
+    "R": 0.056518,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 35.29190499102697,
+    "peak_mb": 0.0,
+    "frnn_proj_ms": 1864.7557485091966,
+    "faiss_ms": 1451.6284275014186,
+    "flash_ms": 455.999827987398,
+    "xfrnn_ms": 26.177260995609686
   },
   "D16_N500000": {
-    "R": 0.57325,
-    "latency_ms": 1133.9962880010717,
-    "peak_mb": 192.0,
-    "faiss_ms": 2237.282934511313,
-    "flash_ms": 697.2887390002143,
-    "xfrnn_ms": 2018.4534899890423
+    "R": 0.057647,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 53.891084986389615,
+    "peak_mb": 0.0,
+    "frnn_proj_ms": 2330.773028996191,
+    "faiss_ms": 2255.9246875025565,
+    "flash_ms": 696.6194134874968,
+    "xfrnn_ms": 36.577057995600626
+  },
+  "D12_N200000": {
+    "R": 0.053695,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 11.765496019506827,
+    "peak_mb": 0.0,
+    "frnn_proj_ms": 1029.7220880165696,
+    "faiss_ms": 357.31968098843936,
+    "flash_ms": 129.43538899708074,
+    "xfrnn_ms": 6.570789992110804
   }
 }

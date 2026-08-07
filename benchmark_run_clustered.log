@@ -1,0 +1,65 @@
+/global/common/software/nersc9/pytorch/2.8.0/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+
+=== distribution: clustered (clusters=16, sigma=0.05) ===
+
+────────────────────────────────────────────────────────
+  D3_N100000  R=0.01356 (calibrated, clustered)
+────────────────────────────────────────────────────────
+  FRNN=0.5103005096316338ms  FRNN-proj=Nonems  FAISS=90.01279101357795ms  FlashLib=38.733304987545125ms  xju2=1.1079090036218986ms
+
+────────────────────────────────────────────────────────
+  D3_N200000  R=0.01085 (calibrated, clustered)
+────────────────────────────────────────────────────────
+  FRNN=0.8911649929359555ms  FRNN-proj=Nonems  FAISS=357.213960000081ms  FlashLib=129.29898500442505ms  xju2=1.4344389928737655ms
+
+────────────────────────────────────────────────────────
+  D3_N300000  R=0.00942 (calibrated, clustered)
+────────────────────────────────────────────────────────
+  FRNN=183.49896949075628ms  FRNN-proj=Nonems  FAISS=811.1642980074976ms  FlashLib=273.19894249376375ms  xju2=1.840763507061638ms
+  !! REGRESSION: FRNN 183.50ms > xju2 1.84ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D3_N400000  R=0.00848 (calibrated, clustered)
+────────────────────────────────────────────────────────
+  FRNN=320.564818001003ms  FRNN-proj=Nonems  FAISS=1443.8072935008677ms  FlashLib=456.2949184910394ms  xju2=2.266816998599097ms
+  !! REGRESSION: FRNN 320.56ms > xju2 2.27ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D3_N500000  R=0.00793 (calibrated, clustered)
+────────────────────────────────────────────────────────
+  FRNN=495.9252304834081ms  FRNN-proj=Nonems  FAISS=2244.545008492423ms  FlashLib=696.641015005298ms  xju2=2.5964024825952947ms
+  !! REGRESSION: FRNN 495.93ms > xju2 2.60ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D16_N100000  R=0.14522 (calibrated, clustered)
+────────────────────────────────────────────────────────
+  FRNN=31.829432991798967ms  FRNN-proj=612.4528664950049ms  FAISS=90.2736419957364ms  FlashLib=38.653246985631995ms  xju2=18.007153514190577ms
+  !! REGRESSION: FRNN 31.83ms > xju2 18.01ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D16_N200000  R=0.13530 (calibrated, clustered)
+────────────────────────────────────────────────────────
+  FRNN=83.17337201151531ms  FRNN-proj=897.8738554869778ms  FAISS=358.64893448888324ms  FlashLib=129.194834997179ms  xju2=48.631833007675596ms
+  !! REGRESSION: FRNN 83.17ms > xju2 48.63ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D16_N300000  R=0.13427 (calibrated, clustered)
+────────────────────────────────────────────────────────
+  FRNN=141.44703948113602ms  FRNN-proj=1408.3511119824834ms  FAISS=817.1412044903263ms  FlashLib=272.5856109900633ms  xju2=91.02722599345725ms
+  !! REGRESSION: FRNN 141.45ms > xju2 91.03ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D16_N400000  R=0.12773 (calibrated, clustered)
+────────────────────────────────────────────────────────
+  FRNN=196.2110314925667ms  FRNN-proj=1897.3432654893259ms  FAISS=1452.3192070046207ms  FlashLib=455.56067550205626ms  xju2=140.06654349213932ms
+  !! REGRESSION: FRNN 196.21ms > xju2 140.07ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D16_N500000  R=0.12661 (calibrated, clustered)
+────────────────────────────────────────────────────────
+  FRNN=261.6883659939049ms  FRNN-proj=2368.520804986474ms  FAISS=2256.680910490104ms  FlashLib=696.3149944931502ms  xju2=213.4502995177172ms
+  !! REGRESSION: FRNN 261.69ms > xju2 213.45ms — see §4.3 diagnostics
+
+→ benchmark_results.json
+  → benchmark_comparison.png

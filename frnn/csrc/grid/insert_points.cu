@@ -2,6 +2,45 @@
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 
+/*
+ * =============================================================================
+ * insert_points.cu — Stage 1 of the grid FRNN pipeline: spatial hash build
+ * =============================================================================
+ *
+ * Transforms an unsorted SoA point array into a cell-ordered representation
+ * that find_nbrs.cu can traverse with coalesced memory access. The pipeline
+ * has three logical steps:
+ *
+ *   1. CountPointsNDKernel  — Each point determines its hypercell and atomically
+ *      increments that cell's count in d_grid_cnt. Also records each point's
+ *      cell index in d_pc_grid_idx.
+ *
+ *   2. Prefix scan (Thrust, in frnn_engine.cu) — Converts d_grid_cnt into
+ *      d_grid_offsets: the exclusive prefix sum so d_grid_offsets[c] is the
+ *      start index in the sorted array for cell c.
+ *
+ *   3. CountingSortNDKernel (or the D=3 AoS variant) — Uses d_grid_offsets to
+ *      scatter each point into its position in the sorted output. Both the
+ *      sorted index list (d_sorted_idxs) and the sorted coordinate buffer
+ *      (d_points_sorted) are written so find_nbrs can stream candidates without
+ *      a gather indirection.
+ *
+ * All inputs and outputs use SoA layout (p[d*P + i]) except d_points_sorted_aos
+ * (the D=3 AoS fast-path buffer), which is written as p[i*3 + d].
+ */
+
+/*
+ * CountPointsNDKernel — assigns each point to a hypercell and counts occupancy.
+ * One thread per point. Reads each coordinate from SoA global memory through
+ * the read-only cache (__ldg), computes a row-major cell hash, and atomically
+ * increments the cell counter. Points outside [min_val, max_val] are tagged
+ * with pc_grid_idx = -1 and skipped in all subsequent kernels.
+ *
+ * Key variables:
+ *   inv_cell      — reciprocal of cell_size; replaces division with multiply
+ *   cell_idx      — accumulated row-major hash of this point's hypercell
+ *   pc_grid_idx[p]— output: which cell point p belongs to (−1 if OOB)
+ */
 // KERNEL 1: Count how many points fall into each hyper-cell
 __global__ void CountPointsNDKernel(
     const float* __restrict__ points,
@@ -48,6 +87,18 @@ __global__ void CountPointsNDKernel(
     }
 }
 
+/*
+ * ReorderIdxsKernel — scatters original point indices into cell-sorted order.
+ * One thread per point. Uses an atomicAdd on the target cell's offset slot to
+ * claim a unique position in sorted_idxs. Used only by the legacy index-only
+ * path (run_reorder_points); the coordinate-copying CountingSortNDKernel is
+ * preferred and replaces this in the main pipeline.
+ *
+ * Key variables:
+ *   cell_idx    — which cell this point belongs to (from pc_grid_idx)
+ *   offset      — the claimed position within that cell (atomicAdd result)
+ *   sorted_idxs — output: original point index stored at the claimed slot
+ */
 // KERNEL 2: Map point indices to the sorted grid list
 __global__ void ReorderIdxsKernel(
     const int* __restrict__ pc_grid_idx,
@@ -66,6 +117,19 @@ __global__ void ReorderIdxsKernel(
     }
 }
 
+/*
+ * CountingSortNDKernel — counting sort that writes both sorted indices and sorted
+ * coordinates into cell order (SoA layout). Each thread claims its cell slot via
+ * atomicAdd, writes its original index to sorted_idxs, and copies all D coordinates
+ * from the input SoA into the output SoA at the sorted position. This lets
+ * find_nbrs stream candidates sequentially instead of gathering through the index
+ * list, which is the key difference that flattens the high-N latency slope.
+ *
+ * Key variables:
+ *   sorted_pos            — claimed position in cell-sorted order (atomicAdd result)
+ *   sorted_idxs[sorted_pos] — output: original index p stored at sorted_pos
+ *   sorted_points[d*P + sorted_pos] — output: coordinate d of point p at sorted_pos
+ */
 // KERNEL 3: Counting sort — physically reorder the point COORDINATES into cell order.
 // ReorderIdxsKernel (above) sorts only the index list, so find_nbrs must gather each
 // candidate's coordinates through that random permutation (points2[d*P + sorted_idx]),
@@ -121,6 +185,19 @@ extern "C" void run_reorder_points(
     ReorderIdxsKernel<<<blocks, threads>>>(d_pc_grid_idx, d_grid_offsets, d_sorted_idxs, P);
 }
 
+/*
+ * CountingSortAoS3Kernel — D=3 counting sort that writes coordinates in AoS layout
+ * ([x,y,z] interleaved per point) instead of SoA. When warp threads are spatially
+ * sorted and therefore hitting the same candidate p2_idx in lockstep, AoS packs
+ * all 3 coords of that candidate into a single 12-byte cache line. A single
+ * float3 store writes all three coords atomically-free; three separate SoA stores
+ * would need three far-apart cache lines.
+ *
+ * Key variables:
+ *   sorted_pos               — claimed position in cell order (atomicAdd result)
+ *   sorted_points[pos*3 + d] — output: AoS layout; one float3 per sorted point
+ *   x/y/z                    — three coords loaded via __ldg and stored as make_float3
+ */
 // AoS D=3 variant: same contract as CountingSortNDKernel but writes sorted_points in
 // AoS layout (sorted_points[pos*3 + d]) instead of SoA.  When queries are spatially
 // sorted, warp threads hit the same candidate p2_idx in lockstep, so a single AoS

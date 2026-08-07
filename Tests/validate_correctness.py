@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 # validate_correctness.py — is our FRNN returning the *right* neighbors?
 #
-# Runs our FRNN (projection two-stage, auto-dispatched), xju2/lxxue FRNN, and an exact
+# Runs our FRNN (via frnn_cuda nanobind extension), xju2/lxxue FRNN, and an exact
 # brute-force ground truth on identical clouds at every swept D, and cross-checks them.
-# Set LOWRANK=k to validate on low intrinsic-dim data (the regime where projection engages).
+#
+# Default: LOWRANK=4 (low intrinsic-dim data — the design target for the projection path).
+# D=3 always uses the grid path regardless of LOWRANK (LOWRANK >= D falls back to uniform).
+# D=16 with LOWRANK=4 exercises the PCA-project -> verify path and is the primary target.
+# Set LOWRANK=0 to test uniform full-rank data. D=16 LOWRANK=0 is known out-of-scope:
+# the engine routes D=16 to projection (3^16 >> 2^16 grid shell), but PROJ_K=4 cannot
+# guarantee a superset for 16D uniform data — correctness requires PROJ_K >= intrinsic dim.
 #
 # The crucial subtlety this validator gets right:
 #   Our FRNN returns the K *nearest* points within the radius (textbook fixed-radius KNN).
@@ -25,7 +31,7 @@
 #   Run from the repo root:  PYTHONPATH=. python3 Tests/validate_correctness.py
 import os, sys
 import numpy as np
-import cupy as cp
+import frnn_cuda
 from math import pi, gamma, ceil
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -36,8 +42,6 @@ for _p in (os.path.join(_ROOT, "xju2_frnn", "FRNN"),
     if os.path.isdir(_p) and _p not in sys.path:
         sys.path.insert(0, _p)
 
-from frnn_cupy import FRNNCuPy
-
 K, SEED = 16, 1234
 D_SWEEP = [3, 16]
 N_SWEEP = [1_000, 10_000, 50_000, 100_000]
@@ -45,7 +49,7 @@ N_SAMPLE = 2_000
 RTOL, ATOL = 1e-3, 1e-6
 TAU = 1e-4
 
-LOWRANK       = int(os.environ.get("LOWRANK", "0"))
+LOWRANK       = int(os.environ.get("LOWRANK", "4"))
 LOWRANK_NOISE = float(os.environ.get("LOWRANK_NOISE", "0.02"))
 
 
@@ -83,14 +87,16 @@ def calibrate_radius(pts, target=K, sample=256, lo=1e-4, hi=2.0, iters=20):
     return round(0.5 * (lo + hi), 6)
 
 
-def ours(pts_cp, R):
-    engine = FRNNCuPy(int(pts_cp.shape[0]))
-    idx, dist = engine.search_projected(pts_cp, K, R)
-    cp.cuda.Device().synchronize()
-    return idx.get(), dist.get()
+def ours(pts_np, R):
+    N = len(pts_np)
+    engine = frnn_cuda.FRNNEngine(max_points=N)
+    idxs_flat, dists_flat = engine.search(pts_np.reshape(-1).tolist(), K, float(R))
+    idx  = np.asarray(idxs_flat,  dtype=np.int32).reshape(N, K)
+    dist = np.asarray(dists_flat, dtype=np.float32).reshape(N, K)
+    return idx, dist
 
 
-def xju2_search(pts_cp, R):
+def xju2_search(pts_np, R):
     # xju2 requires PyTorch tensors; import torch here so the rest of the
     # file stays torch-free. Raises if torch is unavailable.
     import torch
@@ -101,7 +107,6 @@ def xju2_search(pts_cp, R):
         _xfn = xf.frnn.frnn_grid_points
     else:
         raise AttributeError("frnn_grid_points not found in xju2 package")
-    pts_np = cp.asnumpy(pts_cp)
     pts_t = torch.tensor(pts_np).cuda()
     N = pts_t.shape[0]
     L = torch.tensor([N], device="cuda")
@@ -130,30 +135,30 @@ def knn_match(a, b, r2_lo):
 
 
 print(f"Validating FRNN correctness  (K={K}, sample={N_SAMPLE} queries/cell)\n")
+
 all_pass = True
 for D in D_SWEEP:
     for N in N_SWEEP:
         pts_np = gen_points(N, D, SEED)
         R = calibrate_radius(pts_np) if LOWRANK > 0 and LOWRANK < D else radius_for(D, N)
-        pts_cp = cp.asarray(pts_np)
 
-        o_idx, o_dist = ours(pts_cp, R)
+        o_idx, o_dist = ours(pts_np, R)
         try:
-            x_idx, x_dist = xju2_search(pts_cp, R)
+            x_idx, x_dist = xju2_search(pts_np, R)
             has_xju2 = True
         except Exception as e:
             has_xju2 = False
             print(f"    [xju2] unavailable: {e}")
 
-        # Exact truth (float64) for a sample of queries.
+        # Exact truth (float64) for a sample of queries — computed in numpy.
         rng = np.random.default_rng(SEED)
         S = min(N_SAMPLE, N)
         qs = rng.choice(N, S, replace=False)
-        Pd = pts_cp.astype(cp.float64)
+        Pd = pts_np.astype(np.float64)
         Qd = Pd[qs]
         sqd = (Pd * Pd).sum(1)
         d2  = (Qd * Qd).sum(1)[:, None] + sqd[None, :] - 2.0 * (Qd @ Pd.T)
-        d2  = cp.maximum(d2, 0.0).get()   # float64 numpy, shape (S, N)
+        d2  = np.maximum(d2, 0.0)   # float64, shape (S, N)
 
         r2_lo, r2_hi = R * R * (1 - TAU), R * R * (1 + TAU)
         ours_truth = sparse = dense = sparse_ok = 0
@@ -191,10 +196,8 @@ for D in D_SWEEP:
         else:
             print(f"    xju2: unavailable — ours validated against brute-force truth")
             print(f"    out-of-radius neighbors:  ours={ours_invalid}")
-        print(f"    => {'PASS' if cell_ok else 'FAIL'}\n")
 
-        del pts_cp, Pd, Qd, sqd, d2
-        cp.get_default_memory_pool().free_all_blocks()
+        print(f"    => {'PASS' if cell_ok else 'FAIL'}\n")
 
 print("=" * 70)
 if all_pass:

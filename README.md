@@ -4,10 +4,11 @@ A pure-CUDA **fixed-radius nearest-neighbor (FRNN)** engine for *N*-dimensional 
 clouds, built to beat **FAISS**, **FlashLib (FlashML)**, and the original
 **xju2 / lxxue FRNN** in wall-clock latency across `D ∈ {2,3,4,8,16}` × `N ∈ {1K,10K,100K}`.
 
-The engine auto-dispatches between two GPU paths:
+The engine auto-dispatches between three GPU paths:
 
 - **Uniform grid** (spatial hash) — used when `3^D < total_cells`. Sub-quadratic; dominates at low/mid `D`.
-- **Tiled brute-force** — used when `3^D ≥ total_cells` or `res ≤ 1` (i.e. high `D`). `float4`-vectorized distance kernel.
+- **PCA projection + grid** — used when the full-D grid is infeasible and `D > 3`. Projects to 3D via PCA, runs the grid at an inflated radius, then verifies candidates in full-D. Best on intrinsically low-dimensional data (e.g. D=16 points that actually live near a 3D manifold).
+- **Tiled brute-force** — fallback when both grid and projection are infeasible. `float4`-vectorized distance kernel.
 
 All point data is stored **Structure-of-Arrays** (`p[d*P + i]`) for coalesced warp access.
 Engine hard limits: `K ≤ 128`, `D ≤ 128`, `ceil(1/R)^D ≤ 1,000,000`.
@@ -20,11 +21,11 @@ Engine hard limits: `K ≤ 128`, `D ≤ 128`, `ceil(1/R)^D ≤ 1,000,000`.
 |---|---|
 | Machine | Perlmutter (NERSC) |
 | GPU | NVIDIA A100 (`sm_80`) |
-| Module | `pytorch/2.8.0` → Python 3.12, CUDA 12.9 (torch used only for FAISS and xju2 baselines) |
-| Runtime | `cupy-cuda12x`, `faiss-gpu`, `nvidia-ml-py` — **no PyTorch required for the FRNN engine** |
+| Module | `pytorch/2.8.0` → Python 3.12, CUDA 12.9 (torch used only for FAISS, FlashLib, and xju2 baselines) |
+| Runtime | `pynvml`, `faiss-gpu` — **no PyTorch or CuPy required for the FRNN engine** |
 
-> The `frnn_cuda` extension (pure pybind11, no torch) is the primary engine interface.
-> PyTorch is only needed at runtime for the FAISS and xju2 baseline blocks in `benchmark_master.py`.
+> The `frnn_cuda` extension (pure nanobind, no torch, no cupy) is the primary engine interface.
+> PyTorch is only needed at runtime for the FAISS, FlashLib, and xju2 baseline blocks in `benchmark_master.py`.
 
 ---
 
@@ -53,17 +54,29 @@ export LD_LIBRARY_PATH=$(python3 -c "import torch, os; print(os.path.join(os.pat
 Install runtime packages once (login node has outbound network; compute node does not):
 
 ```bash
-pip install --user cupy-cuda12x faiss-gpu nvidia-ml-py
+pip install --user pynvml faiss-gpu
 ```
 
-## 3. Verify the engine loads
+## 3. Build the engine
 
-`frnn_cuda` (the primary engine) is already compiled and present in the repo root as
-`frnn_cuda.cpython-312-*.so`. It is a pure pybind11 extension with no PyTorch dependency —
-**no rebuild needed unless `python_interface/frnn_engine.cu` or `frnn_engine.h` changes.**
+`frnn_cuda` is a **nanobind** extension (no torch, no cupy). Build it from the repo root:
 
 ```bash
-python3 -c "import frnn_cuda; from frnn_cupy import FRNNCuPy; import cupy as cp; print('OK')"
+cd /global/u1/d/dratnam/FRNN-master
+pip install --user nanobind scikit-build-core
+pip install --user --no-build-isolation -e .
+```
+
+Verify it loads:
+
+```bash
+python3 -c "import frnn_cuda; e = frnn_cuda.FRNNEngine(100); print('OK')"
+```
+
+**Rebuild** (after editing any `.cu` / `.h` under `python_interface/` or `frnn/csrc/`):
+
+```bash
+pip install --user --no-build-isolation -e .   # re-runs CMake + nvcc
 ```
 
 ## 4. (Optional) Build the xju2 baseline
@@ -91,8 +104,7 @@ benchmark still runs.
 ## 4b. Set up FlashLib (`flash_lib_knn`)
 
 `benchmark_master.py` times **FlashLib** (FlashML's fused brute-force exact top-K KNN,
-`flash_knn`) as a baseline. It lives in `flash_lib_knn/` and the benchmark passes it a CuPy
-array via DLPack interop. Install on a **login node** (compute nodes have no outbound
+`flash_knn`) as a baseline. Install on a **login node** (compute nodes have no outbound
 internet); the Triton / CuteDSL kernels compile JIT on first GPU call:
 
 ```bash
@@ -116,48 +128,37 @@ PYTHONPATH=. python3 Tests/benchmark_master.py 2>&1 | tee benchmark_run.log
 grep REGRESSION benchmark_run.log          # any cell where FRNN lost a baseline
 ```
 
-Sweeps `D ∈ {3,16}` × `N ∈ {100K,200K,300K,400K,500K}` (10 cells by default), timing
-FRNN, FAISS, FlashLib, and xju2 in-process on GPU-resident CuPy arrays. A 3-second GPU
-warm-up runs first. Override the sweep at runtime:
+Sweeps `D ∈ {3,16}` × `N ∈ {100K,200K,300K,400K,500K}` plus a singular `D=12, N=200K`
+probe cell (11 cells by default), timing FRNN, FAISS, FlashLib, and xju2 in-process on
+GPU-resident data. A 3-second GPU warm-up runs first.
+
+### Data distributions
+
+Control the point cloud generator with the `DIST` environment variable:
+
+| `DIST` | Description | Radius |
+|---|---|---|
+| `lowrank` (default) | `INTRINSIC`-dim structure linearly embedded in D + noise; realistic non-uniform data and projection's win regime | calibrated bisection |
+| `uniform` | iid uniform in `[0,1]^D` | analytic `radius_for(D,N)` |
 
 ```bash
-D_SWEEP=3,4,8,16 PYTHONPATH=. python3 Tests/benchmark_master.py
+# Low-rank data (default; exercises projection path at D=16)
+DIST=lowrank  PYTHONPATH=. python3 Tests/benchmark_master.py 2>&1 | tee benchmark_run_lowrank.log
+
+# Uniform data
+DIST=uniform  PYTHONPATH=. python3 Tests/benchmark_master.py 2>&1 | tee benchmark_run_uniform.log
 ```
 
-FRNN uses `frnn_cupy.FRNNCuPy.search_projected()`: a CuPy wrapper around `frnn_cuda` with
-zero host↔device copies. AoS→SoA transpose is done on the GPU; results are returned as
-`(N, K)` CuPy arrays. The projection two-stage path (PCA→3D candidate search→full-D verify)
-engages automatically when the top-3 principal components capture ≥ 90% of variance.
+Tunable env vars: `N_SWEEP` (comma-separated, default `100000,...,500000`), `D_SWEEP`
+(default `3,16`), `EXTRA_CELLS` (singular `D:N` probe cells appended to the grid,
+default `12:200000`), `INTRINSIC` (intrinsic dim for lowrank, default `3`),
+`LOWRANK_NOISE` (default `0.02`).
 
-All baselines are timed on GPU-resident data (no H2D copies in the timed loop): FRNN and
-FlashLib use CuPy arrays; FAISS and xju2 use pre-transferred CUDA tensors.
+FRNN is timed via `frnn_cuda.FRNNEngine.search_gpu()` called with a PyTorch tensor's raw
+device pointer (AoS→SoA transpose done on the GPU with `.T.contiguous()`). No H2D/D2H
+copies occur inside the timed loop — same footing as FAISS and xju2.
 
-## 5b. Run the benchmark on low-rank data (projection path)
-
-Set `LOWRANK=<intrinsic_dim>` to generate points near a low-dimensional manifold embedded in
-the ambient D-space. The projection two-stage path (PCA→3D candidate search→full-D verify)
-engages automatically when the top-3 principal components capture ≥ 90% of variance — exactly
-the condition that holds for low-rank data. Baselines (FAISS, FlashLib, xju2) still run on
-the original D-dimensional points; only FRNN uses projection.
-
-```bash
-LOWRANK=3 PYTHONPATH=. python3 Tests/benchmark_master.py 2>&1 | tee benchmark_run_lowrank.log
-grep REGRESSION benchmark_run_lowrank.log
-```
-
-This overwrites `benchmark_results.json` and `benchmark_comparison.png` with the low-rank
-results. On low-rank data the projection two-stage delivers a **4.7–7.1× speedup** over the
-plain brute-force path at D=16 with exact recall (see `projection_comparison.json`).
-
-To compare projection vs no-projection directly (rather than vs other libraries), run the
-dedicated head-to-head script:
-
-```bash
-PYTHONPATH=. python3 compare_projection.py 2>&1 | tee projection_run.log
-```
-
-This writes `projection_comparison.json` with per-stage breakdowns (`project_ms`,
-`stage1_ms`, `verify_ms`), recall, and speedup for both uniform and low-rank regimes.
+All baselines are timed on GPU-resident PyTorch tensors (no H2D copies in the timed loop).
 
 ## 6. Validate correctness
 
@@ -165,7 +166,14 @@ Checks FRNN returns the *right* neighbors, against xju2 and a float64 brute-forc
 (exits 0 = all pass, for CI):
 
 ```bash
+# Standard uniform validation
 PYTHONPATH=. python3 Tests/validate_correctness.py
+
+# Validate the projection path (D=16 low-rank data, INTRINSIC=3)
+LOWRANK=3 PYTHONPATH=. python3 Tests/validate_correctness.py
+
+# With projection debug output
+LOWRANK=3 FRNN_DEBUG_PROJ=1 PYTHONPATH=. python3 Tests/validate_correctness.py
 ```
 
 Confirms FRNN returns the exact **K-nearest** points within the radius (matches the
@@ -173,15 +181,23 @@ brute-force oracle, and matches xju2 wherever the answer is unambiguous). On den
 (>K points in radius) FRNN returns the nearest K while xju2 returns any K — a semantic
 difference the check accounts for, not a bug.
 
+Set `FRNN_DEBUG_PROJ=1` at runtime (no rebuild needed) to print whether the projection
+path engaged or fell back to brute-force for each search call.
+
 ---
 
 ## Outputs
 
 | File | Contents |
 |---|---|
-| `benchmark_results.json` | per-cell `{R, latency_ms (FRNN), peak_mb, faiss_ms, flash_ms, xfrnn_ms}` |
+| `benchmark_results.json` | per-cell `{R, dist, radius_mode, latency_ms (FRNN), peak_mb, faiss_ms, flash_ms, xfrnn_ms}` |
 | `benchmark_run.log` | full console log; `!! REGRESSION` lines mark FRNN losses |
 | `benchmark_comparison.png` | latency-vs-N plot per D dimension (log scale) |
+
+Save results under a named file after each distribution run so they are not overwritten:
+```bash
+cp benchmark_results.json benchmark_results_lowrank.json
+```
 
 ---
 
@@ -189,18 +205,28 @@ difference the check accounts for, not a bug.
 
 ```
 python_interface/
-  frnn_engine.cu/.h    # pure pybind11 engine (CPU + raw-device-ptr GPU search paths)
+  frnn_engine.h          # FRNNEngine class declaration
+  frnn_engine.cu         # FRNNEngine implementation (grid/BF auto-dispatch)
+  nanobind_module.cu     # frnn_cuda nanobind extension (NB_MODULE)
 frnn/csrc/
-  grid/                # insert_points.cu, find_nbrs.cu — uniform-grid kernels (SoA)
-  no_grid_frnn/        # no_grid_frnn.cu — float4-vectorized tiled brute-force (SoA)
-  projection/          # project.cu (PCA->3D), verify.cu (fused full-D verify)
-frnn_cupy.py              # CuPy interface to frnn_cuda: zero-copy search() + search_projected()
-projection_frnn.py        # two-stage projection dispatcher (pure CuPy, no torch)
+  grid/
+    grid.h               # GridParams struct
+    insert_points.cu     # uniform-grid insertion kernel (SoA)
+    find_nbrs.cu         # neighbor search kernel (SoA, D=3 AoS fast path)
+  no_grid_frnn/
+    no_grid_frnn.cu      # float4-vectorized tiled brute-force kernel
+    no_grid_frnn.h
+  projection/
+    project.cu           # PCA project D→3, isotropic rescale to [0,1]^3
+    verify.cu            # full-D distance verify on candidate set
 Tests/
-  benchmark_master.py     # the sweep (FRNN vs FAISS vs FlashLib vs xju2)
+  benchmark_master.py     # FRNN vs FAISS vs FlashLib vs xju2 latency sweep
   validate_correctness.py # FRNN vs xju2 vs float64 brute-force oracle
+  _run_frnn_isolated.py   # subprocess worker used by benchmark isolation mode
 xju2_frnn/             # original lxxue/FRNN baseline (FRNN/ + prefix_sum/)
 flash_lib_knn/         # FlashLib (FlashML) baseline — git clone + pip install -e (step 4b)
+CMakeLists.txt         # scikit-build-core + nanobind build (replaces setup_frnn_torch.py)
+pyproject.toml         # build-system declaration
 ```
 
 ---
@@ -209,9 +235,6 @@ flash_lib_knn/         # FlashLib (FlashML) baseline — git clone + pip install
 
 Rebuild the xju2 extensions (step 4) when you switch the `pytorch` module (different torch/Python ABI).
 
-Rebuild `frnn_cuda` (the primary engine) when you edit:
+Rebuild `frnn_cuda` (step 3) when you edit any `.cu` or `.h` under `python_interface/` or `frnn/csrc/`.
 
-- `python_interface/frnn_engine.cu` or `python_interface/frnn_engine.h`, or
-- any `.cu` / `.h` under `frnn/csrc/`.
-
-`frnn_cupy.py` and `projection_frnn.py` are pure Python — no rebuild needed after edits.
+Pure-Python files (`Tests/benchmark_master.py`, etc.) need no rebuild after edits.

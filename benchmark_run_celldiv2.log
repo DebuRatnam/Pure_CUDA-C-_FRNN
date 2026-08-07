@@ -1,0 +1,247 @@
+/global/common/software/nersc9/pytorch/2.8.0/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.99625 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996251 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.99625 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996252 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.99625 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.99625 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996249 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996252 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996251 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996248 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.99625 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996251 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996252 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996251 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.99625 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996251 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996248 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.99625 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996249 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996252 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996249 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996251 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996251 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996249 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.99625 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.99625 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996249 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996251 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.996249 O=64
+[proj] engaged: D=16 R*s=0.0246002 res=82 cells=551368 cell_div=2 shell=125 s=0.322571 var=0.99625 O=64
+[proj] engaged: D=16 R*s=0.0285534 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.99375 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.993749 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.993749 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.993751 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.993749 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.993751 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.99375 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.99375 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.99375 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.993751 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.993751 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.99375 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.993748 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.99375 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.99375 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.99375 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.993749 O=64
+[proj] engaged: D=16 R*s=0.0285534 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.993749 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.993749 O=64
+[proj] engaged: D=16 R*s=0.0285534 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.993748 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.99375 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.993751 O=64
+[proj] engaged: D=16 R*s=0.0285534 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.993749 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.99375 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.993749 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.993749 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.993751 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.993749 O=64
+[proj] engaged: D=16 R*s=0.0285535 res=71 cells=357911 cell_div=2 shell=125 s=0.376685 var=0.993749 O=64
+[proj] engaged: D=16 R*s=0.0285534 res=71 cells=357911 cell_div=2 shell=125 s=0.376684 var=0.99375 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.99753 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.997529 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.997529 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.997531 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.99753 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.997532 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.997531 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.997531 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.997531 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.99753 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.997532 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.99753 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.99753 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.99753 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.99753 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.99753 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.997528 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.997531 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.997532 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.997532 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.99753 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.997529 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.997528 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.997531 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.997529 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.997531 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.99753 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.997531 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.99753 O=64
+[proj] engaged: D=16 R*s=0.0200497 res=100 cells=1000000 cell_div=2 shell=125 s=0.350006 var=0.99753 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398527 var=0.997387 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398527 var=0.997385 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398527 var=0.997386 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398526 var=0.997386 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398526 var=0.997385 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398526 var=0.997386 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398526 var=0.997385 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398526 var=0.997388 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398526 var=0.997387 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398527 var=0.997387 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398526 var=0.997384 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398526 var=0.997386 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398526 var=0.997386 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398526 var=0.997387 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398527 var=0.997387 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398526 var=0.997386 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398526 var=0.997388 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398526 var=0.997387 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398527 var=0.997387 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398526 var=0.997388 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398527 var=0.997387 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398526 var=0.997386 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398527 var=0.997386 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398527 var=0.997387 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398526 var=0.997388 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398527 var=0.997386 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398527 var=0.997386 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398527 var=0.997386 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398527 var=0.997385 O=64
+[proj] engaged: D=16 R*s=0.0225239 res=89 cells=704969 cell_div=2 shell=125 s=0.398527 var=0.997387 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404518 var=0.995817 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995816 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404518 var=0.995816 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995814 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404518 var=0.995814 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995815 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995815 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404518 var=0.995814 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995815 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995813 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995814 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995815 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404518 var=0.995816 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995814 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995816 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995816 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404518 var=0.995814 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404518 var=0.995815 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995816 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404518 var=0.995816 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995815 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995815 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995815 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404518 var=0.995814 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404518 var=0.995815 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995816 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995815 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995814 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995817 O=64
+[proj] engaged: D=16 R*s=0.0233192 res=86 cells=636056 cell_div=2 shell=125 s=0.404517 var=0.995814 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.997639 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.99764 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.99764 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.997639 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.997639 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.997641 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.99764 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.997639 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.997639 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.997639 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431529 var=0.997639 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.99764 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431529 var=0.997638 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.997639 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431529 var=0.997638 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.997638 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.99764 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431529 var=0.997641 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.99764 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.997639 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.997642 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.99764 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.997638 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.99764 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.99764 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.997641 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.997639 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.997642 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.997641 O=64
+[proj] engaged: D=12 R*s=0.0231709 res=87 cells=658503 cell_div=2 shell=125 s=0.431528 var=0.997642 O=64
+
+=== distribution: lowrank (intrinsic=3, noise=0.02) ===
+
+────────────────────────────────────────────────────────
+  D3_N100000  R=0.03316 (calibrated, lowrank)
+────────────────────────────────────────────────────────
+  FRNN=0.49106049118563533ms  FRNN-proj=Nonems  FAISS=90.04800648835953ms  FlashLib=38.74148799513932ms  xju2=1.1246880021644756ms
+
+────────────────────────────────────────────────────────
+  D3_N200000  R=0.02629 (calibrated, lowrank)
+────────────────────────────────────────────────────────
+  FRNN=0.8887310104910284ms  FRNN-proj=Nonems  FAISS=357.66979449545033ms  FlashLib=129.43805000395514ms  xju2=1.4790400164201856ms
+
+────────────────────────────────────────────────────────
+  D3_N300000  R=0.02302 (calibrated, lowrank)
+────────────────────────────────────────────────────────
+  FRNN=1.53148100071121ms  FRNN-proj=Nonems  FAISS=811.0736334929243ms  FlashLib=273.0927619995782ms  xju2=1.7577194957993925ms
+
+────────────────────────────────────────────────────────
+  D3_N400000  R=0.02074 (calibrated, lowrank)
+────────────────────────────────────────────────────────
+  FRNN=2.3486444988520816ms  FRNN-proj=Nonems  FAISS=1444.8006494931178ms  FlashLib=456.41212149348576ms  xju2=2.169592509744689ms
+  !! REGRESSION: FRNN 2.35ms > xju2 2.17ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D3_N500000  R=0.01934 (calibrated, lowrank)
+────────────────────────────────────────────────────────
+  FRNN=3.19412600947544ms  FRNN-proj=Nonems  FAISS=2245.011553502991ms  FlashLib=696.8189975159476ms  xju2=2.4444599985145032ms
+  !! REGRESSION: FRNN 3.19ms > xju2 2.44ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D16_N100000  R=0.07626 (calibrated, lowrank)
+────────────────────────────────────────────────────────
+  FRNN=5.544894505874254ms  FRNN-proj=472.7223700028844ms  FAISS=90.17152449814603ms  FlashLib=38.68931549368426ms  xju2=5.746345006627962ms
+
+────────────────────────────────────────────────────────
+  D16_N200000  R=0.07580 (calibrated, lowrank)
+────────────────────────────────────────────────────────
+  FRNN=17.929421985172667ms  FRNN-proj=1075.0900654966244ms  FAISS=358.46119999769144ms  FlashLib=129.3062505137641ms  xju2=30.798492996837012ms
+
+────────────────────────────────────────────────────────
+  D16_N300000  R=0.05728 (calibrated, lowrank)
+────────────────────────────────────────────────────────
+  FRNN=24.623438497656025ms  FRNN-proj=1398.5630990064237ms  FAISS=815.5577694997191ms  FlashLib=273.0256310023833ms  xju2=31.263646509614773ms
+
+────────────────────────────────────────────────────────
+  D16_N400000  R=0.05652 (calibrated, lowrank)
+────────────────────────────────────────────────────────
+  FRNN=35.058756518992595ms  FRNN-proj=1862.0097060193075ms  FAISS=1450.4185495025013ms  FlashLib=456.1074290104443ms  xju2=25.91717100585811ms
+  !! REGRESSION: FRNN 35.06ms > xju2 25.92ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D16_N500000  R=0.05765 (calibrated, lowrank)
+────────────────────────────────────────────────────────
+  FRNN=53.27187399961986ms  FRNN-proj=2306.483002495952ms  FAISS=2246.4019144827034ms  FlashLib=696.5305670164526ms  xju2=36.50581899273675ms
+  !! REGRESSION: FRNN 53.27ms > xju2 36.51ms — see §4.3 diagnostics
+
+────────────────────────────────────────────────────────
+  D12_N200000  R=0.05369 (calibrated, lowrank)
+────────────────────────────────────────────────────────
+  FRNN=11.79921449511312ms  FRNN-proj=1025.9045610000612ms  FAISS=357.0166534918826ms  FlashLib=129.4248515041545ms  xju2=6.556183492648415ms
+  !! REGRESSION: FRNN 11.80ms > xju2 6.56ms — see §4.3 diagnostics
+
+→ benchmark_results.json
+  → benchmark_comparison.png

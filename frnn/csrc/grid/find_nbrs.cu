@@ -2,6 +2,50 @@
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 
+/*
+ * =============================================================================
+ * find_nbrs.cu — Stage 2 of the grid FRNN pipeline: neighbor search
+ * =============================================================================
+ *
+ * Given the cell-sorted point array built by insert_points.cu, this file
+ * implements the neighbor-search kernels that find the K nearest points within
+ * radius r for every query.
+ *
+ * Each query thread iterates over the shell of (2*cell_radius+1)^D neighboring
+ * cells. For each neighboring cell it uses an AABB lower-bound test to prune
+ * cells that cannot contain a point closer than the current heap worst, then
+ * scans the candidate points in that cell and maintains a per-thread max-heap
+ * of the K nearest found so far.
+ *
+ * Two kernel variants cover the two main deployment cases:
+ *
+ *   FindNbrsNDKernel<CAP, DIM> — general N-D kernel, templated on both heap
+ *     capacity and dimension. DIM>0 bakes the dimension in at compile time so
+ *     query coordinates live in registers and the dim loops unroll fully.
+ *     DIM=0 falls back to a runtime dimension (correct for any D).
+ *
+ *   FindNbrsAoS3Kernel<CAP> — D=3 fast path with sorted queries (cell-order)
+ *     and AoS candidates. Sorted queries mean warp threads share the same
+ *     neighbor cells and hit the same candidate cache lines in lockstep,
+ *     turning random L2 misses into broadcast hits.
+ *
+ * ScatterToOrigKernel unpermutes the sorted-query output back to original
+ * query order after FindNbrsAoS3Kernel.
+ *
+ * All outputs are SoA: dists[k*P + p], idxs[k*P + p].
+ */
+
+/*
+ * insert_neighbor_t<CAP> — max-heap replace-root + sift-down for the grid path.
+ * Replaces the current worst neighbor (heap root, local_dists[0]) with the new
+ * candidate (d2, idx2) and restores the heap invariant. The depth is a
+ * compile-time constant derived from CAP, enabling full loop unroll.
+ *
+ * Key variables:
+ *   local_dists[0] — heap root, the current worst accepted squared distance
+ *   CAP            — compile-time heap capacity; determines unrolled sift depth
+ *   i              — current node being sifted down toward the leaves
+ */
 // Templated sift-down: CAP known at compile time so loop depth is exact
 // and the compiler can fully unroll and eliminate dead branches.
 template<int CAP>
@@ -26,17 +70,23 @@ __device__ __forceinline__ float insert_neighbor_t(float* __restrict__ local_dis
     return local_dists[0];
 }
 
-// CAP is the per-thread heap capacity, fixed at compile time so the arrays are sized to
-// the actual K (dispatched below) instead of the 128 worst case. K=16 then uses 64 B/thread
-// of local memory instead of 1 KB, easing local-memory traffic and L1 pressure. The count
-// itself (K) stays a runtime arg, so any K <= CAP is still correct.
-//
-// DIM is the compile-time dimension. When DIM>0 the per-thread coord arrays (q,
-// cell_coords) are sized to DIM — 3 floats at D=3 instead of MAX_DIM_SUPPORTED=128 —
-// so they live in REGISTERS instead of local memory, and the dim loops unroll. This
-// is the dominant per-candidate cost: q[d] is read on every distance computation, so
-// a register read vs a local-memory (DRAM-backed) read is the high-N slope difference
-// vs xju2. DIM=0 falls back to a runtime dim (arbitrary D, MAX_DIM_SUPPORTED arrays).
+/*
+ * FindNbrsNDKernel<CAP, DIM> — N-dimensional grid neighbor search.
+ * One thread per query point. Loads the query into register arrays (when DIM>0),
+ * then iterates over all (2*cell_radius+1)^D neighboring cells. For each cell it
+ * computes the AABB minimum distance to prune cells that cannot beat the current
+ * heap worst, then walks the candidate span doing FMA distance accumulation and
+ * heap insertion. Output is SoA: dists[k*P1 + p1], idxs[k*P1 + p1].
+ *
+ * Key variables:
+ *   q[DCAP]        — register-resident query coordinates; size DIM (compile-time)
+ *                    or MAX_DIM_SUPPORTED (runtime fallback). Register vs local
+ *                    memory is the dominant high-N slope difference vs xju2.
+ *   max_dist_sq    — current heap-worst accepted squared distance; shrinks as
+ *                    better neighbors are found, tightening cell pruning over time
+ *   cell_min_dist_sq — AABB lower bound to a candidate cell; skips the cell if
+ *                    this already exceeds max_dist_sq
+ */
 template<int CAP, int DIM>
 __global__ void __launch_bounds__(256, 4) FindNbrsNDKernel(
     const float* __restrict__ points1,
@@ -137,25 +187,22 @@ __global__ void __launch_bounds__(256, 4) FindNbrsNDKernel(
     }
 }
 
-// D=3 grid kernel with SORTED QUERIES + AoS candidate layout.
-//
-// Two changes over FindNbrsNDKernel, both aimed at the high-N latency slope:
-//
-//  1. SORTED QUERIES. Thread p1 here is a *sorted (cell-order) position*, not an
-//     original point id. points1_aos is the cell-ordered query buffer, so consecutive
-//     threads in a warp are spatially adjacent points sharing (nearly) the same grid
-//     cell. They enumerate the same neighbor cells and scan the same ~3^3 candidate
-//     span in lockstep, so each candidate cache line is fetched once and broadcast to
-//     the whole warp from L2/L1 — instead of 32 threads scattering across the domain
-//     (original input order is randomized) and each missing cache. Output is produced
-//     in sorted order (dists[k*P1+p1]); the engine's scatter kernel unpermutes it back
-//     to original query order via sorted_idxs.
-//
-//  2. AoS CANDIDATES. With the warp locked onto one p2_idx at a time, the 3 coords of
-//     that candidate sit in a single 12-byte span (one cache line) in AoS, so the whole
-//     warp's distance check is served by one fetch. The SoA path would need 3 separate
-//     fetches (one per dim) from three far-apart regions. Query coords are read once
-//     into registers, so their layout is immaterial.
+/*
+ * FindNbrsAoS3Kernel<CAP> — D=3 grid search with sorted queries and AoS candidates.
+ * Identical search logic to FindNbrsNDKernel but with two structural changes:
+ *   (1) Sorted queries — p1 indexes the cell-ordered buffer, so warp threads are
+ *       spatially adjacent and enumerate the same neighbor cells in lockstep. Each
+ *       candidate cache line is broadcast across the warp from L2/L1 rather than
+ *       fetched 32× independently.
+ *   (2) AoS candidates — all 3 coords of a candidate sit in a single 12-byte span
+ *       so the warp's distance computation needs one cache line, not three.
+ * Output is in sorted-query order; ScatterToOrigKernel unpermutes it afterward.
+ *
+ * Key variables:
+ *   qx/qy/qz    — scalar register-resident query coordinates for the fixed D=3 case
+ *   max_dist_sq — current heap-worst distance; shrinks as better neighbors are found
+ *   cptr        — incrementing pointer into the AoS candidate buffer (advances 3 floats per step)
+ */
 template<int CAP>
 __global__ void __launch_bounds__(128, 8) FindNbrsAoS3Kernel(
     const float* __restrict__ points1_aos,
@@ -249,10 +296,18 @@ __global__ void __launch_bounds__(128, 8) FindNbrsAoS3Kernel(
     }
 }
 
-// Unpermute the sorted-query output (dists_in/idxs_in, laid out [k*P + sorted_pos]) back
-// into original query order (dists_out/idxs_out, [k*P + orig]). One thread per sorted
-// position; sorted_idxs[sp] gives the original id. Neighbor IDs are already original
-// (mapped via sorted_points2_idxs in the kernel), so only the query axis is unpermuted.
+/*
+ * ScatterToOrigKernel — unpermutes sorted-query output back to original query order.
+ * One thread per sorted position sp. Reads coalesced (input indexed by sp), writes
+ * scattered (output indexed by original id). Neighbor ids in the input are already
+ * in original space (mapped by sorted_points2_idxs inside FindNbrsAoS3Kernel), so
+ * only the query axis needs unpermuting.
+ *
+ * Key variables:
+ *   sp           — sorted-position index (this thread's identity in the kernel)
+ *   orig         — original query index recovered via sorted_idxs[sp]
+ *   dists_in/idxs_in[k*P + sp] — input in sorted order; output to [k*P + orig]
+ */
 __global__ void ScatterToOrigKernel(
     const float* __restrict__ dists_in, const int* __restrict__ idxs_in,
     const int* __restrict__ sorted_idxs,

@@ -1,0 +1,173 @@
+
+╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+║                        FRNN ALGORITHM ARCHITECTURE                                          ║
+║             Fixed-Radius Nearest Neighbors · Pure CUDA · Auto-dispatch                      ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════╝
+
+                        ┌─────────────────────────────────────┐
+                        │               INPUT                  │
+                        │   N × D float32 points (SoA layout)  │
+                        │   p[d·N + i]  ·  K neighbors  ·  R  │
+                        └──────────────────┬──────────────────┘
+                                           │
+                        ┌──────────────────▼──────────────────┐
+                        │         FRNNEngine.search()          │
+                        │    frnn_engine.cu  ·  H2D copy       │
+                        └──────────────────┬──────────────────┘
+                                           │
+                        ┌──────────────────▼──────────────────┐
+                        │            AUTO-DISPATCH             │
+                        │   total_cells = ceil(1/R)^D          │
+                        │   res        = ceil(1/R)             │
+                        │   limits: D≤128, K≤128, cells≤1M    │
+                        └────────┬──────────────────┬─────────┘
+                                 │                  │
+          cells≤1M AND           │                  │   cells>1M  OR
+          3^D < cells AND        │                  │   3^D ≥ cells  OR
+          res > 1                │                  │   res ≤ 1
+                                 │                  │
+               ┌─────────────────▼──┐          ┌───▼──────────────────────┐
+               │     GRID PATH       │          │    BRUTE-FORCE PATH      │
+               │  insert_points.cu  │          │    no_grid_frnn.cu       │
+               │  find_nbrs.cu      │          └───┬──────────────────────┘
+               └──┬──────────────────┘              │
+                  │                                 │
+  ────────────────────────────────────────────────────────────────────────
+  GRID PATH                                         BRUTE-FORCE PATH
+  ────────────────────────────────────────────────────────────────────────
+  │                                                 │
+  │  STAGE 1 — Build Spatial Hash                   │
+  │                                                 │  ┌──────────────────────────────────┐
+  │  ┌──────────────────────────────────┐           │  │  TiledBruteforceNDKernel<CAP>    │
+  │  │  CountPointsNDKernel             │           │  │                                  │
+  │  │                                  │           │  │  One thread per query.           │
+  │  │  One thread per point.           │           │  │  Cooperatively load blockDim.x   │
+  │  │  Compute D-dim cell hash via     │           │  │  reference pts into shared tile[]│
+  │  │  row-major linearization.        │           │  │  All query threads scan tile.    │
+  │  │  atomicAdd to per-cell count.    │           │  │  Amortizes global BW by blockDim.│
+  │  │                                  │           │  │  float4 distance when dim%4==0.  │
+  │  │  inv_cell  · cell_idx            │           │  │                                  │
+  │  │  pc_grid_idx[p]                  │           │  │  tile[]  · q[BF_MAX_DIM]         │
+  │  └──────────────┬───────────────────┘           │  │  local_dists[CAP]                │
+  │                 │                               │  └──────────────┬───────────────────┘
+  │  ┌──────────────▼───────────────────┐           │                 │ dim==16?
+  │  │  Thrust::exclusive_scan  (host)  │           │  ┌──────────────▼───────────────────┐
+  │  │                                  │           │  │  TiledBruteforce16Kernel<CAP>    │
+  │  │  Converts per-cell counts into   │           │  │                                  │
+  │  │  cell start offsets. O(cells).   │           │  │  Query in 4×float4 registers     │
+  │  │                                  │           │  │  (q0, q1, q2, q3).               │
+  │  │  pc_grid_idx[] → cell_offsets[]  │           │  │  Tile loaded as float4 chunks.   │
+  │  └──────────────┬───────────────────┘           │  │  Distance: 4 unrolled fma blocks.│
+  │                 │                               │  │  Eliminates 128-float local array.│
+  │  ┌──────────────▼───────────────────┐           │  │                                  │
+  │  │  CountingSortNDKernel            │           │  │  q0..q3  · t4[]  · tile[]        │
+  │  │                                  │           │  └──────────────┬───────────────────┘
+  │  │  One thread per point.           │           │                 │
+  │  │  Scatter coords into SoA cell    │           │  ┌──────────────▼───────────────────┐
+  │  │  order via atomicAdd on offsets. │           │  │  run_bruteforce()  (host wrapper) │
+  │  │  Single pass, O(N).              │           │  │                                  │
+  │  │                                  │           │  │  Select block size (64–256) based │
+  │  │  sorted_pos                      │           │  │  on smem budget.                 │
+  │  │  sorted_points[d·P + pos]        │           │  │  CAP dispatch switch on K.       │
+  │  │  sorted_idxs[pos]                │           │  │  cudaDeviceSynchronize().        │
+  │  └──────────────┬───────────────────┘           │  │                                  │
+  │                 │ D==3?                         │  │  threads  · smem                 │
+  │  ┌──────────────▼───────────────────┐           │  │  DISPATCH_BF / LAUNCH_BF         │
+  │  │  CountingSortAoS3Kernel          │           │  └──────────────────────────────────┘
+  │  │  (D=3 fast path)                 │           │
+  │  │                                  │           │
+  │  │  AoS layout: pos·3 + d.          │           │
+  │  │  x/y/z loaded to registers.      │           │
+  │  │  Enables warp-coherent access    │           │
+  │  │  in FindNbrsAoS3Kernel.          │           │
+  │  └──────────────┬───────────────────┘           │
+  │                 │                               │
+  │  STAGE 2 — Neighbor Search                      │
+  │                                                 │
+  │  ┌──────────────────────────────────┐           │
+  │  │  FindNbrsNDKernel<CAP, DIM>      │           │
+  │  │                                  │           │
+  │  │  One thread per query.           │           │
+  │  │  Load D coords to q[] registers. │           │
+  │  │  Enumerate (2·cell_r+1)^D        │           │
+  │  │  neighbor cells around query.    │           │   ┌──────────────────────────────┐
+  │  │  AABB prune: skip cell if its    │◄──────────┼───│     K-NEAREST MAX-HEAP       │
+  │  │  nearest corner dist² ≥ heap max.│           │───►│  (shared by both paths)      │
+  │  │  Insert candidates into heap.    │           │   │                              │
+  │  │                                  │           │   │  local_dists[CAP]            │
+  │  │  q[DIM]  · max_dist_sq           │           │   │  local_idxs [CAP]            │
+  │  │  cell_min_dist_sq                │           │   │  CAP ∈ {16, 32, 64, 128}     │
+  │  └──────────────┬───────────────────┘           │   │  (compile-time template)     │
+  │                 │ D==3?                         │   │                              │
+  │  ┌──────────────▼───────────────────┐           │   │  insert_neighbor_t (grid)    │
+  │  │  FindNbrsAoS3Kernel<CAP>         │           │   │  bf_insert_neighbor (BF)     │
+  │  │  (D=3 fast path)                 │           │   │                              │
+  │  │                                  │           │   │  Replace root + sift-down.   │
+  │  │  Queries sorted by cell order.   │           │   │  Guard: d² < d[0]            │
+  │  │  Warp's 32 threads visit the     │           │   │  Depth unrolled at compile   │
+  │  │  SAME neighbor cells in lockstep.│           │   │  time: ceil(log2(CAP)) lvls  │
+  │  │  AoS candidates → shared L2      │           │   └──────────────────────────────┘
+  │  │  cache lines across the warp.    │           │
+  │  │                                  │           │
+  │  │  qx/qy/qz  · max_dist_sq  · cptr│           │
+  │  └──────────────┬───────────────────┘           │
+  │                 │                               │
+  │  ┌──────────────▼───────────────────┐           │
+  │  │  ScatterToOrigKernel             │           │
+  │  │                                  │           │
+  │  │  Unpermute results from sorted   │           │
+  │  │  query order back to original    │           │
+  │  │  index order for caller.         │           │
+  │  │                                  │           │
+  │  │  sp  · orig                      │           │
+  │  │  dists_in[k·P + sp]              │           │
+  │  └──────────────┬───────────────────┘           │
+  │                 │                               │
+  └─────────────────┼───────────────────────────────┘
+                    │
+        ┌───────────▼────────────────────────┐
+        │              OUTPUT                 │
+        │   dists [N × K]  idxs [N × K]      │
+        │   SoA: result[k·N + i]              │
+        │   D2H copy  →  returned as          │
+        │   std::vector<float> / <int32_t>    │
+        └─────────────────────────────────────┘
+
+════════════════════════════════════════════════════════════════════
+SOURCE FILES
+════════════════════════════════════════════════════════════════════
+
+  frnn_engine.cu          Engine entry point, dispatch logic, H2D/D2H, Thrust scan
+  insert_points.cu        Grid build kernels (CountPointsND, CountingSort*)
+  find_nbrs.cu            Search kernels (FindNbrsND, FindNbrsAoS3, ScatterToOrig)
+  no_grid_frnn.cu         Brute-force kernels (TiledBruteforceND, Tiled16, run_bruteforce)
+  nanobind_module.cu      Python binding (NB_MODULE → frnn_cuda.FRNNEngine)
+  grid.h                  GridParams struct shared by insert_points + find_nbrs
+  no_grid_frnn.h          run_bruteforce declaration
+
+  projection/             LEGACY — not compiled by CMakeLists.txt
+    project.cu            PCA projection (AccumStats → Jacobi → ProjectCentered → Rescale)
+    verify.cu             Full-D candidate verification (VerifyKernel)
+
+════════════════════════════════════════════════════════════════════
+KEY DESIGN DECISIONS
+════════════════════════════════════════════════════════════════════
+
+  SoA layout  p[d·N + i]     Coalesced warp access — threads 0..31 read consecutive
+                             addresses for the same dimension d.
+
+  AoS fast path (D=3)        Sorted queries → warp's 32 threads touch the same cells
+                             in lockstep → single L2 broadcast per candidate point.
+
+  float4 distance            When dim%4==0: one 128-bit LDS.128 fetches 4 coords,
+                             halving instruction count vs. scalar loop.
+
+  CAP template               Heap array sized at compile time → unrolled sift-down,
+                             no branch on heap size, local array in registers.
+
+  AABB pruning               Skips entire cells when their nearest corner is already
+                             farther than the current K-th best — eliminates most
+                             distance computations at high N.
+
+  Shared-mem tiling (BF)     blockDim.x threads load blockDim.x reference points
+                             once; all threads reuse them → BW reduced by blockDim.x.

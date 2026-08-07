@@ -4,16 +4,51 @@
 #include <cstdlib>
 #include <cstdio>
 
+/*
+ * =============================================================================
+ * no_grid_frnn.cu — Tiled brute-force FRNN: fallback for high-D / large-radius
+ * =============================================================================
+ *
+ * Implements O(N^2) fixed-radius nearest-neighbor search without any spatial
+ * index. FRNNEngine dispatches here when the uniform grid in insert_points.cu /
+ * find_nbrs.cu is infeasible (3^D ≥ total_cells, total_cells > 1M, or res ≤ 1).
+ *
+ * The key optimization is shared-memory tiling: each block cooperatively loads
+ * BLOCKDIM reference points into shared memory in AoS layout (coords contiguous
+ * per point), then every query thread in the block scans the tile. This amortizes
+ * the global memory bandwidth cost by a factor of blockDim.x — the tile is fetched
+ * once and reused by all 128–512 threads.
+ *
+ * Two kernel variants:
+ *
+ *   TiledBruteforceNDKernel<CAP> — general N-D. Query stored in a 128-float
+ *     local array (BF_MAX_DIM); distance uses float4 loads when dim%4==0.
+ *
+ *   TiledBruteforce16Kernel<CAP> — D=16 specialization. Query is held in 4
+ *     float4 registers (q0..q3) so it is never re-fetched from local memory.
+ *     Distance computation is fully unrolled to 4 float4 subtract-accumulate
+ *     blocks, matching the throughput of a cuBLAS GEMM kernel at this size.
+ *
+ * run_bruteforce selects the block size to maximize reference reuse (bigger
+ * blocks = wider tiles = fewer global fetches), subjects to shared-memory limits,
+ * and dispatches the right kernel and CAP via the DISPATCH_BF / LAUNCH_BF macros.
+ */
+
 // Engine hard limit (D <= 128); matches MAX_DIM_SUPPORTED in grid.h.
 constexpr int BF_MAX_DIM = 128;
 
-// Squared L2 distance between a query point q and a tile point t, both laid out
-// contiguously over the `dim` axis. When dim is a multiple of 4 (the D=8/16
-// brute-force cases) we issue 128-bit float4 loads — one LDS.128 per 4 coords
-// instead of four LDS.32 — and accumulate four squared diffs per iteration.
-// Both operands are 16-byte aligned in that path: q is __align__(16), and
-// &tile[tj*dim] is a multiple of 16 bytes because dim*4 is. Non-multiple-of-4
-// dims fall back to the scalar loop so the kernel stays correct for any D.
+/*
+ * bf_dist2 — squared L2 distance between query q and tile entry t.
+ * When dim is divisible by 4, uses 128-bit float4 loads (one LDS.128 per 4
+ * coords) instead of four scalar loads, halving the load instruction count on
+ * A100. Both q and &tile[tj*dim] are 16-byte aligned so the reinterpret cast is
+ * valid. Falls back to a scalar loop for non-multiple-of-4 dims.
+ *
+ * Key variables:
+ *   q    — 16-byte-aligned register array of the query point (loaded once per tile)
+ *   t    — pointer into shared memory tile at &tile[tj*dim] (AoS, 16B aligned)
+ *   nv   — number of float4 words when dim%4==0 (= dim/4)
+ */
 __device__ __forceinline__ float bf_dist2(
     const float* __restrict__ q, const float* __restrict__ t, int dim)
 {
@@ -38,6 +73,18 @@ __device__ __forceinline__ float bf_dist2(
     return d2;
 }
 
+/*
+ * bf_insert_neighbor — max-heap replace-root + sift-down for the brute-force path.
+ * Guards with an early exit if d2 ≥ heap root, then replaces the root and sifts
+ * down. Depth is fixed at 7 iterations (covers K up to 128). Same algorithm as
+ * insert_neighbor_t in find_nbrs.cu but without the CAP template (used here
+ * because the brute-force kernel was not originally templated on K).
+ *
+ * Key variables:
+ *   local_dists[0] — heap root; the current worst (largest) accepted distance
+ *   d2             — candidate squared distance; only inserted if d2 < local_dists[0]
+ *   i              — current node index during sift-down toward the leaves
+ */
 __device__ void bf_insert_neighbor(float* local_dists, int* local_idxs, int K, float d2, int idx2) {
     if (d2 >= local_dists[0]) return;
 
@@ -57,13 +104,20 @@ __device__ void bf_insert_neighbor(float* local_dists, int* local_idxs, int K, f
     }
 }
 
-// Tiled brute-force: each block loads a tile of reference points into shared
-// memory once, then all query threads in the block reuse it.
-// This reduces global memory traffic by a factor of blockDim.x compared to
-// the naive per-thread approach.
-// CAP = compile-time per-thread heap capacity (>= K), so the scratch arrays are sized to
-// the actual K (dispatched below) rather than the 128 worst case — K=16 uses 64 B/thread
-// instead of 1 KB. K stays a runtime arg, so any K <= CAP remains correct.
+/*
+ * TiledBruteforceNDKernel<CAP> — generic N-D tiled brute-force kernel.
+ * Each block cooperatively loads BLOCKDIM reference points into shared memory
+ * (AoS layout, one float3..float128 row per point), then every query thread
+ * scans the tile and calls bf_dist2 for each entry. Slides the tile window
+ * across all P2 reference points with two __syncthreads() barriers per tile.
+ *
+ * Key variables:
+ *   tile[]          — shared memory buffer: blockDim.x points × dim coords, AoS,
+ *                     16-byte aligned so bf_dist2 can use float4 loads
+ *   q[BF_MAX_DIM]   — register-cached query coords (SoA global → contiguous local,
+ *                     loaded once before the tile loop)
+ *   local_dists[CAP]— per-thread K-heap sized to CAP (not 128), holding K best dists
+ */
 template<int CAP>
 __global__ void TiledBruteforceNDKernel(
     const float* __restrict__ p1,
@@ -122,17 +176,20 @@ __global__ void TiledBruteforceNDKernel(
     }
 }
 
-// D=16 specialization. Same tiled scheme as TiledBruteforceNDKernel, but with the
-// dimension baked in as a compile-time constant — the way FAISS/PyG specialize their hot
-// dimensions. Three wins over the generic runtime-dim kernel:
-//   1. The query is held in 4 float4 *registers* (q0..q3), not a 128-float local array.
-//      It is read once per tile element (P2 times), so keeping it in registers instead of
-//      L1-backed local memory removes the dominant load on the inner loop.
-//   2. The distance is fully unrolled to exactly 4 float4 subtract-square-accumulates with
-//      no loop, no runtime dim, and no dim%4 branch — pure FMA throughput.
-//   3. The tile stride is the constant 16, so addressing folds into the index arithmetic.
-// `dim` is still in the signature (so it shares the launch macro) but is ignored; the
-// dispatcher only routes here when dim == 16.
+/*
+ * TiledBruteforce16Kernel<CAP> — D=16 specialization of the tiled brute-force kernel.
+ * Same tile-slide scheme as TiledBruteforceNDKernel, but dimension 16 is baked in at
+ * compile time for three micro-architectural wins: (1) the 16-coord query is held in
+ * 4 float4 registers (q0..q3) instead of a 128-float local array, eliminating L1
+ * local-memory re-reads on every tile entry; (2) the distance is fully unrolled to 4
+ * float4 subtract-accumulate groups with no loop or dim%4 branch; (3) the tile stride
+ * is the constant 16, simplifying address arithmetic. The `dim` arg is ignored.
+ *
+ * Key variables:
+ *   q0..q3   — four float4 registers holding all 16 query coords; never re-fetched
+ *   t4[]     — tile entry reinterpreted as float4 pointer; 4× LDS.128 from smem
+ *   tile[]   — shared memory buffer, AoS at stride 16 (blockDim.x × 16 floats)
+ */
 template<int CAP>
 __global__ void TiledBruteforce16Kernel(
     const float* __restrict__ p1,
@@ -199,17 +256,25 @@ __global__ void TiledBruteforce16Kernel(
     }
 }
 
+/*
+ * run_bruteforce — host wrapper that selects block size and dispatches the tiled kernel.
+ * Computes the largest block size that keeps shared memory within the device limit and
+ * enough blocks to fill all 80 A100 SMs. For D=16 floors at 256 threads (128 is
+ * suboptimal there — too little reference reuse per tile load). Opts into the A100's
+ * larger dynamic shared-memory limit when the tile exceeds the default 48 KB.
+ * Dispatches TiledBruteforce16Kernel for dim==16, TiledBruteforceNDKernel otherwise,
+ * both with the smallest compile-time CAP that holds K.
+ *
+ * Key variables:
+ *   threads — block size; controls tile width (= reference reuse per tile fetch)
+ *   smem    — shared memory per block = threads × dim × 4 bytes; the tile size
+ *   DISPATCH_BF / LAUNCH_BF — two-axis dispatch macros: K-cap × kernel variant
+ */
 extern "C" void run_bruteforce(
     const float* d_p1, const float* d_p2,
     int P1, int P2, int K, int dim, float r,
     float* d_dists, int* d_idxs)
 {
-    // Each block loads `threads` reference points into shared memory and every query
-    // thread reuses them, so reuse — and the inverse of global/L2 reference traffic —
-    // scales with the block size. Bigger blocks = bigger tiles = fewer reference
-    // re-reads, traded against occupancy. Default 256; FRNN_BF_THREADS overrides for
-    // tuning. The tile can exceed the 48 KB default, so opt into the A100's larger
-    // per-block shared-memory limit when needed.
     int threads = 512;        // measured best at D16 (2.3x over 128 at N=200K)
     // Shrink at small N to keep the SMs filled, but floor at 256 for D=16 — 128 is
     // suboptimal there (too little reference reuse per tile load).

@@ -1,14 +1,30 @@
-// project.cu — pure C++/CUDA PCA projection (Stage 0 of the projection FRNN).
-//
-// Projects (N, D) points onto their top-k principal axes and isotropically rescales
-// into [0,1]^k, entirely on the GPU. No cuBLAS / cuSOLVER:
-//   - the O(N) work (mean, covariance accumulation, projection, min/max) is custom kernels;
-//   - the tiny O(D^3) eigendecomposition of the D x D covariance runs on the host via
-//     cyclic Jacobi (D is small — 16/32 — so this is microseconds and avoids a library dep).
-//
-// Orthonormal (eigenvector) basis => the projection is contractive, so a radius-(R*s)
-// search in the projection returns a superset of the true D-dim R-neighbors. The caller
-// (search_projected) then verifies in full D to get the exact answer.
+/*
+ * =============================================================================
+ * project.cu — PCA projection stage for the projection-FRNN algorithm (LEGACY)
+ * =============================================================================
+ *
+ * NOTE: This file is NOT compiled by CMakeLists.txt. It is retained as reference
+ * for the projection-FRNN approach but is dead code in the current build.
+ *
+ * Implements Stage 0 of the two-stage projection FRNN: projects (N, D) points
+ * onto their top-k principal components and isotropically rescales into [0,1]^k,
+ * entirely on the GPU. The resulting low-dimensional representation is then
+ * searched with the grid FRNN kernel at an inflated radius (R * s, where s is
+ * the isotropic scale factor), which yields a superset of the true D-dimensional
+ * R-neighbors. verify.cu then filters this candidate set by recomputing exact
+ * full-D distances.
+ *
+ * Design choices:
+ *   - No cuBLAS / cuSOLVER: the O(N) work (mean, covariance, projection, min/max)
+ *     is handled by custom CUDA kernels.
+ *   - The O(D^3) eigendecomposition of the D×D covariance matrix runs on the CPU
+ *     via cyclic Jacobi (D ≤ 32, so this is microseconds and avoids a library dep).
+ *   - An orthonormal basis ensures the projection is contractive, guaranteeing the
+ *     inflated-radius search in k-D returns a superset of the true D-D neighbors.
+ *
+ * Pipeline: AccumStatsKernel → host Jacobi → ProjectCenteredKernel →
+ *           MinMaxAxisKernel → RescaleKernel (all orchestrated by run_pca_project).
+ */
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 #include <math.h>
@@ -35,7 +51,18 @@ __device__ __forceinline__ float atomicMaxFloat(float* addr, float val) {
     return __int_as_float(old);
 }
 
-// ---- Accumulate sum_x[D] and sum_xx[D*D] (upper triangle) via block-shared partials ----
+/*
+ * AccumStatsKernel — accumulates per-axis sums and the upper triangle of the
+ * outer-product matrix needed to form the empirical covariance. Each block
+ * maintains a shared-memory partial in [D sums | D*D cross-products], then
+ * atomically contributes its partial to the global accumulators. The covariance
+ * is then computed on the CPU from these sums (see run_pca_project).
+ *
+ * Key variables:
+ *   sh[]      — shared partial: ssx[D] followed by ssxx[D*D] (upper triangle only)
+ *   N         — total point count; loop stride = gridDim.x*blockDim.x for coverage
+ *   sumx/sumxx— global device accumulators for the mean and cross-product sums
+ */
 // Shared layout: [D sums][D*D cross-products]. Requires (D + D*D)*4 bytes of shared mem.
 __global__ void AccumStatsKernel(const float* __restrict__ pts, int N, int D,
                                  float* __restrict__ sumx, float* __restrict__ sumxx) {
@@ -59,7 +86,17 @@ __global__ void AccumStatsKernel(const float* __restrict__ pts, int N, int D,
     for (int t = threadIdx.x; t < D * D; t += blockDim.x) atomicAdd(&sumxx[t], ssxx[t]);
 }
 
-// Project onto the centered basis: proj[i,c] = sum_d (pts[i,d]-mean[d]) * basis[d*k+c].
+/*
+ * ProjectCenteredKernel — projects each point onto the k PCA basis vectors.
+ * One thread per point. Subtracts the per-axis mean, then computes the dot
+ * product with each of the k eigenvectors (columns of `basis`). Output is
+ * the k-dimensional projection of each point before normalization.
+ *
+ * Key variables:
+ *   mean[D]       — per-axis mean, subtracted before projection to center the data
+ *   basis[D*k]    — column-major PCA basis: basis[d*k + c] = eigenvector c, coord d
+ *   proj[i*k + c] — output: projection score of point i onto principal axis c
+ */
 __global__ void ProjectCenteredKernel(const float* __restrict__ pts, int N, int D, int k,
                                       const float* __restrict__ mean,
                                       const float* __restrict__ basis,
@@ -74,7 +111,18 @@ __global__ void ProjectCenteredKernel(const float* __restrict__ pts, int N, int 
     }
 }
 
-// Per-axis min/max over the projection (block-shared reduction, then one atomic per axis).
+/*
+ * MinMaxAxisKernel — computes per-axis min and max of the projected coordinates.
+ * Each block reduces its slice of rows into shared-memory accumulators (one
+ * atomicMinFloat / atomicMaxFloat per coord per row), then contributes to global
+ * accumulators. The resulting range is used by RescaleKernel to compute the
+ * isotropic scale s = 1 / max_range.
+ *
+ * Key variables:
+ *   smn[k] / smx[k] — block-shared per-axis min/max accumulators (2k floats)
+ *   gmn / gmx        — global device min/max per axis, updated atomically
+ *   proj[i*k + c]    — input: projection values from ProjectCenteredKernel
+ */
 __global__ void MinMaxAxisKernel(const float* __restrict__ proj, int N, int k,
                                  float* __restrict__ gmn, float* __restrict__ gmx) {
     extern __shared__ float sh[];
@@ -93,7 +141,18 @@ __global__ void MinMaxAxisKernel(const float* __restrict__ proj, int N, int k,
     }
 }
 
-// proj01[i,c] = (proj[i,c] - mn[c]) * s   (isotropic scale s, per-axis offset)
+/*
+ * RescaleKernel — isotropically rescales all projected coordinates into [0,1]^k.
+ * Applies proj01 = (proj - mn) * s in-place. The scale s is the same for all k
+ * axes (isotropic), which preserves the relative distances between points so that
+ * a radius-r*s search in the projected space returns a superset of radius-r neighbors
+ * in the original D-dimensional space.
+ *
+ * Key variables:
+ *   s        — isotropic scale = 1 / max_range (max range across all k axes)
+ *   mn[k]    — per-axis minimum; shifts each axis so its minimum maps to 0
+ *   proj[i*k + c] — in-place: unnormalized projection in, [0,1] out
+ */
 __global__ void RescaleKernel(float* __restrict__ proj, int N, int k,
                               const float* __restrict__ mn, float s) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -102,8 +161,18 @@ __global__ void RescaleKernel(float* __restrict__ proj, int N, int k,
     for (int c = 0; c < k; c++) r[c] = (r[c] - mn[c]) * s;
 }
 
-// ---- host: cyclic Jacobi eigendecomposition of a symmetric D x D matrix ----
-// A (row-major, D*D) is overwritten; evec (row-major, columns = eigenvectors), eval[D].
+/*
+ * jacobi_eigh — host-side cyclic Jacobi eigendecomposition of a symmetric D×D matrix.
+ * Iterates Jacobi sweeps (annihilating off-diagonal elements pairwise) until the
+ * sum of squared off-diagonal elements falls below 1e-20 or 100 sweeps complete.
+ * Runs on the CPU because D ≤ 32 — a full GPU eigen-solver (cuSOLVER) would cost
+ * more in launch overhead than this entire function takes to run.
+ *
+ * Key variables:
+ *   A[D*D]    — input: symmetric covariance matrix (row-major); overwritten in place
+ *   evec[D*D] — output: column j is the eigenvector for eigenvalue eval[j]
+ *   phi       — Jacobi rotation angle for the current (p,q) element
+ */
 static void jacobi_eigh(std::vector<double>& A, int D,
                         std::vector<double>& eval, std::vector<double>& evec) {
     evec.assign(D * D, 0.0);
@@ -144,10 +213,21 @@ static void jacobi_eigh(std::vector<double>& A, int D,
 // Largest shared-mem footprint AccumStats can use: (D + D*D) floats must fit ~48 KB.
 static inline bool accum_shared_fits(int D) { return (size_t)(D + D * D) * sizeof(float) <= 48000; }
 
-// run_pca_project: fill d_proj01 (N,k) in [0,1], set *out_s (distance scale) and
-// *out_var_ratio (top-k variance fraction). Returns 0 on success, 1 if D is too large
-// for the shared-memory stats path (caller should fall back to brute force).
-// Scratch (caller-owned, device): sumx[D], sumxx[D*D], mean[D], basis[D*k], minmax[2*k].
+/*
+ * run_pca_project — orchestrates the full GPU PCA + normalization pipeline.
+ * Runs AccumStatsKernel → D2H copy → host Jacobi → D2H upload of mean and basis
+ * → ProjectCenteredKernel → MinMaxAxisKernel → RescaleKernel in sequence.
+ * Returns 0 on success; returns 1 if D is too large for the shared-memory stats
+ * path (caller should fall back to brute force). All device scratch buffers are
+ * caller-owned to avoid repeated allocation across multiple search calls.
+ *
+ * Key variables:
+ *   d_proj01     — output: (N, k) normalized projection in [0, 1]^k
+ *   out_s        — output: isotropic scale s; caller multiplies radius by s when
+ *                  searching in projection space to get a superset of D-D neighbors
+ *   out_var_ratio — output: fraction of total variance captured by the top-k axes;
+ *                  low values indicate the projection loses significant structure
+ */
 extern "C" int run_pca_project(
     const float* d_pts, int N, int D, int k,
     float* d_proj01,

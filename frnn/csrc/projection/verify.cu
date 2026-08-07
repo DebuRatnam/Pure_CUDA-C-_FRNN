@@ -1,21 +1,44 @@
-// verify.cu — fused candidate-verify kernel for the projection two-stage FRNN.
-//
-// Stage 2 of the projection method: given each query's candidate ids (the
-// oversample-nearest in the 3D projection, from the grid search), recompute the
-// TRUE full-D squared distance to each candidate, keep the K nearest with d^2 <= r^2.
-//
-// One thread per query. The query coords are cached in a local array; the K-heap
-// (sized to the smallest compile-time CAP that holds K) lives in registers/local.
-// No (N, oversample, D) temporary is materialized — that gather+reduce was the
-// dominant cost of the torch implementation this replaces. Output is squared
-// distance in heap order, matching the native engine convention.
+/*
+ * =============================================================================
+ * verify.cu — Full-D candidate verification stage for projection-FRNN (LEGACY)
+ * =============================================================================
+ *
+ * NOTE: This file is NOT compiled by CMakeLists.txt. It is retained as reference
+ * for the projection-FRNN approach but is dead code in the current build.
+ *
+ * Implements Stage 2 (the verification step) of the two-stage projection FRNN:
+ *
+ *   Stage 1 (project.cu + grid FRNN): project the N points into k-D PCA space and
+ *   find the O nearest neighbors in projection space at radius r*s. This produces
+ *   an (N, O) candidate table that is a superset of the true D-dimensional R-neighbors
+ *   (guaranteed by the contractive, orthonormal projection).
+ *
+ *   Stage 2 (this file): for each query, recompute the true full-D squared L2
+ *   distance to each of its O candidates, keep the K with d^2 ≤ r^2. This is a
+ *   fused gather-compute-filter kernel: no (N × O × D) temporary is materialized,
+ *   which was the dominant cost of the original PyTorch implementation.
+ *
+ * One thread per query. Query coords are cached in a register array (qreg) once,
+ * then reused for all O candidates. A max-heap of size CAP (templated, smallest that
+ * holds K) accumulates the K nearest. Output is in AoS layout to match the engine
+ * convention for the projection path.
+ */
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 
 constexpr int VERIFY_MAX_DIM = 128;   // matches engine MAX_DIM_SUPPORTED
 
-// Max-heap replace-root + sift-down (same scheme as no_grid_frnn.cu). Keeps the K
-// smallest d^2 seen. CAP is compile-time so the sift depth is a constant.
+/*
+ * verify_insert<CAP> — max-heap replace-root + sift-down for the verify kernel.
+ * Same algorithm as insert_neighbor_t in find_nbrs.cu. Guards on d[0] (heap root)
+ * so only candidates that improve on the current worst are inserted. CAP is
+ * compile-time so the sift depth (4–7 levels) is a constant and the loop unrolls.
+ *
+ * Key variables:
+ *   d[0]  — heap root; current worst (largest) accepted squared distance; entry guard
+ *   CAP   — compile-time heap capacity; determines the unrolled sift depth
+ *   i     — current node index during sift-down toward the leaves
+ */
 template<int CAP>
 __device__ __forceinline__ void verify_insert(float* d, int* ix, int K, float d2, int j) {
     if (d2 >= d[0]) return;
@@ -34,6 +57,18 @@ __device__ __forceinline__ void verify_insert(float* d, int* ix, int K, float d2
     }
 }
 
+/*
+ * VerifyKernel<CAP> — one thread per query; recomputes full-D distances to each candidate.
+ * Caches the query's D coordinates in a local array (qreg) once, then iterates
+ * over the O candidates from the projection-space search, computing the squared L2
+ * distance in the original D-dimensional space and inserting into a K-heap when
+ * below r^2. Skips candidates with id = -1 (empty projection slots).
+ *
+ * Key variables:
+ *   qreg[VERIFY_MAX_DIM] — register-resident query coordinates; loaded once, reused O times
+ *   cand[q*O + o]        — o-th candidate original index for query q; -1 = empty
+ *   O                    — oversample count: number of projection-space candidates per query
+ */
 template<int CAP>
 __global__ void VerifyKernel(
     const float* __restrict__ pts,    // (N, D) AoS  [q*D + d]
@@ -70,7 +105,17 @@ __global__ void VerifyKernel(
     }
 }
 
-// Host wrapper. r is the (full-D) radius; the kernel compares squared distances.
+/*
+ * run_verify_candidates — host wrapper for VerifyKernel.
+ * Squares the radius, selects the smallest compile-time CAP that holds K, and
+ * launches one thread per query point. Output arrays (d_out_d, d_out_i) are
+ * AoS layout: out[q*K + k] for the k-th neighbor of query q.
+ *
+ * Key variables:
+ *   r2   — squared radius (r^2); the kernel filters candidates by d^2 < r2
+ *   O    — oversample factor: number of projection-space candidates per query
+ *   N    — total query/point count; determines grid size
+ */
 extern "C" void run_verify_candidates(
     const float* d_pts, const int* d_cand,
     int N, int D, int O, int K, float r,
