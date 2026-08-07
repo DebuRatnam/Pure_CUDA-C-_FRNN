@@ -128,6 +128,28 @@ bool FRNNEngine::run_projection_search(const float* d_in_soa, int N, int D, int 
     // cell_div is clamped down so the finer grid's res^PROJ_K stays within the 1M-cell
     // budget (avoids the infeasible-fallback path, which currently yields no results).
     static const bool dbg = std::getenv("FRNN_DEBUG_PROJ") != nullptr;
+
+    // Idea 2: shrink projected search radius by sqrt(var_ratio) — the contractive
+    // factor of an orthonormal PCA projection (any true neighbor with full_dist <= R
+    // has proj_dist <= full_dist * sqrt(var_ratio)).  A 1.05x safety buffer guards
+    // borderline cases.  rscale is clamped to [0,1] so it never inflates the radius.
+    // Override at runtime with FRNN_PROJ_RSCALE (e.g. "0.9" to tune manually).
+    float rscale = std::min(1.0f, sqrtf(var_ratio) * 1.05f);
+    if (const char* e = std::getenv("FRNN_PROJ_RSCALE")) {
+        float v = std::atof(e);
+        if (v > 0.0f && v <= 1.0f) rscale = v;
+    }
+    // Feasibility floor: never reduce rscale past the point where the coarsest
+    // feasible grid (cell_div=1) would exceed 1M cells.
+    // With cell_div=1: res = ceil(1 / (radius*s*rscale)); need res^PROJ_K <= 1M.
+    // → rscale >= 1 / (floor(1M^(1/PROJ_K)) * radius * s).
+    // Guard: only apply when rscale_floor < 1 (else the fallback below handles it).
+    {
+        float max_res = std::floor(std::pow(1000000.0, 1.0 / PROJ_K));  // 31 for PROJ_K=4
+        float rscale_floor = 1.0f / (max_res * radius * s);
+        if (rscale_floor < 1.0f) rscale = std::max(rscale, rscale_floor);
+    }
+
     int cell_div = 2;
     if (const char* e = std::getenv("FRNN_PROJ_CELL_DIV")) {
         int v = std::atoi(e);
@@ -136,7 +158,7 @@ bool FRNNEngine::run_projection_search(const float* d_in_soa, int N, int D, int 
 
     GridParams pp;
     pp.dim = PROJ_K;
-    pp.radius = radius * s;
+    pp.radius = radius * s * rscale;
     pp.min_val = 0.0f;
     pp.max_val = 1.0f;
 
@@ -154,16 +176,16 @@ bool FRNNEngine::run_projection_search(const float* d_in_soa, int N, int D, int 
     long long shell = 1;
     for (int d = 0; d < PROJ_K; d++) shell *= (2 * cell_div + 1);  // (2*cell_div+1)^PROJ_K
     if (pp.res <= 1 || tc > 1000000.0 || shell >= (long long)tc) {
-        if (dbg) std::cerr << "[proj] fallback: D=" << D << " R*s=" << pp.radius
+        if (dbg) std::cerr << "[proj] fallback: D=" << D << " R*s*rscale=" << pp.radius
                            << " res=" << pp.res << " cell_div=" << cell_div
-                           << " s=" << s << " var=" << var_ratio << "\n";
+                           << " s=" << s << " var=" << var_ratio << " rscale=" << rscale << "\n";
         return false;
     }
     pp.total_cells = (long long)tc;
-    if (dbg) std::cerr << "[proj] engaged: D=" << D << " R*s=" << pp.radius
+    if (dbg) std::cerr << "[proj] engaged: D=" << D << " R*s*rscale=" << pp.radius
                        << " res=" << pp.res << " cells=" << pp.total_cells
                        << " cell_div=" << cell_div << " shell=" << shell
-                       << " s=" << s << " var=" << var_ratio
+                       << " s=" << s << " var=" << var_ratio << " rscale=" << rscale
                        << " O=" << O << "\n";
 
     // Grid search on the projection at O oversample (generic N-D path; DIM=PROJ_K
