@@ -18,6 +18,13 @@ for _p in (os.path.join(_ROOT, "xju2_frnn", "FRNN"),
     if os.path.isdir(_p) and _p not in sys.path:
         sys.path.insert(0, _p)
 
+# xju2/libFRNN (new standalone library). The _frnn*.so built by
+# new_xju2_frnn/build_libfrnn.sh is copied to new_xju2_frnn/ so a single
+# sys.path entry is enough; it does not conflict with our frnn_cuda module.
+_NEW_XJU2_DIR = os.path.join(_ROOT, "new_xju2_frnn")
+if _NEW_XJU2_DIR not in sys.path:
+    sys.path.insert(0, _NEW_XJU2_DIR)
+
 N_SWEEP = [int(n) for n in os.environ.get(
     "N_SWEEP", "100000,200000,300000,400000,500000").split(",")]
 D_SWEEP = [int(d) for d in os.environ.get("D_SWEEP", "3,16").split(",")]
@@ -180,6 +187,33 @@ def run_frnn_projected(pts_np, pts_t, N, D, R):
     return {"latency_ms": latency_ms, "peak_mb": float(peak_mb)}
 
 
+def run_new_xju2(pts_np, D, R):
+    """xju2/libFRNN standalone (no PyTorch). Times include H2D + search + D2H
+    because their synchronous build_edges API does not expose a device-only path.
+    Returns latency_ms or None on import/runtime failure.
+    """
+    try:
+        import _frnn as _libfrnn_new
+    except ImportError:
+        return None
+
+    if D > 32:
+        return None  # library hard limit
+
+    # Warm up engine + driver before timing.
+    for _ in range(WARMUP):
+        _libfrnn_new.build_edges(pts_np, radius=R, max_neighbors=K,
+                                 exclude_self=False)
+
+    times = []
+    for _ in range(TRIALS):
+        t0 = time.perf_counter()
+        _libfrnn_new.build_edges(pts_np, radius=R, max_neighbors=K,
+                                 exclude_self=False)
+        times.append(time.perf_counter() - t0)
+    return float(np.median(times)) * 1000.0
+
+
 def run_baselines(pts_np, D, R):
     out = {}
 
@@ -233,6 +267,16 @@ def run_baselines(pts_np, D, R):
         print(f"    [xju2] {e}")
 
     torch.cuda.empty_cache()
+
+    # xju2/libFRNN new standalone (synchronous, includes H2D+D2H).
+    try:
+        out["new_xju2_ms"] = run_new_xju2(pts_np, D, R)
+        if out["new_xju2_ms"] is None:
+            print(f"    [libFRNN] not available (D={D}>32 or .so not built)")
+    except Exception as e:
+        out["new_xju2_ms"] = None
+        print(f"    [libFRNN] {e}")
+
     return out
 
 
@@ -249,7 +293,8 @@ def plot_results(results, path="benchmark_comparison.png"):
                ("FRNN-proj",    "frnn_proj_ms", "P", "--", "#17becf"),
                ("FAISS",        "faiss_ms",     "s", "--", "#d62728"),
                ("FlashLib",     "flash_ms",     "^", "--", "#ff7f0e"),
-               ("xju2",         "xfrnn_ms",     "D", "-.", "#2ca02c")]
+               ("xju2",         "xfrnn_ms",     "D", "-.", "#2ca02c"),
+               ("libFRNN",      "new_xju2_ms",  "v", "-.", "#9467bd")]
 
     by_d = {}
     for key, v in results.items():
@@ -341,12 +386,14 @@ for D, N in CELLS:
     f_ms = frnn_res["latency_ms"]
     print(f"  FRNN={f_ms}ms  FRNN-proj={proj_ms}ms"
           f"  FAISS={base['faiss_ms']}ms"
-          f"  FlashLib={base['flash_ms']}ms  xju2={base['xfrnn_ms']}ms")
+          f"  FlashLib={base['flash_ms']}ms  xju2={base['xfrnn_ms']}ms"
+          f"  libFRNN={base['new_xju2_ms']}ms")
 
     if f_ms is not None:
         for name, ms in [("FAISS",    base["faiss_ms"]),
                          ("FlashLib", base["flash_ms"]),
-                         ("xju2",     base["xfrnn_ms"])]:
+                         ("xju2",     base["xfrnn_ms"]),
+                         ("libFRNN",  base["new_xju2_ms"])]:
             if ms is not None and f_ms > ms:
                 print(f"  !! REGRESSION: FRNN {f_ms:.2f}ms > {name} {ms:.2f}ms"
                       f" — see §4.3 diagnostics")
