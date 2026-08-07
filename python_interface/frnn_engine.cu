@@ -133,8 +133,10 @@ bool FRNNEngine::run_projection_search(const float* d_in_soa, int N, int D, int 
     // factor of an orthonormal PCA projection (any true neighbor with full_dist <= R
     // has proj_dist <= full_dist * sqrt(var_ratio)).  A 1.05x safety buffer guards
     // borderline cases.  rscale is clamped to [0,1] so it never inflates the radius.
+    // Only applied at N >= 50000: below that the verify kernel is cheap, but a
+    // smaller radius forces a finer grid (more cells) whose setup cost dominates.
     // Override at runtime with FRNN_PROJ_RSCALE (e.g. "0.9" to tune manually).
-    float rscale = std::min(1.0f, sqrtf(var_ratio) * 1.05f);
+    float rscale = (N >= 50000) ? std::min(1.0f, sqrtf(var_ratio) * 1.05f) : 1.0f;
     if (const char* e = std::getenv("FRNN_PROJ_RSCALE")) {
         float v = std::atof(e);
         if (v > 0.0f && v <= 1.0f) rscale = v;
