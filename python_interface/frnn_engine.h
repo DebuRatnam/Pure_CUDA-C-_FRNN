@@ -46,7 +46,7 @@ class FRNNEngine {
         // --- Projection path (project.cu + verify.cu) scratch ---
         // Engaged when the full-D grid is infeasible and dim > PROJ_K: PCA-project
         // D->PROJ_K, grid-search the projection at R*s, then verify in full D.
-        static constexpr int PROJ_K = 4;
+        static constexpr int PROJ_K = 3;  // 3^3=27K cells at res=41; 4 was infeasible (41^4=2.8M)
         float *d_pts_aos;    // (N, D) AoS staging: SoA input transposed for project/verify
         float *d_sumx, *d_sumxx, *d_mean, *d_basis, *d_minmax;  // PCA scratch (project.cu)
         float *d_proj01;     // (N, PROJ_K) AoS normalized projection (project.cu output)
