@@ -47,9 +47,7 @@ class FRNNEngine {
         // Engaged when the full-D grid is infeasible: build a grid on the first
         // grid_dim = (D>4)?4:min(D,3) coordinates; rank candidates inline in full D.
         static constexpr int GRID_DIM_MAX = 4;
-        float *d_pts_aos;    // (N, D) AoS staging: SoA input transposed for verify
-        float *d_proj_soa;   // (N, GRID_DIM_MAX) SoA first-d coords for the grid pipeline
-        int   *d_cand;       // (N, O) AoS candidate original ids for verify
+        float *d_grid_coords_soa; // (N, GRID_DIM_MAX) first-d grid coordinates
 
         // Grid on first grid_dim coordinates while computing full-D distances. Returns false
         // if the first-d grid is degenerate (fallback to brute-force in caller).

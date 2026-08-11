@@ -15,30 +15,9 @@ extern "C" void run_find_nbrs_griddim(float* d_points1, float* d_points2, int* d
 extern "C" void run_counting_sort_aos3(float* d_points, int* d_pc_grid_idx, int* d_grid_offsets, int* d_sorted_idxs, float* d_points_sorted, int P);
 extern "C" void run_find_nbrs_aos3(float* d_points1_aos, float* d_points2_aos, int* d_pc2_grid_off, int* d_sorted_idxs, int P1, int K, float radius, float* d_dists, int* d_idxs, GridParams params);
 extern "C" void run_scatter_to_orig(const float* d_dists_in, const int* d_idxs_in, const int* d_sorted_idxs, int P, int K, float* d_dists_out, int* d_idxs_out);
-// Verify path (verify.cu). AoS in/out; see that file for layout.
-extern "C" void run_verify_candidates(const float* d_pts, const int* d_cand, int N, int D,
-                                      int O, int K, float r, float* d_out_d, int* d_out_i);
 extern "C" void run_bruteforce(const float* d_p1, const float* d_p2,
                                int P1, int P2, int K, int dim, float r,
                                float* d_dists, int* d_idxs);
-
-// Element-wise transposes bridging the engine's SoA layout and the projection
-// stages' AoS layout. Treat src as (rows x cols) row-major; write dst as
-// (cols x rows) row-major: dst[c*rows + r] = src[r*cols + c].
-__global__ void transpose_f(const float* __restrict__ src, float* __restrict__ dst, int rows, int cols) {
-    long long idx = (long long)blockIdx.x * blockDim.x + threadIdx.x;
-    long long total = (long long)rows * cols;
-    if (idx >= total) return;
-    int r = (int)(idx / cols), c = (int)(idx % cols);
-    dst[(long long)c * rows + r] = src[idx];
-}
-__global__ void transpose_i(const int* __restrict__ src, int* __restrict__ dst, int rows, int cols) {
-    long long idx = (long long)blockIdx.x * blockDim.x + threadIdx.x;
-    long long total = (long long)rows * cols;
-    if (idx >= total) return;
-    int r = (int)(idx / cols), c = (int)(idx % cols);
-    dst[(long long)c * rows + r] = src[idx];
-}
 
 // Note: Constructor now takes max_points AND dim to allocate correctly
 FRNNEngine::FRNNEngine(int max_points) : max_p(max_points) {
@@ -63,10 +42,7 @@ FRNNEngine::FRNNEngine(int max_points) : max_p(max_points) {
     cudaMalloc(&d_dists_sorted, max_p * 128 * sizeof(float));
     cudaMalloc(&d_idxs_sorted, max_p * 128 * sizeof(int));
 
-    // First-d grid path scratch: AoS staging for verify, first-d SoA for grid, candidates.
-    cudaMalloc(&d_pts_aos,   max_p * default_dim * sizeof(float));
-    cudaMalloc(&d_proj_soa,  max_p * GRID_DIM_MAX * sizeof(float));
-    cudaMalloc(&d_cand,      max_p * 128 * sizeof(int));  // O up to 128
+    cudaMalloc(&d_grid_coords_soa, max_p * GRID_DIM_MAX * sizeof(float));
 }
 
 FRNNEngine::~FRNNEngine() {
@@ -75,12 +51,12 @@ FRNNEngine::~FRNNEngine() {
     cudaFree(d_grid_idx); cudaFree(d_sorted_idxs);
     cudaFree(d_dists); cudaFree(d_idxs);
     cudaFree(d_dists_sorted); cudaFree(d_idxs_sorted);
-    cudaFree(d_pts_aos); cudaFree(d_proj_soa); cudaFree(d_cand);
+    cudaFree(d_grid_coords_soa);
 }
 
 // First-d grid with inline full-D ranking (libFRNN-style).
 //   grid_dim = (D>4)?4:min(D,3)  — matches libFRNN gridDimensionCount().
-//   1. Copy first grid_dim dimensions from SoA input into d_proj_soa (SoA, no alloc).
+//   1. Copy first grid_dim dimensions from SoA input into d_grid_coords_soa.
 // Every point encountered by the grid scan is compared in full D and inserted
 // directly into the true K-nearest heap; there is no bounded candidate stage.
 // Final results land in d_dists/d_idxs (SoA [k*N+q], original ids). Returns false if
@@ -89,7 +65,7 @@ bool FRNNEngine::run_firstd_search(const float* d_in_soa, int N, int D, int K, f
     const int grid_dim = (D > 4) ? 4 : std::min(D, 3);
     // Extract first grid_dim dimensions: SoA layout means the first grid_dim*N floats
     // of d_in_soa are exactly dimensions 0..grid_dim-1 for all N points.
-    cudaMemcpy(d_proj_soa, d_in_soa, (size_t)grid_dim * N * sizeof(float),
+    cudaMemcpy(d_grid_coords_soa, d_in_soa, (size_t)grid_dim * N * sizeof(float),
                cudaMemcpyDeviceToDevice);
 
     // Grid params on the first grid_dim dimensions (data normalized to [0,1]).
@@ -111,7 +87,7 @@ bool FRNNEngine::run_firstd_search(const float* d_in_soa, int N, int D, int K, f
 
     // Sort all D coordinates using cell ids formed from only the first grid_dim.
     cudaMemset(d_grid_cnt, 0, pp.total_cells * sizeof(int));
-    run_insert_points(d_proj_soa, d_grid_cnt, d_grid_idx, N, grid_dim, pp);
+    run_insert_points(d_grid_coords_soa, d_grid_cnt, d_grid_idx, N, grid_dim, pp);
     thrust::exclusive_scan(
         thrust::device_ptr<int>(d_grid_cnt),
         thrust::device_ptr<int>(d_grid_cnt + pp.total_cells),

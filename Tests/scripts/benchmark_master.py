@@ -31,18 +31,16 @@ N_SWEEP = [int(n) for n in os.environ.get(
     "N_SWEEP", "100000,200000,300000,400000,500000").split(",")]
 D_SWEEP = [int(d) for d in os.environ.get("D_SWEEP", "3,16").split(",")]
 # Singular probe cells appended to the D_SWEEP×N_SWEEP grid (env "D:N,D:N,...").
-# Default: one D=12, N=200K point exercising the projection path at mid-D.
 EXTRA_CELLS = [tuple(int(x) for x in c.split(":"))
                for c in os.environ.get("EXTRA_CELLS", "12:200000").split(",") if c.strip()]
 K, SEED, WARMUP, TRIALS = 16, 1234, 20, 10
-PROJ_K = 3   # target dimension for the projection variant
+DEFAULT_INTRINSIC = 3
 
 # Data distribution, env-selectable. uniform: iid in [0,1]^D (uses analytic
 # radius_for). lowrank: INTRINSIC-dim structure linearly embedded in D + noise —
-# the realistic non-uniform regime and projection's win case (uses a calibrated
-# radius, see below).
+# a realistic non-uniform regime using a calibrated radius.
 DIST          = os.environ.get("DIST", "lowrank").lower()
-INTRINSIC     = int(os.environ.get("INTRINSIC", str(PROJ_K)))
+INTRINSIC     = int(os.environ.get("INTRINSIC", str(DEFAULT_INTRINSIC)))
 LOWRANK_NOISE = float(os.environ.get("LOWRANK_NOISE", "0.02"))
 
 
@@ -126,66 +124,6 @@ def run_frnn_gpu(pts_t, N, D, R):
     mem_before = pynvml.nvmlDeviceGetMemoryInfo(handle).used
     latency_ms = timed_gpu(lambda: engine.search_gpu(pts_soa.data_ptr(), N, D, K, R))
     peak_mb = max(0, pynvml.nvmlDeviceGetMemoryInfo(handle).used - mem_before) / 1024**2
-    return {"latency_ms": latency_ms, "peak_mb": float(peak_mb)}
-
-
-def run_frnn_projected(pts_np, pts_t, N, D, R):
-    """PCA project to PROJ_K dims, run our FRNN at inflated radius, verify in full D on GPU.
-
-    Only runs when D > PROJ_K. PCA is precomputed on CPU (not timed); the timed
-    region is FRNN-on-projected-coords + full-D candidate verification via PyTorch.
-    """
-    if D <= PROJ_K:
-        return None
-
-    # PCA: project to PROJ_K dims (CPU preprocessing, not timed).
-    centered = pts_np - pts_np.mean(0)
-    _, _, Vt = np.linalg.svd(centered, full_matrices=False)
-    basis = Vt[:PROJ_K].T.astype(np.float32)            # (D, PROJ_K)
-    proj_np = (centered @ basis).astype(np.float32)     # (N, PROJ_K)
-
-    # Inflate radius: an orthonormal projection is contractive, so true-D distances
-    # are >= projected distances. Inflate by sqrt(D / PROJ_K) as a conservative bound.
-    R_proj = float(min(R * (D / PROJ_K) ** 0.5, 2.0))
-    K_over = min(K * 4, 128)   # oversample in projected space before full-D filter
-
-    proj_t   = torch.tensor(proj_np, device="cuda")
-    proj_soa = proj_t.T.contiguous().reshape(-1)
-    engine_p = frnn_cuda.FRNNEngine(max_points=N)
-    # warm up the projection engine + verify path
-    for _ in range(WARMUP):
-        engine_p.search_gpu(proj_soa.data_ptr(), N, PROJ_K, K_over, R_proj)
-    torch.cuda.synchronize()
-
-    handle     = pynvml.nvmlDeviceGetHandleByIndex(0)
-    mem_before = pynvml.nvmlDeviceGetMemoryInfo(handle).used
-    times = []
-    r2 = float(R * R)
-    for _ in range(TRIALS):
-        torch.cuda.synchronize()
-        t0 = time.perf_counter()
-
-        # Step 1: FRNN in projected space.
-        engine_p.search_gpu(proj_soa.data_ptr(), N, PROJ_K, K_over, R_proj)
-        # Step 2: retrieve candidate indices (D2H — part of pipeline cost).
-        _, idxs_raw = engine_p.get_results(N, K_over)
-        idxs_t = torch.tensor(
-            np.array(idxs_raw, dtype=np.int64).reshape(N, K_over), device="cuda"
-        )
-        # Step 3: full-D verification on GPU via PyTorch.
-        valid = idxs_t.clamp(min=0)          # replace -1 sentinels with 0 (masked below)
-        cands = pts_t[valid]                  # (N, K_over, D)
-        diff  = pts_t.unsqueeze(1) - cands   # (N, K_over, D)
-        d2    = (diff * diff).sum(-1)         # (N, K_over)
-        keep  = (d2 <= r2) & (idxs_t >= 0)  # (N, K_over) bool mask
-
-        torch.cuda.synchronize()
-        times.append(time.perf_counter() - t0)
-
-    latency_ms = float(np.median(times)) * 1000.0
-    peak_mb    = max(0, pynvml.nvmlDeviceGetMemoryInfo(handle).used - mem_before) / 1024**2
-    del proj_t, proj_soa, idxs_t, cands, diff, d2, keep
-    torch.cuda.empty_cache()
     return {"latency_ms": latency_ms, "peak_mb": float(peak_mb)}
 
 
@@ -292,7 +230,6 @@ def plot_results(results, path="benchmark_comparison.png"):
         return
 
     methods = [("FRNN",          "latency_ms",   "o", "-",  "#1f77b4"),
-               ("FRNN-proj",    "frnn_proj_ms", "P", "--", "#17becf"),
                ("FAISS",        "faiss_ms",     "s", "--", "#d62728"),
                ("FlashLib",     "flash_ms",     "^", "--", "#ff7f0e"),
                ("xju2",         "xfrnn_ms",     "D", "-.", "#2ca02c"),
@@ -374,23 +311,15 @@ for D, N in CELLS:
         print(f"  [FRNN ERROR] {e}")
         frnn_res = {"latency_ms": None, "peak_mb": None}
 
-    try:
-        proj_res = run_frnn_projected(pts_np, pts_t, N, D, R)
-    except Exception as e:
-        print(f"  [FRNN-proj ERROR] {e}")
-        proj_res = None
-
     del pts_t
     torch.cuda.empty_cache()
 
     base = run_baselines(pts_np, D, R)
-    proj_ms = proj_res["latency_ms"] if proj_res else None
-    all_results[key] = {"R": R, "dist": DIST, "radius_mode": r_mode, **frnn_res,
-                        "frnn_proj_ms": proj_ms, **base}
+    all_results[key] = {"R": R, "dist": DIST, "radius_mode": r_mode,
+                        **frnn_res, **base}
 
     f_ms = frnn_res["latency_ms"]
-    print(f"  FRNN={f_ms}ms  FRNN-proj={proj_ms}ms"
-          f"  FAISS={base['faiss_ms']}ms"
+    print(f"  FRNN={f_ms}ms  FAISS={base['faiss_ms']}ms"
           f"  FlashLib={base['flash_ms']}ms  xju2={base['xfrnn_ms']}ms"
           f"  libFRNN={base['new_xju2_ms']}ms")
 

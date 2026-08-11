@@ -27,8 +27,6 @@ set(FRNN_SOURCES
     frnn/csrc/grid/insert_points.cu
     frnn/csrc/grid/find_nbrs.cu
     frnn/csrc/no_grid_frnn/no_grid_frnn.cu
-    frnn/csrc/projection/project.cu
-    frnn/csrc/projection/verify.cu
     python_interface/nanobind_module.cu
 )
 
@@ -39,7 +37,6 @@ target_include_directories(frnn_cuda PRIVATE
     ${CMAKE_SOURCE_DIR}/python_interface
     ${CMAKE_SOURCE_DIR}/frnn/csrc/grid
     ${CMAKE_SOURCE_DIR}/frnn/csrc/no_grid_frnn
-    ${CMAKE_SOURCE_DIR}/frnn/csrc/projection
 )
 
 target_compile_options(frnn_cuda PRIVATE

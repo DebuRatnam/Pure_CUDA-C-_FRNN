@@ -216,9 +216,6 @@ frnn/csrc/
   no_grid_frnn/
     no_grid_frnn.cu      # float4-vectorized tiled brute-force kernel
     no_grid_frnn.h
-  projection/
-    project.cu           # legacy PCA implementation (not used by engine dispatch)
-    verify.cu            # legacy candidate verifier (not used by engine dispatch)
 Tests/
   scripts/
     benchmark_master.py          # FRNN vs all available baselines
