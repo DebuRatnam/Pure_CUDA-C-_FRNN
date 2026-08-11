@@ -25,6 +25,7 @@ dist/
 
 # --- Data & Logs ---
 # Ignore large point cloud files or slurm output logs
+*.log
 *.pts
 *.ply
 *.pcd
