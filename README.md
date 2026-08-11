@@ -6,12 +6,18 @@ clouds, built to beat **FAISS**, **FlashLib (FlashML)**, and the original
 
 The engine auto-dispatches between three GPU paths:
 
-- **Uniform grid** (spatial hash) — used when `3^D < total_cells`. Sub-quadratic; dominates at low/mid `D`.
-- **PCA projection + grid** — used when the full-D grid is infeasible and `D > 3`. Projects to 3D via PCA, runs the grid at an inflated radius, then verifies candidates in full-D. Best on intrinsically low-dimensional data (e.g. D=16 points that actually live near a 3D manifold).
-- **Tiled brute-force** — fallback when both grid and projection are infeasible. `float4`-vectorized distance kernel.
+- **Full-D uniform grid** (spatial hash) — used when the complete `D`-dimensional grid and its `3^D` neighbor-cell shell are feasible. Sub-quadratic; dominates at low/mid `D`.
+- **First-coordinate grid with full-D ranking** — used for larger high-dimensional searches when the full-D grid is infeasible. The grid is built and scanned on `grid_dim = (D > 4) ? 4 : min(D, 3)` coordinates, but every encountered point is compared using its exact full-D squared distance and inserted directly into the K-nearest heap.
+- **Tiled brute-force** — used for small workloads and as the fallback when a useful grid cannot be built. Uses a `float4`-vectorized distance kernel.
+
+The high-D grid is an exact acceleration structure, not an approximate projection. Because
+distance in the first `grid_dim` coordinates is a lower bound on full-D distance, its
+radius-sized cell scan cannot omit a true in-radius neighbor. There is no PCA and no
+"find O candidates, then verify" stage: all grid candidates are ranked in full D inline.
 
 All point data is stored **Structure-of-Arrays** (`p[d*P + i]`) for coalesced warp access.
-Engine hard limits: `K ≤ 128`, `D ≤ 128`, `ceil(1/R)^D ≤ 1,000,000`.
+Engine hard limits: `K ≤ 128`, `D ≤ 128`. Grid paths use at most 1,000,000 cells;
+the engine falls back to tiled brute force when the applicable grid is degenerate.
 
 ---
 
@@ -138,11 +144,11 @@ Control the point cloud generator with the `DIST` environment variable:
 
 | `DIST` | Description | Radius |
 |---|---|---|
-| `lowrank` (default) | `INTRINSIC`-dim structure linearly embedded in D + noise; realistic non-uniform data and projection's win regime | calibrated bisection |
+| `lowrank` (default) | `INTRINSIC`-dim structure linearly embedded in D + noise; realistic non-uniform high-D data | calibrated bisection |
 | `uniform` | iid uniform in `[0,1]^D` | analytic `radius_for(D,N)` |
 
 ```bash
-# Low-rank data (default; exercises projection path at D=16)
+# Low-rank data (default; exercises the first-coordinate/full-D grid path at D=16)
 DIST=lowrank  PYTHONPATH=. python3 Tests/benchmark_master.py 2>&1 | tee benchmark_run_lowrank.log
 
 # Uniform data
@@ -162,27 +168,21 @@ All baselines are timed on GPU-resident PyTorch tensors (no H2D copies in the ti
 
 ## 6. Validate correctness
 
-Checks FRNN returns the *right* neighbors, against xju2 and a float64 brute-force truth
-(exits 0 = all pass, for CI):
+Checks that FRNN returns the right neighbors against an exact float64 brute-force truth
+(exits 0 = all pass, for CI). The default sweep covers the D=3 full-grid path and the
+D=12/D=16 first-coordinate grids:
 
 ```bash
-# Standard uniform validation
+# Default validation (LOWRANK=4)
 PYTHONPATH=. python3 Tests/validate_correctness.py
 
-# Validate the projection path (D=16 low-rank data, INTRINSIC=3)
+# Change the intrinsic dimension of generated high-D data
 LOWRANK=3 PYTHONPATH=. python3 Tests/validate_correctness.py
-
-# With projection debug output
-LOWRANK=3 FRNN_DEBUG_PROJ=1 PYTHONPATH=. python3 Tests/validate_correctness.py
 ```
 
 Confirms FRNN returns the exact **K-nearest** points within the radius (matches the
-brute-force oracle, and matches xju2 wherever the answer is unambiguous). On dense queries
-(>K points in radius) FRNN returns the nearest K while xju2 returns any K — a semantic
-difference the check accounts for, not a bug.
-
-Set `FRNN_DEBUG_PROJ=1` at runtime (no rebuild needed) to print whether the projection
-path engaged or fell back to brute-force for each search call.
+brute-force oracle) and reports any returned out-of-radius neighbors. At high D this
+validates the inline full-D rankings produced during the first-coordinate grid scan.
 
 ---
 
@@ -206,22 +206,22 @@ cp benchmark_results.json benchmark_results_lowrank.json
 ```
 python_interface/
   frnn_engine.h          # FRNNEngine class declaration
-  frnn_engine.cu         # FRNNEngine implementation (grid/BF auto-dispatch)
+  frnn_engine.cu         # full-grid/first-coordinate-grid/BF auto-dispatch
   nanobind_module.cu     # frnn_cuda nanobind extension (NB_MODULE)
 frnn/csrc/
   grid/
     grid.h               # GridParams struct
     insert_points.cu     # uniform-grid insertion kernel (SoA)
-    find_nbrs.cu         # neighbor search kernel (SoA, D=3 AoS fast path)
+    find_nbrs.cu         # full-D neighbor ranking (SoA, D=3 AoS fast path)
   no_grid_frnn/
     no_grid_frnn.cu      # float4-vectorized tiled brute-force kernel
     no_grid_frnn.h
   projection/
-    project.cu           # PCA project D→3, isotropic rescale to [0,1]^3
-    verify.cu            # full-D distance verify on candidate set
+    project.cu           # legacy PCA implementation (not used by engine dispatch)
+    verify.cu            # legacy candidate verifier (not used by engine dispatch)
 Tests/
   benchmark_master.py     # FRNN vs FAISS vs FlashLib vs xju2 latency sweep
-  validate_correctness.py # FRNN vs xju2 vs float64 brute-force oracle
+  validate_correctness.py # FRNN vs exact float64 brute-force oracle
   _run_frnn_isolated.py   # subprocess worker used by benchmark isolation mode
 xju2_frnn/             # original lxxue/FRNN baseline (FRNN/ + prefix_sum/)
 flash_lib_knn/         # FlashLib (FlashML) baseline — git clone + pip install -e (step 4b)

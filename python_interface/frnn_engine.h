@@ -43,20 +43,17 @@ class FRNNEngine {
         float *d_dists_sorted;
         int   *d_idxs_sorted;
 
-        // --- Projection path (project.cu + verify.cu) scratch ---
-        // Engaged when the full-D grid is infeasible and dim > PROJ_K: PCA-project
-        // D->PROJ_K, grid-search the projection at R*s, then verify in full D.
-        static constexpr int PROJ_K = 3;  // 3^3=27K cells at res=41; 4 was infeasible (41^4=2.8M)
-        float *d_pts_aos;    // (N, D) AoS staging: SoA input transposed for project/verify
-        float *d_sumx, *d_sumxx, *d_mean, *d_basis, *d_minmax;  // PCA scratch (project.cu)
-        float *d_proj01;     // (N, PROJ_K) AoS normalized projection (project.cu output)
-        float *d_proj_soa;   // (N, PROJ_K) SoA projection for the grid pipeline
+        // --- First-d grid path scratch ---
+        // Engaged when the full-D grid is infeasible: build a grid on the first
+        // grid_dim = (D>4)?4:min(D,3) coordinates; rank candidates inline in full D.
+        static constexpr int GRID_DIM_MAX = 4;
+        float *d_pts_aos;    // (N, D) AoS staging: SoA input transposed for verify
+        float *d_proj_soa;   // (N, GRID_DIM_MAX) SoA first-d coords for the grid pipeline
         int   *d_cand;       // (N, O) AoS candidate original ids for verify
 
-        // Orchestrates project -> grid-on-projection -> full-D verify. Results land in
-        // d_dists/d_idxs (SoA, original ids). Returns false if projection is infeasible
-        // (D too large for stats, or projected grid degenerate) so the caller brute-forces.
-        bool run_projection_search(const float* d_in_soa, int N, int D, int K, float radius);
+        // Grid on first grid_dim coordinates while computing full-D distances. Returns false
+        // if the first-d grid is degenerate (fallback to brute-force in caller).
+        bool run_firstd_search(const float* d_in_soa, int N, int D, int K, float radius);
 };
 
 #endif

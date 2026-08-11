@@ -187,6 +187,96 @@ __global__ void __launch_bounds__(256, 4) FindNbrsNDKernel(
     }
 }
 
+/* Grid on GRID_DIM coordinates, but rank every point encountered by its exact
+   FULL-D distance.  This is the high-dimensional libFRNN-style path: the grid
+   is only an acceleration structure and never an approximate pre-selector.
+
+   Queries are consumed in the same cell-sorted order as the database.  Thus
+   neighboring warp lanes usually traverse the same cells and candidate spans,
+   improving cache reuse and reducing control-flow divergence.  Results are
+   written directly to the original query id, so no output scatter kernel is
+   required. */
+template<int CAP, int GRID_DIM>
+__global__ void FindNbrsGridDimKernel(
+    const float* __restrict__ points1,
+    const float* __restrict__ points2,
+    const int* __restrict__ pc2_grid_off,
+    const int* __restrict__ sorted_points2_idxs,
+    int P1, int K, int full_dim, float r2,
+    float* __restrict__ dists,
+    int* __restrict__ idxs,
+    GridParams params)
+{
+    int sorted_p1 = blockIdx.x * blockDim.x + threadIdx.x;
+    if (sorted_p1 >= P1) return;
+    int p1 = __ldg(&sorted_points2_idxs[sorted_p1]);
+
+    float local_dists[CAP];
+    int local_idxs[CAP];
+    #pragma unroll
+    for (int k = 0; k < CAP; ++k) {
+        local_dists[k] = r2;
+        local_idxs[k] = -1;
+    }
+    float max_dist_sq = r2;
+
+    float q[MAX_DIM_SUPPORTED];
+    for (int d = 0; d < full_dim; ++d)
+        q[d] = __ldg(&points1[(long long)d * P1 + p1]);
+
+    int cell_coords[GRID_DIM];
+    const float inv_cs = 1.0f / params.cell_size;
+    #pragma unroll
+    for (int d = 0; d < GRID_DIM; ++d) {
+        int grid_pos = (int)((q[d] - params.min_val) * inv_cs);
+        cell_coords[d] = max(0, min(grid_pos, params.res - 1));
+    }
+
+    constexpr int NUM_OFFSETS = 1;
+    const int W = 2 * params.cell_radius + 1;
+    long long num_neighbor_cells = NUM_OFFSETS;
+    #pragma unroll
+    for (int d = 0; d < GRID_DIM; ++d) num_neighbor_cells *= W;
+
+    for (long long nc = 0; nc < num_neighbor_cells; ++nc) {
+        long long tmp = nc, hash = 0, stride = 1;
+        float cell_min_dist_sq = 0.0f;
+        bool valid = true;
+        #pragma unroll
+        for (int d = 0; d < GRID_DIM; ++d) {
+            int coord = cell_coords[d] + (int)(tmp % W) - params.cell_radius;
+            tmp /= W;
+            if (coord < 0 || coord >= params.res) { valid = false; break; }
+            float lo = params.min_val + coord * params.cell_size;
+            float hi = lo + params.cell_size;
+            float delta = q[d] < lo ? lo - q[d] : (q[d] > hi ? q[d] - hi : 0.0f);
+            cell_min_dist_sq = __fmaf_rn(delta, delta, cell_min_dist_sq);
+            hash += (long long)coord * stride;
+            stride *= params.res;
+        }
+        if (!valid || cell_min_dist_sq >= max_dist_sq) continue;
+
+        int start = hash == 0 ? 0 : __ldg(&pc2_grid_off[hash - 1]);
+        int end = __ldg(&pc2_grid_off[hash]);
+        for (int p2_idx = start; p2_idx < end; ++p2_idx) {
+            float d2 = 0.0f;
+            for (int d = 0; d < full_dim; ++d) {
+                float diff = q[d] - __ldg(&points2[(long long)d * P1 + p2_idx]);
+                d2 = __fmaf_rn(diff, diff, d2);
+            }
+            if (d2 >= max_dist_sq) continue;
+            int original_idx2 = __ldg(&sorted_points2_idxs[p2_idx]);
+            max_dist_sq = insert_neighbor_t<CAP>(local_dists, local_idxs, K, d2, original_idx2);
+        }
+    }
+
+    #pragma unroll
+    for (int k = 0; k < CAP; ++k) if (k < K) {
+        dists[k * P1 + p1] = local_dists[k];
+        idxs[k * P1 + p1] = local_idxs[k];
+    }
+}
+
 /*
  * FindNbrsAoS3Kernel<CAP> — D=3 grid search with sorted queries and AoS candidates.
  * Identical search logic to FindNbrsNDKernel but with two structural changes:
@@ -397,5 +487,31 @@ extern "C" void run_find_nbrs(
     }
     #undef DISPATCH_K
     #undef LAUNCH_FIND_NBRS
+    cudaDeviceSynchronize();
+}
+
+extern "C" void run_find_nbrs_griddim(
+    float* d_points1, float* d_points2,
+    int* d_pc2_grid_off, int* d_sorted_idxs,
+    int P1, int K, int full_dim, int grid_dim, float radius,
+    float* d_dists, int* d_idxs, GridParams params)
+{
+    int threads = 128;
+    int blocks = (P1 + threads - 1) / threads;
+    float r2 = radius * radius;
+    #define LAUNCH_GRID_DIM(CAP, GDIM) FindNbrsGridDimKernel<CAP, GDIM><<<blocks, threads>>>( \
+        d_points1, d_points2, d_pc2_grid_off, d_sorted_idxs, P1, K, full_dim, r2, \
+        d_dists, d_idxs, params)
+    #define DISPATCH_GRID_K(GDIM) do { \
+        if      (K <= 16) LAUNCH_GRID_DIM(16, GDIM); \
+        else if (K <= 32) LAUNCH_GRID_DIM(32, GDIM); \
+        else if (K <= 64) LAUNCH_GRID_DIM(64, GDIM); \
+        else              LAUNCH_GRID_DIM(128, GDIM); \
+    } while (0)
+    if (grid_dim == 4) DISPATCH_GRID_K(4);
+    else if (grid_dim == 3) DISPATCH_GRID_K(3);
+    else DISPATCH_GRID_K(2);
+    #undef DISPATCH_GRID_K
+    #undef LAUNCH_GRID_DIM
     cudaDeviceSynchronize();
 }
