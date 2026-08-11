@@ -12,6 +12,16 @@ endif()
 find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
 find_package(nanobind CONFIG REQUIRED)
 
+# High-dimensional grid launch policy.  These are cache variables so occupancy
+# experiments can rebuild a single policy without editing CUDA source.
+set(FRNN_GRID_D12_THREADS 128 CACHE STRING "Threads/block for the D=12 grid kernel")
+set(FRNN_GRID_D12_MIN_BLOCKS 8 CACHE STRING "launch_bounds minimum blocks/SM for D=12")
+set(FRNN_GRID_D16_THREADS 128 CACHE STRING "Threads/block for the D=16 grid kernel")
+set(FRNN_GRID_D16_MIN_BLOCKS 8 CACHE STRING "launch_bounds minimum blocks/SM for D=16")
+set(FRNN_GRID_GENERIC_THREADS 128 CACHE STRING "Threads/block for the generic high-D grid kernel")
+set(FRNN_GRID_GENERIC_MIN_BLOCKS 4 CACHE STRING "launch_bounds minimum blocks/SM for generic high-D")
+option(FRNN_PTXAS_VERBOSE "Print CUDA register, stack, and spill usage while compiling" OFF)
+
 set(FRNN_SOURCES
     python_interface/frnn_engine.cu
     frnn/csrc/grid/insert_points.cu
@@ -34,6 +44,16 @@ target_include_directories(frnn_cuda PRIVATE
 
 target_compile_options(frnn_cuda PRIVATE
     $<$<COMPILE_LANGUAGE:CUDA>:-O3 --expt-relaxed-constexpr>
+    $<$<AND:$<COMPILE_LANGUAGE:CUDA>,$<BOOL:${FRNN_PTXAS_VERBOSE}>>:-Xptxas=-v>
+)
+
+target_compile_definitions(frnn_cuda PRIVATE
+    FRNN_GRID_D12_THREADS=${FRNN_GRID_D12_THREADS}
+    FRNN_GRID_D12_MIN_BLOCKS=${FRNN_GRID_D12_MIN_BLOCKS}
+    FRNN_GRID_D16_THREADS=${FRNN_GRID_D16_THREADS}
+    FRNN_GRID_D16_MIN_BLOCKS=${FRNN_GRID_D16_MIN_BLOCKS}
+    FRNN_GRID_GENERIC_THREADS=${FRNN_GRID_GENERIC_THREADS}
+    FRNN_GRID_GENERIC_MIN_BLOCKS=${FRNN_GRID_GENERIC_MIN_BLOCKS}
 )
 
 install(TARGETS frnn_cuda LIBRARY DESTINATION .)

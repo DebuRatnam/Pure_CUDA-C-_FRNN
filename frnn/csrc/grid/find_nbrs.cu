@@ -1,7 +1,32 @@
 #include "grid.h"
 #include <cfloat>
+#include <cstdio>
+#include <cstdlib>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
+
+#ifndef FRNN_GRID_D12_THREADS
+#define FRNN_GRID_D12_THREADS 128
+#endif
+#ifndef FRNN_GRID_D12_MIN_BLOCKS
+#define FRNN_GRID_D12_MIN_BLOCKS 8
+#endif
+#ifndef FRNN_GRID_D16_THREADS
+#define FRNN_GRID_D16_THREADS 128
+#endif
+#ifndef FRNN_GRID_D16_MIN_BLOCKS
+#define FRNN_GRID_D16_MIN_BLOCKS 8
+#endif
+#ifndef FRNN_GRID_GENERIC_THREADS
+#define FRNN_GRID_GENERIC_THREADS 128
+#endif
+#ifndef FRNN_GRID_GENERIC_MIN_BLOCKS
+#define FRNN_GRID_GENERIC_MIN_BLOCKS 4
+#endif
+
+static_assert(FRNN_GRID_D12_THREADS == 64 || FRNN_GRID_D12_THREADS == 128 || FRNN_GRID_D12_THREADS == 256);
+static_assert(FRNN_GRID_D16_THREADS == 64 || FRNN_GRID_D16_THREADS == 128 || FRNN_GRID_D16_THREADS == 256);
+static_assert(FRNN_GRID_GENERIC_THREADS == 64 || FRNN_GRID_GENERIC_THREADS == 128 || FRNN_GRID_GENERIC_THREADS == 256);
 
 /*
  * =============================================================================
@@ -215,8 +240,8 @@ struct GridQueryCoords<0> {
    improving cache reuse and reducing control-flow divergence.  Results are
    written directly to the original query id, so no output scatter kernel is
    required. */
-template<int CAP, int GRID_DIM, int FULL_DIM>
-__global__ void FindNbrsGridDimKernel(
+template<int CAP, int GRID_DIM, int FULL_DIM, int THREADS, int MIN_BLOCKS>
+__global__ __launch_bounds__(THREADS, MIN_BLOCKS) void FindNbrsGridDimKernel(
     const float* __restrict__ points1,
     const float* __restrict__ points2,
     const int* __restrict__ pc2_grid_off,
@@ -226,8 +251,8 @@ __global__ void FindNbrsGridDimKernel(
     int* __restrict__ idxs,
     GridParams params)
 {
-    int sorted_p1 = blockIdx.x * blockDim.x + threadIdx.x;
-    if (sorted_p1 >= P1) return;
+  for (int sorted_p1 = blockIdx.x * blockDim.x + threadIdx.x;
+       sorted_p1 < P1; sorted_p1 += blockDim.x * gridDim.x) {
     int p1 = __ldg(&sorted_points2_idxs[sorted_p1]);
 
     float local_dists[CAP];
@@ -324,6 +349,36 @@ __global__ void FindNbrsGridDimKernel(
         dists[k * P1 + p1] = local_dists[k];
         idxs[k * P1 + p1] = local_idxs[k];
     }
+  }
+}
+
+template<int CAP, int GRID_DIM, int FULL_DIM, int THREADS, int MIN_BLOCKS>
+static void report_grid_kernel_occupancy()
+{
+    if (std::getenv("FRNN_REPORT_OCCUPANCY") == nullptr) return;
+    static bool reported = false;
+    if (reported) return;
+    reported = true;
+    cudaFuncAttributes attr{};
+    int active_blocks = 0;
+    int device = 0;
+    cudaDeviceProp prop{};
+    cudaGetDevice(&device);
+    cudaGetDeviceProperties(&prop, device);
+    cudaFuncGetAttributes(
+        &attr, FindNbrsGridDimKernel<CAP, GRID_DIM, FULL_DIM, THREADS, MIN_BLOCKS>);
+    cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+        &active_blocks,
+        FindNbrsGridDimKernel<CAP, GRID_DIM, FULL_DIM, THREADS, MIN_BLOCKS>,
+        THREADS, 0);
+    const float occupancy =
+        (float)(active_blocks * THREADS) / (float)prop.maxThreadsPerMultiProcessor;
+    std::fprintf(stderr,
+        "FRNN_OCCUPANCY kernel=FindNbrsGridDimKernel CAP=%d GDIM=%d FDIM=%d "
+        "threads=%d min_blocks=%d regs=%d local_bytes=%zu active_blocks_sm=%d "
+        "theoretical_occupancy=%.3f\n",
+        CAP, GRID_DIM, FULL_DIM, THREADS, MIN_BLOCKS, attr.numRegs,
+        attr.localSizeBytes, active_blocks, occupancy);
 }
 
 /*
@@ -545,26 +600,32 @@ extern "C" void run_find_nbrs_griddim(
     int P1, int K, int full_dim, int grid_dim, float radius,
     float* d_dists, int* d_idxs, GridParams params)
 {
-    int threads = 128;
-    int blocks = (P1 + threads - 1) / threads;
     float r2 = radius * radius;
-    #define LAUNCH_GRID_DIM(CAP, GDIM, FDIM) FindNbrsGridDimKernel<CAP, GDIM, FDIM><<<blocks, threads>>>( \
-        d_points1, d_points2, d_pc2_grid_off, d_sorted_idxs, P1, K, full_dim, r2, \
-        d_dists, d_idxs, params)
-    #define DISPATCH_GRID_K(GDIM, FDIM) do { \
-        if      (K <= 16) LAUNCH_GRID_DIM(16, GDIM, FDIM); \
-        else if (K <= 32) LAUNCH_GRID_DIM(32, GDIM, FDIM); \
-        else if (K <= 64) LAUNCH_GRID_DIM(64, GDIM, FDIM); \
-        else              LAUNCH_GRID_DIM(128, GDIM, FDIM); \
+    #define LAUNCH_GRID_DIM(CAP, GDIM, FDIM, THREADS, MIN_BLOCKS) do { \
+        int blocks = (P1 + (THREADS) - 1) / (THREADS); \
+        if (blocks > 65535) blocks = 65535; \
+        report_grid_kernel_occupancy<CAP, GDIM, FDIM, THREADS, MIN_BLOCKS>(); \
+        FindNbrsGridDimKernel<CAP, GDIM, FDIM, THREADS, MIN_BLOCKS> \
+            <<<blocks, THREADS>>>(d_points1, d_points2, d_pc2_grid_off, \
+            d_sorted_idxs, P1, K, full_dim, r2, d_dists, d_idxs, params); \
     } while (0)
-    #define DISPATCH_GRID_DIM(FDIM) do { \
-        if (grid_dim == 4) DISPATCH_GRID_K(4, FDIM); \
-        else if (grid_dim == 3) DISPATCH_GRID_K(3, FDIM); \
-        else DISPATCH_GRID_K(2, FDIM); \
+    #define DISPATCH_GRID_K(GDIM, FDIM, THREADS, MIN_BLOCKS) do { \
+        if      (K <= 16) LAUNCH_GRID_DIM(16, GDIM, FDIM, THREADS, MIN_BLOCKS); \
+        else if (K <= 32) LAUNCH_GRID_DIM(32, GDIM, FDIM, THREADS, MIN_BLOCKS); \
+        else if (K <= 64) LAUNCH_GRID_DIM(64, GDIM, FDIM, THREADS, MIN_BLOCKS); \
+        else              LAUNCH_GRID_DIM(128, GDIM, FDIM, THREADS, MIN_BLOCKS); \
     } while (0)
-    if (full_dim == 12) DISPATCH_GRID_DIM(12);
-    else if (full_dim == 16) DISPATCH_GRID_DIM(16);
-    else DISPATCH_GRID_DIM(0);
+    #define DISPATCH_GRID_DIM(FDIM, THREADS, MIN_BLOCKS) do { \
+        if (grid_dim == 4) DISPATCH_GRID_K(4, FDIM, THREADS, MIN_BLOCKS); \
+        else if (grid_dim == 3) DISPATCH_GRID_K(3, FDIM, THREADS, MIN_BLOCKS); \
+        else DISPATCH_GRID_K(2, FDIM, THREADS, MIN_BLOCKS); \
+    } while (0)
+    if (full_dim == 12)
+        DISPATCH_GRID_DIM(12, FRNN_GRID_D12_THREADS, FRNN_GRID_D12_MIN_BLOCKS);
+    else if (full_dim == 16)
+        DISPATCH_GRID_DIM(16, FRNN_GRID_D16_THREADS, FRNN_GRID_D16_MIN_BLOCKS);
+    else
+        DISPATCH_GRID_DIM(0, FRNN_GRID_GENERIC_THREADS, FRNN_GRID_GENERIC_MIN_BLOCKS);
     #undef DISPATCH_GRID_DIM
     #undef DISPATCH_GRID_K
     #undef LAUNCH_GRID_DIM
