@@ -2,7 +2,8 @@
 
 A pure-CUDA **fixed-radius nearest-neighbor (FRNN)** engine for *N*-dimensional point
 clouds, built to beat **FAISS**, **FlashLib (FlashML)**, and the original
-**xju2 / lxxue FRNN** in wall-clock latency across `D ∈ {2,3,4,8,16}` × `N ∈ {1K,10K,100K}`.
+**xju2 / lxxue FRNN** in wall-clock latency. The focused libFRNN benchmark covers
+`D ∈ {3,12,16}` × `N ∈ {200K,500K,750K,1M,1.25M,1.5M}`.
 
 The engine auto-dispatches between three GPU paths:
 
@@ -53,7 +54,7 @@ benchmarks. (Change `-A m3443` to your own allocation if different.)
 
 ```bash
 module load pytorch/2.8.0
-cd /global/u1/d/dratnam/FRNN-master
+cd /global/homes/d/dratnam/FRNN-master
 export LD_LIBRARY_PATH=$(python3 -c "import torch, os; print(os.path.join(os.path.dirname(torch.__file__), 'lib'))"):$LD_LIBRARY_PATH
 ```
 
@@ -68,7 +69,7 @@ pip install --user pynvml faiss-gpu
 `frnn_cuda` is a **nanobind** extension (no torch, no cupy). Build it from the repo root:
 
 ```bash
-cd /global/u1/d/dratnam/FRNN-master
+cd /global/homes/d/dratnam/FRNN-master
 pip install --user nanobind scikit-build-core
 pip install --user --no-build-isolation -e .
 ```

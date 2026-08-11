@@ -38,10 +38,10 @@ D_SWEEP = [int(d) for d in os.environ.get("D_SWEEP", "3,12,16").split(",") if d.
 EXTRA_CELLS = [tuple(int(x) for x in c.split(":"))
                for c in os.environ.get("EXTRA_CELLS", "").split(",") if c.strip()]
 K, SEED, WARMUP, TRIALS = 16, 1234, 20, 10
-PROJ_K = 3
+DEFAULT_INTRINSIC_DIM = 3
 
 DIST          = os.environ.get("DIST", "lowrank").lower()
-INTRINSIC     = int(os.environ.get("INTRINSIC", str(PROJ_K)))
+INTRINSIC     = int(os.environ.get("INTRINSIC", str(DEFAULT_INTRINSIC_DIM)))
 LOWRANK_NOISE = float(os.environ.get("LOWRANK_NOISE", "0.02"))
 
 JSON_DIR = os.path.join(_TEST_ROOT, "json_results")
