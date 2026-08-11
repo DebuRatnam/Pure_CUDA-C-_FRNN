@@ -32,3 +32,5 @@ dist/
 slurm-*.out
 tests/output/
 flash_lib_knn/
+graphify-out/
+new_xju2_frnn/libFRNN/
