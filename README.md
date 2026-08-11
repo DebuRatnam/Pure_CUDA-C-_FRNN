@@ -166,6 +166,52 @@ copies occur inside the timed loop — same footing as FAISS and xju2.
 
 All baselines are timed on GPU-resident PyTorch tensors (no H2D copies in the timed loop).
 
+### FRNN vs libFRNN reusable sweep
+
+For the focused head-to-head comparison, run:
+
+```bash
+PYTHONPATH=. python3 -u Tests/scripts/benchmark_vs_libfrnn.py
+```
+
+The default matrix is:
+
+- `D ∈ {3, 12, 16}`
+- `N ∈ {200K, 500K, 750K, 1M, 1.25M, 1.5M}`
+- low-rank data with `K=16`, intrinsic dimension 3, and noise 0.02
+
+By default, `LIBFRNN_MODE=stored`: the script benchmarks only the current FRNN and
+compares it with the 18 fixed A100 libFRNN measurements embedded in the script. This
+avoids repeatedly running libFRNN when tuning our implementation.
+
+```bash
+# Benchmark FRNN and compare against the stored libFRNN measurements (default)
+LIBFRNN_MODE=stored PYTHONPATH=. python3 -u Tests/scripts/benchmark_vs_libfrnn.py
+
+# Benchmark FRNN without any libFRNN comparison
+LIBFRNN_MODE=none PYTHONPATH=. python3 -u Tests/scripts/benchmark_vs_libfrnn.py
+
+# Deliberately remeasure both FRNN and libFRNN
+LIBFRNN_MODE=live PYTHONPATH=. python3 -u Tests/scripts/benchmark_vs_libfrnn.py
+```
+
+Stored mode is valid only for the default low-rank distribution settings. Use `live`
+or `none` when changing `DIST`, `INTRINSIC`, or `LOWRANK_NOISE`. Subsets can be selected
+with comma-separated `D_SWEEP`, `N_SWEEP`, or `EXTRA_CELLS=D:N,D:N` values.
+
+Results and the generated comparison plot are written to:
+
+```text
+Tests/json_results/vs_libfrnn_results.json
+Tests/png_results/vs_libfrnn_comparison.png
+```
+
+Regenerate the plot without benchmarking:
+
+```bash
+PYTHONPATH=. python3 Tests/scripts/benchmark_vs_libfrnn.py --plot-only
+```
+
 ## 6. Validate correctness
 
 Checks that FRNN returns the right neighbors against an exact float64 brute-force truth
@@ -191,8 +237,10 @@ validates the inline full-D rankings produced during the first-coordinate grid s
 | File | Contents |
 |---|---|
 | `Tests/json_results/benchmark_results.json` | per-cell `{R, dist, radius_mode, latency_ms (FRNN), peak_mb, faiss_ms, flash_ms, xfrnn_ms}` |
-| `benchmark_run.log` | full console log; `!! REGRESSION` lines mark FRNN losses |
 | `Tests/png_results/benchmark_comparison.png` | latency-vs-N plot per D dimension (log scale) |
+| `Tests/json_results/vs_libfrnn_results.json` | reusable FRNN timings with stored or live libFRNN comparisons |
+| `Tests/png_results/vs_libfrnn_comparison.png` | focused FRNN-vs-libFRNN latency plot |
+| `Tests/png_results/requested_occupancy_sweep.png` | measured D=3/D=12/D=16 occupancy-tuning sweep |
 
 Save results under a named file after each distribution run so they are not overwritten:
 ```bash
