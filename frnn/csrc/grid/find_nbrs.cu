@@ -1,4 +1,5 @@
 #include "grid.h"
+#include <cfloat>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 
@@ -187,6 +188,24 @@ __global__ void __launch_bounds__(256, 4) FindNbrsNDKernel(
     }
 }
 
+template<int FULL_DIM>
+struct GridQueryCoords;
+
+template<>
+struct GridQueryCoords<12> {
+    float q[12];
+};
+
+template<>
+struct GridQueryCoords<16> {
+    float q[16];
+};
+
+template<>
+struct GridQueryCoords<0> {
+    float q[MAX_DIM_SUPPORTED];
+};
+
 /* Grid on GRID_DIM coordinates, but rank every point encountered by its exact
    FULL-D distance.  This is the high-dimensional libFRNN-style path: the grid
    is only an acceleration structure and never an approximate pre-selector.
@@ -196,7 +215,7 @@ __global__ void __launch_bounds__(256, 4) FindNbrsNDKernel(
    improving cache reuse and reducing control-flow divergence.  Results are
    written directly to the original query id, so no output scatter kernel is
    required. */
-template<int CAP, int GRID_DIM>
+template<int CAP, int GRID_DIM, int FULL_DIM>
 __global__ void FindNbrsGridDimKernel(
     const float* __restrict__ points1,
     const float* __restrict__ points2,
@@ -220,8 +239,11 @@ __global__ void FindNbrsGridDimKernel(
     }
     float max_dist_sq = r2;
 
-    float q[MAX_DIM_SUPPORTED];
-    for (int d = 0; d < full_dim; ++d)
+    const int ndim = FULL_DIM > 0 ? FULL_DIM : full_dim;
+    GridQueryCoords<FULL_DIM> query;
+    float (&q)[FULL_DIM > 0 ? FULL_DIM : MAX_DIM_SUPPORTED] = query.q;
+    #pragma unroll
+    for (int d = 0; d < ndim; ++d)
         q[d] = __ldg(&points1[(long long)d * P1 + p1]);
 
     int cell_coords[GRID_DIM];
@@ -259,8 +281,35 @@ __global__ void FindNbrsGridDimKernel(
         int start = hash == 0 ? 0 : __ldg(&pc2_grid_off[hash - 1]);
         int end = __ldg(&pc2_grid_off[hash]);
         for (int p2_idx = start; p2_idx < end; ++p2_idx) {
+            if constexpr (FULL_DIM == 12 || FULL_DIM == 16) {
+                /* The grid has already screened dimensions 0..3.  Test the
+                   remaining axes first and quit on the first decisive partial
+                   sum.  Reordered roundings can make this partial sum slightly
+                   larger than the canonical full-D sum, so expand the screening
+                   threshold by a conservative two ulps per dimension. Survivors
+                   are always recomputed below in canonical order; screening
+                   therefore cannot change boundary or top-K insertion behavior. */
+                float screen_limit = __fmaf_rn(max_dist_sq,
+                                               (2.0f * FULL_DIM) * FLT_EPSILON,
+                                               max_dist_sq);
+                screen_limit = nextafterf(screen_limit, FLT_MAX);
+                float screen_d2 = 0.0f;
+                bool rejected = false;
+                #pragma unroll
+                for (int d = 4; d < FULL_DIM; ++d) {
+                    float diff = q[d] - __ldg(&points2[(long long)d * P1 + p2_idx]);
+                    screen_d2 = __fmaf_rn(diff, diff, screen_d2);
+                    if (screen_d2 >= screen_limit) {
+                        rejected = true;
+                        break;
+                    }
+                }
+                if (rejected) continue;
+            }
+
             float d2 = 0.0f;
-            for (int d = 0; d < full_dim; ++d) {
+            #pragma unroll
+            for (int d = 0; d < ndim; ++d) {
                 float diff = q[d] - __ldg(&points2[(long long)d * P1 + p2_idx]);
                 d2 = __fmaf_rn(diff, diff, d2);
             }
@@ -499,18 +548,24 @@ extern "C" void run_find_nbrs_griddim(
     int threads = 128;
     int blocks = (P1 + threads - 1) / threads;
     float r2 = radius * radius;
-    #define LAUNCH_GRID_DIM(CAP, GDIM) FindNbrsGridDimKernel<CAP, GDIM><<<blocks, threads>>>( \
+    #define LAUNCH_GRID_DIM(CAP, GDIM, FDIM) FindNbrsGridDimKernel<CAP, GDIM, FDIM><<<blocks, threads>>>( \
         d_points1, d_points2, d_pc2_grid_off, d_sorted_idxs, P1, K, full_dim, r2, \
         d_dists, d_idxs, params)
-    #define DISPATCH_GRID_K(GDIM) do { \
-        if      (K <= 16) LAUNCH_GRID_DIM(16, GDIM); \
-        else if (K <= 32) LAUNCH_GRID_DIM(32, GDIM); \
-        else if (K <= 64) LAUNCH_GRID_DIM(64, GDIM); \
-        else              LAUNCH_GRID_DIM(128, GDIM); \
+    #define DISPATCH_GRID_K(GDIM, FDIM) do { \
+        if      (K <= 16) LAUNCH_GRID_DIM(16, GDIM, FDIM); \
+        else if (K <= 32) LAUNCH_GRID_DIM(32, GDIM, FDIM); \
+        else if (K <= 64) LAUNCH_GRID_DIM(64, GDIM, FDIM); \
+        else              LAUNCH_GRID_DIM(128, GDIM, FDIM); \
     } while (0)
-    if (grid_dim == 4) DISPATCH_GRID_K(4);
-    else if (grid_dim == 3) DISPATCH_GRID_K(3);
-    else DISPATCH_GRID_K(2);
+    #define DISPATCH_GRID_DIM(FDIM) do { \
+        if (grid_dim == 4) DISPATCH_GRID_K(4, FDIM); \
+        else if (grid_dim == 3) DISPATCH_GRID_K(3, FDIM); \
+        else DISPATCH_GRID_K(2, FDIM); \
+    } while (0)
+    if (full_dim == 12) DISPATCH_GRID_DIM(12);
+    else if (full_dim == 16) DISPATCH_GRID_DIM(16);
+    else DISPATCH_GRID_DIM(0);
+    #undef DISPATCH_GRID_DIM
     #undef DISPATCH_GRID_K
     #undef LAUNCH_GRID_DIM
     cudaDeviceSynchronize();
