@@ -130,7 +130,7 @@ If FlashLib is not installed the `flash_ms` column is reported as `None` (skip-l
 Run **from the repo root** with `PYTHONPATH=.`:
 
 ```bash
-PYTHONPATH=. python3 Tests/benchmark_master.py 2>&1 | tee benchmark_run.log
+PYTHONPATH=. python3 Tests/scripts/benchmark_master.py 2>&1 | tee benchmark_run.log
 grep REGRESSION benchmark_run.log          # any cell where FRNN lost a baseline
 ```
 
@@ -149,10 +149,10 @@ Control the point cloud generator with the `DIST` environment variable:
 
 ```bash
 # Low-rank data (default; exercises the first-coordinate/full-D grid path at D=16)
-DIST=lowrank  PYTHONPATH=. python3 Tests/benchmark_master.py 2>&1 | tee benchmark_run_lowrank.log
+DIST=lowrank  PYTHONPATH=. python3 Tests/scripts/benchmark_master.py 2>&1 | tee benchmark_run_lowrank.log
 
 # Uniform data
-DIST=uniform  PYTHONPATH=. python3 Tests/benchmark_master.py 2>&1 | tee benchmark_run_uniform.log
+DIST=uniform  PYTHONPATH=. python3 Tests/scripts/benchmark_master.py 2>&1 | tee benchmark_run_uniform.log
 ```
 
 Tunable env vars: `N_SWEEP` (comma-separated, default `100000,...,500000`), `D_SWEEP`
@@ -174,10 +174,10 @@ D=12/D=16 first-coordinate grids:
 
 ```bash
 # Default validation (LOWRANK=4)
-PYTHONPATH=. python3 Tests/validate_correctness.py
+PYTHONPATH=. python3 Tests/scripts/validate_correctness.py
 
 # Change the intrinsic dimension of generated high-D data
-LOWRANK=3 PYTHONPATH=. python3 Tests/validate_correctness.py
+LOWRANK=3 PYTHONPATH=. python3 Tests/scripts/validate_correctness.py
 ```
 
 Confirms FRNN returns the exact **K-nearest** points within the radius (matches the
@@ -190,13 +190,13 @@ validates the inline full-D rankings produced during the first-coordinate grid s
 
 | File | Contents |
 |---|---|
-| `benchmark_results.json` | per-cell `{R, dist, radius_mode, latency_ms (FRNN), peak_mb, faiss_ms, flash_ms, xfrnn_ms}` |
+| `Tests/json_results/benchmark_results.json` | per-cell `{R, dist, radius_mode, latency_ms (FRNN), peak_mb, faiss_ms, flash_ms, xfrnn_ms}` |
 | `benchmark_run.log` | full console log; `!! REGRESSION` lines mark FRNN losses |
-| `benchmark_comparison.png` | latency-vs-N plot per D dimension (log scale) |
+| `Tests/png_results/benchmark_comparison.png` | latency-vs-N plot per D dimension (log scale) |
 
 Save results under a named file after each distribution run so they are not overwritten:
 ```bash
-cp benchmark_results.json benchmark_results_lowrank.json
+cp Tests/json_results/benchmark_results.json Tests/json_results/benchmark_results_lowrank.json
 ```
 
 ---
@@ -220,9 +220,13 @@ frnn/csrc/
     project.cu           # legacy PCA implementation (not used by engine dispatch)
     verify.cu            # legacy candidate verifier (not used by engine dispatch)
 Tests/
-  benchmark_master.py     # FRNN vs FAISS vs FlashLib vs xju2 latency sweep
-  validate_correctness.py # FRNN vs exact float64 brute-force oracle
-  _run_frnn_isolated.py   # subprocess worker used by benchmark isolation mode
+  scripts/
+    benchmark_master.py          # FRNN vs all available baselines
+    benchmark_vs_libfrnn.py      # reusable FRNN vs stored/live libFRNN sweep
+    validate_correctness.py      # FRNN vs exact brute-force oracle
+    _run_frnn_isolated.py        # subprocess benchmark worker
+  json_results/                  # structured benchmark outputs
+  png_results/                   # generated benchmark plots
 xju2_frnn/             # original lxxue/FRNN baseline (FRNN/ + prefix_sum/)
 flash_lib_knn/         # FlashLib (FlashML) baseline — git clone + pip install -e (step 4b)
 CMakeLists.txt         # scikit-build-core + nanobind build (replaces setup_frnn_torch.py)
@@ -237,4 +241,4 @@ Rebuild the xju2 extensions (step 4) when you switch the `pytorch` module (diffe
 
 Rebuild `frnn_cuda` (step 3) when you edit any `.cu` or `.h` under `python_interface/` or `frnn/csrc/`.
 
-Pure-Python files (`Tests/benchmark_master.py`, etc.) need no rebuild after edits.
+Pure-Python files (`Tests/scripts/benchmark_master.py`, etc.) need no rebuild after edits.

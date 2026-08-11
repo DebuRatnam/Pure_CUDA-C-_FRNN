@@ -9,10 +9,12 @@ import frnn_cuda
 import pynvml
 from math import pi, gamma, ceil
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_TEST_ROOT = os.path.dirname(_SCRIPT_DIR)
+_ROOT = os.path.dirname(_TEST_ROOT)
+sys.path.insert(0, _ROOT)
 
 # xju2/FRNN baseline path setup (used in run_baselines, guarded with try/except).
-_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 for _p in (os.path.join(_ROOT, "xju2_frnn", "FRNN"),
            os.path.join(_ROOT, "xju2_frnn", "prefix_sum")):
     if os.path.isdir(_p) and _p not in sys.path:
@@ -331,9 +333,12 @@ def plot_results(results, path="benchmark_comparison.png"):
     print(f"  → {path}")
 
 
+JSON_RESULTS = os.path.join(_TEST_ROOT, "json_results", "benchmark_results.json")
+PNG_RESULTS = os.path.join(_TEST_ROOT, "png_results", "benchmark_comparison.png")
+
 if "--plot-only" in sys.argv:
-    with open("benchmark_results.json") as f:
-        plot_results(json.load(f))
+    with open(JSON_RESULTS) as f:
+        plot_results(json.load(f), PNG_RESULTS)
     sys.exit(0)
 
 
@@ -398,8 +403,10 @@ for D, N in CELLS:
                 print(f"  !! REGRESSION: FRNN {f_ms:.2f}ms > {name} {ms:.2f}ms"
                       f" — see §4.3 diagnostics")
 
-with open("benchmark_results.json", "w") as f:
+os.makedirs(os.path.dirname(JSON_RESULTS), exist_ok=True)
+os.makedirs(os.path.dirname(PNG_RESULTS), exist_ok=True)
+with open(JSON_RESULTS, "w") as f:
     json.dump(all_results, f, indent=2)
-print("\n→ benchmark_results.json")
-plot_results(all_results)
+print(f"\n→ {JSON_RESULTS}")
+plot_results(all_results, PNG_RESULTS)
 pynvml.nvmlShutdown()

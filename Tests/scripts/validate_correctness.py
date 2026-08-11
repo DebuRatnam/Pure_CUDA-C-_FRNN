@@ -19,13 +19,13 @@
 #   * Points within float32 epsilon of the radius are genuinely ambiguous (in or out), so a
 #     small boundary band (TAU) is treated as don't-care for boundary points only.
 #
-#   Run from the repo root:  PYTHONPATH=. python3 Tests/validate_correctness.py
+#   Run from the repo root:  PYTHONPATH=. python3 Tests/scripts/validate_correctness.py
 import os, sys
 import numpy as np
 import frnn_cuda
 from math import pi, gamma, ceil
 
-_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 for _p in (os.path.join(_ROOT, "xju2_frnn", "FRNN"),

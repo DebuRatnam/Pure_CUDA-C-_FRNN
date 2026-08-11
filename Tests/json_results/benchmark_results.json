@@ -1,0 +1,26 @@
+{
+  "D3_N100000": {
+    "R": 0.033159,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 0.47593750059604645,
+    "peak_mb": 0.0,
+    "frnn_proj_ms": null,
+    "faiss_ms": 90.05309097119607,
+    "flash_ms": 38.72370350291021,
+    "xfrnn_ms": 1.1357860057614744,
+    "new_xju2_ms": 4.198786977212876
+  },
+  "D12_N200000": {
+    "R": 0.053695,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 0.8216025016736239,
+    "peak_mb": 0.0,
+    "frnn_proj_ms": 956.8794619699474,
+    "faiss_ms": 356.1936939950101,
+    "flash_ms": 129.36848250683397,
+    "xfrnn_ms": 6.561931513715535,
+    "new_xju2_ms": 14.789831970119849
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "D16_N1250000": {
+    "R": 0.05034,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 175.28476048028097,
+    "peak_mb": 0.0,
+    "libfrnn_gpu_ms": 162.11757005658
+  },
+  "D16_N1500000": {
+    "R": 0.049079,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 198.13100999454036,
+    "peak_mb": 0.0,
+    "libfrnn_gpu_ms": 178.52352902991697
+  }
+}

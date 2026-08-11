@@ -1,0 +1,50 @@
+{
+  "D12_N200000": {
+    "R": 0.053695,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 7.3781710234470665,
+    "peak_mb": 0.0,
+    "libfrnn_gpu_ms": 5.978823988698423
+  },
+  "D12_N500000": {
+    "R": 0.049318,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 23.22301553795114,
+    "peak_mb": 0.0,
+    "libfrnn_gpu_ms": 21.653761039488018
+  },
+  "D12_N1000000": {
+    "R": 0.039409,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 59.32024650974199,
+    "peak_mb": 0.0,
+    "libfrnn_gpu_ms": 68.0998710449785
+  },
+  "D16_N200000": {
+    "R": 0.075802,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 20.085041061975062,
+    "peak_mb": 0.0,
+    "libfrnn_gpu_ms": 9.88839496858418
+  },
+  "D16_N500000": {
+    "R": 0.057647,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 43.707173492293805,
+    "peak_mb": 0.0,
+    "libfrnn_gpu_ms": 28.637330513447523
+  },
+  "D16_N1000000": {
+    "R": 0.048421,
+    "dist": "lowrank",
+    "radius_mode": "calibrated",
+    "latency_ms": 98.8155270460993,
+    "peak_mb": 0.0,
+    "libfrnn_gpu_ms": 90.10353952180594
+  }
+}

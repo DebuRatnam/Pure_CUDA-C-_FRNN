@@ -48,7 +48,7 @@ kernel specialization:
 ```bash
 FRNN_REPORT_OCCUPANCY=1 \
 EXTRA_CELLS=12:200000 N_SWEEP= D_SWEEP= \
-PYTHONPATH=. python3 Tests/benchmark_vs_libfrnn.py 2>&1 | tee occupancy-128-8.log
+PYTHONPATH=. python3 Tests/scripts/benchmark_vs_libfrnn.py 2>&1 | tee occupancy-128-8.log
 ```
 
 The report includes CAP, dimensions, threads, minimum blocks, registers, local
@@ -64,7 +64,7 @@ and libFRNN kernels:
 ncu --kernel-name 'regex:FindNbrsGridDimKernel.*' \
   --metrics launch__registers_per_thread,launch__occupancy_limit_registers,sm__warps_active.avg.pct_of_peak_sustained_active \
   --target-processes all \
-  python3 Tests/benchmark_vs_libfrnn.py 2>&1 | tee ncu-128-8.log
+  python3 Tests/scripts/benchmark_vs_libfrnn.py 2>&1 | tee ncu-128-8.log
 ```
 
 Start runtime comparisons with the strongest spill-free constraints from the
