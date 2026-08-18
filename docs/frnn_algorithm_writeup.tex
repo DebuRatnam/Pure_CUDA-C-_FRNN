@@ -1,0 +1,351 @@
+% ---------------------------------------------------------------------------
+% FRNN: the original grid algorithm and the libFRNN redesign
+%
+% Self-contained and compilable, but every section is also safe to \input into
+% a larger document: the preamble uses only amsmath, hyperref and url.
+% ---------------------------------------------------------------------------
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+\title{Fixed-Radius Nearest Neighbors on the GPU:\\
+       From the Original FRNN Grid to \texttt{libFRNN}}
+\date{}
+
+\begin{document}
+\maketitle
+
+% ===========================================================================
+\section{The Original FRNN Algorithm}
+\label{sec:original}
+
+% ---------------------------------------------------------------------------
+\subsection{Original Use Case}
+\label{sec:original-usecase}
+
+The original FRNN implementation\footnote{\url{https://github.com/lxxue/FRNN}}
+was written as a drop-in accelerator for point-cloud deep learning, exposing an
+interface deliberately modeled on \texttt{pytorch3d.ops.knn\_points}. The target
+workload is a batch of variable-length 3D point clouds --- registration, scene
+flow, correspondence matching, and implicit-surface reconstruction --- in which
+a network repeatedly asks, for every point of a query cloud $P_1$, for the $K$
+nearest points of a reference cloud $P_2$ that lie within a fixed radius $r$.
+Two properties of that setting shape the entire design. First, the radius is
+fixed and known before the search, which makes a uniform spatial grid the
+natural acceleration structure. Second, the reference cloud is frequently
+static across many calls (the same scene queried by successive network layers
+or successive iterations), which is why the library returns its grid as a
+cacheable handle and can skip reconstruction entirely on subsequent calls. The
+implementation was written for $D \in \{2,3\}$, differentiable with respect to
+the input coordinates, and everything above the CUDA kernels --- grid sizing,
+buffer allocation, batching --- lives in Python and PyTorch tensors.
+
+% ---------------------------------------------------------------------------
+\subsection{Method}
+\label{sec:original-method}
+
+\paragraph{The uniform grid as a filter.}
+The algorithm replaces the $O(|P_1| \cdot |P_2|)$ all-pairs comparison with a
+two-stage \emph{bin-and-scan} scheme. A uniform grid is laid over the axis-aligned
+bounding box of the reference cloud with a cell edge of $r/\rho$, where $\rho$
+is the \texttt{radius\_cell\_ratio} (default $2$); the resolution per axis is
+clamped to $64$ in 3D and $512$ in 2D, and the cell size is enlarged if that cap
+would be exceeded. Because a cell edge is at most $r$, every point within
+distance $r$ of a query $q$ must lie in the cell block
+\[
+  \Big[\big\lfloor (q_d - m_d - r)\,\delta \big\rfloor,\;
+       \big\lfloor (q_d - m_d + r)\,\delta \big\rfloor \Big],
+  \qquad d = 0,\dots,D_{\text{grid}}-1,
+\]
+with $m$ the grid minimum and $\delta = 1/\text{cell}$ the inverse cell size.
+The grid is therefore a \emph{conservative filter}: it never discards a true
+neighbor, and the exact test $\lVert p - q \rVert^2 \le r^2$ is still applied to
+every candidate the stencil produces. Grid parameters are packed into an
+$8$-float record in 3D (minimum, $\delta$, per-axis resolution, total cells) and
+a $6$-float record in 2D.
+
+\paragraph{Building the grid without a sort.}
+Construction is three kernels and no comparison sort. \texttt{InsertPoints}
+maps each point to a linear cell index
+$c = (g_x R_y + g_y) R_z + g_z$ and performs an \texttt{atomicAdd} on that
+cell's counter; the value \emph{returned} by the atomic is kept as the point's
+rank within its cell, so one pass simultaneously builds the cell histogram and
+assigns each point a unique, stable slot. An exclusive prefix sum over the cell
+counts --- a work-efficient Blelloch scan with the classical
+\texttt{CONFLICT\_FREE\_OFFSET} shared-memory padding to avoid bank conflicts
+--- converts counts into per-cell base offsets. \texttt{CountingSort} then
+writes each point to position $\text{offset}[c] + \text{rank}$, producing a
+coordinate array in which the membership of any cell is a \emph{contiguous}
+range $[\text{off}[c], \text{off}[c{+}1])$, plus a permutation array mapping
+sorted positions back to original indices. The candidate stream for a stencil
+cell is thus a single linear read, which is exactly what a GPU wants.
+
+\paragraph{Sorting the queries too.}
+A subtle but important choice: the \emph{query} cloud is inserted, prefix-summed
+and counting-sorted through the same three kernels. Queries are then processed
+in grid order, so the threads of a warp are spatially adjacent and traverse
+overlapping stencils; the candidate ranges they stream are largely the same
+cache lines. Results are scattered back to the caller's original indexing
+through the query permutation, so the reordering is invisible at the API.
+
+\paragraph{Bounded selection in registers.}
+Each thread owns one query and maintains a \texttt{MinK} structure --- a
+bounded array of the $K$ smallest squared distances seen so far, together with
+their indices, plus a cached maximum. Insertion is $O(1)$ when the candidate is
+rejected or the structure is not yet full, and $O(K)$ when it displaces the
+current maximum (the maximum is re-found by a linear rescan). The structure
+allocates nothing: it is constructed over arrays supplied by the caller, which
+are thread-local registers in the fast kernels and a slice of the output tensor
+in the generic one. A final in-place sort orders each row by distance.
+
+\paragraph{Grids over a coordinate prefix.}
+The grid is never built over all $D$ axes. In two dimensions it is a 2D grid; in
+every dimension $D \ge 3$ it is a \emph{3D} grid over the first three
+coordinates, with the remaining $D-3$ coordinates participating only in the
+exact distance evaluation inside the innermost loop. (Later work in this line
+widens that prefix to four axes for high-dimensional inputs; see
+Section~\ref{sec:libfrnn}.) The correctness argument is that projection onto a
+coordinate subset can only shrink distances,
+\[
+  \lVert p - q \rVert_{\text{proj}} \;\le\; \lVert p - q \rVert,
+\]
+so a stencil computed in the projected space is still a superset of the true
+neighborhood; only its \emph{selectivity} degrades as $D$ grows. This is what
+keeps the cell count bounded --- a full $D$-dimensional grid would need
+$\text{res}^{D}$ cells and a $3^{D}$ stencil --- at the price of an increasingly
+weak filter in high dimensions.
+
+\paragraph{CUDA-level memory management.}
+Several deliberate choices target the memory system rather than arithmetic.
+(i)~Every kernel uses a fixed launch geometry ($256$ blocks $\times$ $256$
+threads) with a chunked persistent loop over the work items, so occupancy is
+decoupled from $N$ and no launch is oversized for a small cloud. (ii)~All
+pointer arguments are marked \texttt{\_\_restrict\_\_}, allowing the compiler to
+route the read-only point and offset arrays through the texture/constant cache
+path. (iii)~The $D=2$ and $D=3$ specializations load coordinates as
+\texttt{float2}/\texttt{float3} vector types, turning per-axis scalar loads into
+single 8- or 12-byte transactions. (iv)~Kernels are templated on $D$ and $K$
+through a recursive dispatch ladder and instantiated in three tiers: a fully
+register-resident variant for small $D$ and $K$, a middle variant that caches
+the query point in registers but writes selections straight into the output
+tensor, and a generic variant for large $D$; compile-time $D$ and $K$ let the
+inner loops unroll completely and remove all indirect indexing. (v)~The
+selection structure writes directly into the destination tensor in the generic
+tiers, avoiding a second pass over results. (vi)~Above the kernels, the built
+grid is returned to the caller and can be handed back on the next call, so a
+static reference cloud pays construction cost exactly once. A brute-force path
+is retained for clouds small enough that grid construction does not amortize.
+
+% ---------------------------------------------------------------------------
+\subsection{Possible Improvements}
+\label{sec:original-improvements}
+
+\paragraph{Entanglement with PyTorch.}
+The most consequential limitation is architectural rather than numerical: the
+algorithm is not separable from its framework. Grid sizing runs in a Python loop
+over the batch, calling \texttt{.min()}, \texttt{.max()} and \texttt{.item()} on
+device tensors --- each of which is a host--device synchronization --- and then
+copies the parameter tensor back to the host with \texttt{.cpu()} before the
+prefix sum, which is itself launched once per batch element from Python. A
+search that should be a handful of asynchronous launches instead becomes a
+sequence of stalls whose cost is invisible in kernel profiles and dominant in
+wall-clock latency at small $N$. Everything crosses the ATen dispatcher, the
+extension is ABI-pinned to a specific PyTorch build, and the kernels are
+unreachable from a C++ simulation, a NumPy program, or a CUDA graph.
+
+\paragraph{Allocation churn and workspace reuse.}
+Every call allocates a fresh set of scratch buffers: per-cell counts and
+offsets, per-point cell and rank arrays, the sorted coordinate array, and the
+sorted-index permutation --- for both clouds. The count and offset arrays are
+sized by the \emph{total} cell count, so a $64^3$ grid costs $262{,}144$
+integers per batch element regardless of how few cells are occupied. Nothing is
+retained between calls, and the query-side grid is rebuilt even when only the
+query moved. A persistent, monotonically growing workspace would remove the
+allocator from the timed path entirely. Similarly, the hand-rolled Blelloch scan
+predates the availability of a tuned device-wide scan and could be replaced by a
+single vendor-optimized call.
+
+\paragraph{Memory layout at high $D$.}
+Both point arrays are array-of-structures, indexed \texttt{p[i*D + d]}. A warp
+reading one axis therefore touches $32$ distinct cache lines --- at $D=16$ the
+inner loop fetches roughly an order of magnitude more bytes than it consumes.
+A structure-of-arrays layout for the sorted reference cloud, \texttt{p[d*P + i]},
+packs $32$ candidates per cache line for a given axis and is the single highest
+leverage change for $D \ge 8$.
+
+\paragraph{Selection cost and grid selectivity.}
+\texttt{MinK}'s displacement path rescans all $K$ entries to re-find the
+maximum, so dense queries at $K = 64$ or $128$ spend most of their time in
+selection rather than in distance evaluation; a heap has the right asymptotics
+but the wrong constant for sparse queries, which suggests a hybrid. Independently,
+the fixed three-axis projection becomes a weak filter as $D$ grows: cells fill
+with candidates that pass the projected test and fail the full-dimensional one,
+and no cell-level bounding-box rejection exists to discard stencil corners that
+cannot intersect the query ball.
+
+\paragraph{Register pressure and compile time.}
+Selection buffers are declared at the template's maximum $K$ even when the call
+uses a fraction of it, and the query cache occupies a further $D$ registers, so
+the upper end of the ladder spills. Because the ladder instantiates the full
+$D \times K$ cross product, build times are long enough that the project's own
+installation notes warn about them.
+
+\paragraph{Synchronous, stream-oblivious API.}
+There is no way to enqueue a search on a caller-supplied stream, to run it
+count-first and allocate an exactly sized output, or to keep the result on the
+device. The output itself is a dense $[N, K]$ tensor padded with sentinels,
+which the caller must post-process to obtain the edge list that downstream graph
+code actually wants.
+
+% ===========================================================================
+\section{\texttt{libFRNN}: A Standalone Redesign}
+\label{sec:libfrnn}
+
+The improvements enumerated in Section~\ref{sec:original-improvements} are, one
+for one, the design brief of
+\texttt{libFRNN}\footnote{\url{https://github.com/xju2/libFRNN}}. It keeps the
+part of the original that is genuinely good --- bin by \texttt{atomicAdd}, prefix
+sum, counting sort, scan a conservative stencil, select in registers --- and
+rebuilds everything around it: the core becomes a standalone C++17/CUDA library
+with no dependency on Python, PyTorch, ATen, \texttt{c10}, TBB or NumPy; grid
+sizing moves onto the device so no call synchronizes with the host; all scratch
+memory moves into a reusable workspace so the warm path performs no allocation;
+the reference cloud is stored structure-of-arrays above four dimensions; the
+grid is widened from three to four indexed axes with per-cell bounding-box
+rejection to pay for it; selection switches adaptively between an insertion list
+and a deterministic heap; and the whole search is expressed as stream-ordered
+asynchronous work with a count-first/materialize split, under an explicit
+exactness and tie-breaking contract that makes the aggressive optimizations
+provably safe. The remainder of this section takes those changes in turn.
+
+\paragraph{A core that owes nothing to a framework.}
+The public surface is a handful of plain structures --- \texttt{PointView},
+\texttt{DevicePointView}, \texttt{Edge}, \texttt{BuildOptions} --- and free
+functions in namespace \texttt{frnn}, installed as a CMake package consumed with
+\texttt{find\_package(frnn)}. The NumPy binding is a thin pybind11 translation
+layer, and PyTorch support is a \emph{separate, optional} build target that
+registers a custom operator, reads \texttt{data\_ptr}, enqueues on PyTorch's
+current stream, and returns a CUDA tensor without ever touching host memory.
+Importing the base package does not import PyTorch; the same object code serves
+a C++ reconstruction pipeline, a NumPy script, and a training loop. In practice
+this also removes the ABI pin: the library is rebuilt against a CUDA toolkit,
+not against a specific tensor framework release.
+
+\paragraph{Grid construction on the device.}
+The Python loop that computed bounds and cell sizes is replaced by three
+kernels. \texttt{initializeBounds} seeds a bounding-box record;
+\texttt{computeBounds} reduces the reference cloud into it using
+\texttt{atomicMinimum}/\texttt{atomicMaximum} built from compare-and-swap on the
+bit pattern of the float; \texttt{finalizeGrid} runs on a single thread and
+derives the cell size and per-axis resolution, iterating up to eight times to
+coarsen the cell size until the cell budget is respected. The grid parameters
+never leave the device, so a search is a pure sequence of enqueues: no
+\texttt{.item()}, no \texttt{.cpu()}, no implicit synchronization anywhere in the
+build phase.
+
+\paragraph{A persistent workspace, and scans that are not hand-written.}
+Every scratch buffer --- bounds, grid parameters, cell counts, cell offsets,
+per-point cells and ranks, the sorted cloud, the permutation, neighbor distances
+and indices, edge counts and offsets, and the scan temporary --- lives in a
+\texttt{Workspace} whose \texttt{reserve} grows capacities monotonically and
+returns immediately when the existing allocation suffices. After the first call
+of a given shape the warm path issues \emph{zero} \texttt{cudaMalloc} calls, and
+clearing is device-guarded so a workspace frees on the device that owns it. Both
+prefix sums --- over cell counts and over per-query edge counts --- are
+\texttt{cub::DeviceScan::ExclusiveSum}, sized once and sharing a single temporary
+buffer allocated at the maximum of the two requirements. Every memset is
+\texttt{cudaMemsetAsync} on the caller's stream.
+
+\paragraph{A four-axis grid, paid for by corner rejection.}
+The indexed prefix is now dimension-dependent: $\min(D,3)$ axes for $D \le 4$ and
+\emph{four} axes for $5 \le D \le 32$, with separate cell budgets ($128{,}000$
+cells for the 3D grid, $128^3$ for the 4D grid) and a cell edge of $r$ in three
+dimensions but $r/2$ in four. Widening the projection strengthens the filter
+exactly where the original was weakest, but it also turns a $3^3$ stencil into a
+$3^4$ one, most of whose cells are corners that cannot intersect the query ball.
+The search kernel therefore computes, for four-dimensional grids only, the
+per-axis gap between the query and the cell's bounding box, accumulates the
+squared gap axis by axis, and \texttt{continue}s as soon as it exceeds $r^2$ ---
+so a corner cell is rejected after one or two multiplies instead of a full scan
+of its contents. The same test is deliberately \emph{not} applied to the 3D
+stencil, where its arithmetic would cost more than it saves.
+
+\paragraph{Structure-of-arrays storage and screened distance evaluation.}
+\texttt{countingSort} writes the sorted reference cloud AoS through dimension
+four --- where a candidate record fits in one short contiguous burst --- and SoA
+above it, at offset $d \cdot P + i$. The high-dimensional distance routine
+exploits that layout twice. It first performs a \emph{screen}: it accumulates
+the squared difference over groups of four axes, starting from axis four and
+wrapping around, and bails out as soon as the partial sum exceeds an
+\emph{expanded} threshold. Candidates that survive the screen are then
+recomputed in canonical axis order with fused multiply-adds. Because the screen
+threshold is widened beyond the worst-case rounding difference between two
+non-negative float32 sums of at most $32$ terms, a candidate near the boundary is
+always recomputed canonically, and the reordering therefore cannot change either
+radius membership or the top-$K$ ordering. The performance argument is a cache
+argument: for a given axis, SoA packs $32$ candidates per cache line against
+roughly $2.67$ for AoS, which is what makes an early-exit filter worth running
+at all.
+
+\paragraph{Hybrid selection with a total order on ties.}
+Selection begins as the original's sorted insertion list, which is optimal for
+the sparse queries that dominate a well-chosen radius. Once a query has accepted
+$24$ candidates and $K \ge 64$, the list is heapified in place and the query
+switches to a deterministic max-heap, with a final heap-sort to restore sorted
+order --- so dense queries stop paying the quadratic shifting cost and sparse
+queries never pay heap overhead. Both paths order candidates by the strict total
+order $(\text{squared distance}, \text{original index})$, which removes the
+original's unspecified behavior on equal distances: ties resolve to the lower
+index, always, on every architecture and along either selection path.
+
+\paragraph{Runtime dispatch instead of a template cross-product.}
+Dispatch is a \texttt{switch} on the runtime dimension over the specialized set
+$\{1,2,3,4,8,12,16\}$ with a generic compiled path covering the remainder through
+$D = 32$; $K$ stays a runtime value. This collapses the original's $D \times K$
+instantiation matrix to a short list, cutting compile time drastically while
+retaining full unrolling where it matters. Occupancy is managed explicitly:
+$256$-thread blocks for $D \le 4$, $128$-thread blocks with
+\texttt{\_\_launch\_bounds\_\_(128, 8)} for the high-dimensional kernels, which
+caps register allocation at a level that keeps eight blocks resident per SM. The
+original's query-reordering trick is preserved --- when query and reference are
+the same set, queries are visited in the sorted spatial order --- and results are
+still written back by original index. Algorithm choice itself is automatic,
+through an overflow-safe work estimate
+$Q \cdot P \cdot D \cdot \lceil K/8 \rceil \le 2\times10^6$ that routes small
+problems to exact brute force, with a manual override available for measurement.
+
+\paragraph{An asynchronous, count-first device API.}
+\texttt{buildEdgesAsync} takes device pointers, a caller-owned output buffer, a
+workspace and a stream, and enqueues every memset, scan and kernel on that
+stream without synchronizing it. Passing a null edge pointer requests
+\emph{count-only} execution: the exact device-resident edge count is produced,
+and after the caller synchronizes on it, \texttt{materializeEdgesAsync} writes
+the already-prepared edges into an exactly sized allocation without repeating
+the search. Launch and API errors are reported immediately; execution errors
+surface at the caller's synchronization point. The synchronous host API is built
+on top of the same path and is the only place validation of host-side
+coordinates occurs, precisely because inspecting device values on the host would
+destroy the asynchrony.
+
+\paragraph{Edges as the output, and an explicit exactness contract.}
+Rather than returning a padded $[N,K]$ neighbor tensor for the caller to
+post-process, the library counts per-query edges, exclusive-scans the counts, and
+writes a compacted $[E,2]$ edge array in one pass --- with self-loop removal and,
+for the single-set case, one emission per undirected pair under the convention
+$\text{source} > \text{target}$. Underpinning all of it is a written contract:
+squared distances accumulate in float32 in dimension order with one fused
+multiply-add per coordinate; the radius boundary is inclusive; rows are ordered
+by $(\text{distance}, \text{index})$ and truncated to $K$; cell ranges, cell
+boxes and rejection thresholds are conservatively expanded to absorb float32
+roundoff so that no true neighbor can be lost to a boundary computation. That
+contract is validated against an independent CPU oracle using \texttt{std::fma},
+with exact-boundary, adjacent-\texttt{nextafter} and rounding-sensitive
+high-dimensional cases. It is what licenses the screening, the early exits and
+the bounding-box rejection: each is a pure performance transformation that
+provably cannot alter the result.
+
+\end{document}
